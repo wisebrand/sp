@@ -502,13 +502,29 @@ async function handleCheckout() {
   refs.checkoutBtn.disabled = true;
 
   try {
-    const response = await fetchWithTimeout(`${API_BASE_URL}/orders/checkout`, {
+    // Calculate total amount
+    const totalAmount = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    // Default shipping address (can be expanded with a form later)
+    const shippingAddress = {
+      street: '123 Main Street',
+      city: 'New York',
+      state: 'NY',
+      zipCode: '10001',
+      country: 'USA'
+    };
+
+    const response = await fetchWithTimeout(`${API_BASE_URL}/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${state.token}`
       },
-      body: JSON.stringify({ items: state.cart })
+      body: JSON.stringify({
+        items: state.cart,
+        totalAmount: parseFloat(totalAmount.toFixed(2)),
+        shippingAddress
+      })
     });
 
     const data = await response.json();
