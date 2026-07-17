@@ -1,12 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const Product = require('../models/Product');
+const supabase = require('../utils/supabase');
 
 // Get all products
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find();
-    res.json(products);
+    const { data: products, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    res.json(products || []);
   } catch (error) {
     console.error('Get products error:', error);
     res.status(500).json({ error: 'Failed to fetch products' });
@@ -16,10 +22,16 @@ router.get('/', async (req, res) => {
 // Get product by ID
 router.get('/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
-    if (!product) {
+    const { data: product, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (error || !product) {
       return res.status(404).json({ error: 'Product not found' });
     }
+
     res.json(product);
   } catch (error) {
     console.error('Get product error:', error);
@@ -36,16 +48,23 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const product = new Product({
-      title,
-      description,
-      price,
-      image,
-      category,
-      stock
-    });
+    const { data: product, error } = await supabase
+      .from('products')
+      .insert([
+        {
+          title,
+          description,
+          price,
+          image,
+          category,
+          stock
+        }
+      ])
+      .select()
+      .single();
 
-    await product.save();
+    if (error) throw error;
+
     res.status(201).json(product);
   } catch (error) {
     console.error('Create product error:', error);

@@ -2,13 +2,8 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const mongoose = require('mongoose');
-const dns = require('node:dns/promises');
-const Product = require('./models/Product');
 
 dotenv.config();
-
-dns.setServers(['1.1.1.1', '8.8.8.8']);
 
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
@@ -40,26 +35,15 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
 
-function isInvalidMongoUri(uri) {
-  if (!uri) return true;
+// Validate Supabase Configuration
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
-  const placeholderPatterns = [
-    /username/i,
-    /password/i,
-    /cluster0\.xxxxx/i,
-    /your[-_]?password/i,
-    /your[-_]?gmail/i,
-    /example\.mongodb\.net/i,
-  ];
-  return placeholderPatterns.some((pattern) => pattern.test(uri));
-}
-
-if (!MONGODB_URI || isInvalidMongoUri(MONGODB_URI)) {
-  console.error('MongoDB connection failed: invalid MongoDB URI in .env');
-  console.error('Please update MONGODB_URI in .env to a real Atlas URI or a running local MongoDB instance.');
-  console.error('Example Atlas URI: mongodb+srv://myUser:myPassword@cluster0.abcd123.mongodb.net/sd-shopping?retryWrites=true&w=majority');
+if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+  console.error('❌ Supabase configuration is missing!');
+  console.error('Please set SUPABASE_URL and SUPABASE_SERVICE_KEY in .env');
+  console.error('\nGet these from: https://app.supabase.com → Settings → API');
   process.exit(1);
 }
 
@@ -83,21 +67,19 @@ function isInvalidGmailCredentials(user, pass) {
     /your[-_]?app[-_]?password/i,
     /example/i,
     /placeholder/i,
+    /devmail@local/i,
+    /abcdefghijklmnop/i,
   ];
   return !user || !pass || placeholderPatterns.some((pattern) => pattern.test(user) || pattern.test(pass));
 }
 
 if (isInvalidGmailCredentials(GMAIL_USER, GMAIL_PASS)) {
-  console.error('Gmail credentials invalid: please update GMAIL_USER and GMAIL_PASS in .env');
-  console.error('1. Enable 2FA on your Gmail account');
-  console.error('2. Generate App Password: https://myaccount.google.com/apppasswords');
-  console.error('3. Use your Gmail email and the 16-character app password');
-  process.exit(1);
+  console.warn('⚠️  Gmail credentials are not configured. OTP emails will not be sent.');
+  console.warn('To enable OTP:');
+  console.warn('1. Enable 2FA on your Gmail account');
+  console.warn('2. Generate App Password: https://myaccount.google.com/apppasswords');
+  console.warn('3. Update GMAIL_USER and GMAIL_PASS in .env\n');
 }
-
-// Seed products
-const seedProducts = async () => {
-  const count = await Product.countDocuments();
   if (count > 0) {
     return;
   }
@@ -115,81 +97,27 @@ const seedProducts = async () => {
     {
       title: 'Smart Watch',
       description: 'Fitness tracking smart watch with heart rate monitoring.',
-      price: 89.99,
-      image: 'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&w=400&q=80',
-      category: 'Electronics',
-      inventory: 75,
-      sku: 'SD-WATCH-002',
-    },
-    {
-      title: 'Modern Backpack',
-      description: 'Durable backpack with padded laptop sleeve.',
-      price: 59.99,
-      image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
-      category: 'Fashion',
-      inventory: 50,
-      sku: 'SD-BPACK-003',
-    },
-    {
-      title: 'Portable Speaker',
-      description: 'Bluetooth speaker with deep bass and splash resistance.',
-      price: 39.99,
-      image: 'https://images.unsplash.com/photo-1512314889357-e157c22f938d?auto=format&fit=crop&w=400&q=80',
-      category: 'Electronics',
-      inventory: 65,
-      sku: 'SD-SPEAKER-004',
-    },
-    {
-      title: 'Coffee Maker',
-      description: 'Programmable coffee maker with thermal carafe.',
-      price: 79.99,
-      image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=400&q=80',
-      category: 'Home',
-      inventory: 30,
-      sku: 'SD-COFFEE-005',
-    },
-    {
-      title: 'Yoga Mat',
-      description: 'Non-slip yoga mat with carrying strap.',
-      price: 29.99,
-      image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=400&q=80',
-      category: 'Sports',
-      inventory: 100,
-      sku: 'SD-YOGA-006',
-    },
-  ];
 
-  await Product.create(sampleProducts);
-  console.log('Sample products seeded');
-};
-
-// Connect to MongoDB and start server
-const startServer = async () => {
-  try {
-    await mongoose.connect(MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 20000,
-      connectTimeoutMS: 30000,
-    });
-
-    console.log('MongoDB connected');
-    await seedProducts();
-  } catch (error) {
-    console.error('MongoDB connection failed:', error.message);
-  }
-
+// Start server
+const startServer = () => {
   const server = app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`\n✅ SD Shopping Server is running!`);
+    console.log(`📱 Open http://localhost:${PORT} in your browser\n`);
+    console.log(`Database: Supabase (PostgreSQL)`);
+    console.log(`API Health: http://localhost:${PORT}/api/health\n`);
   });
 
   server.on('error', (error) => {
     if (error.code === 'EADDRINUSE') {
-      console.error(`Port ${PORT} is already in use. Another instance may already be running.`);
+      console.error(`\n❌ Port ${PORT} is already in use`);
+      console.error('Kill the process or use a different PORT in .env');
     } else {
       console.error('Server failed to start:', error.message);
     }
+    process.exit(1);
   });
 };
 
+console.log(`\n🚀 Starting SD Shopping Server...\n`);
 startServer();
+

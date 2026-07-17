@@ -18,7 +18,12 @@ router.post('/register', async (req, res) => {
     }
 
     // Check if user exists
-    const existingUser = await User.findOne({ email });
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+
     if (existingUser) {
       return res.status(409).json({ error: 'Email already registered' });
     }
@@ -66,25 +71,34 @@ router.post('/verify-otp', async (req, res) => {
       return res.status(400).json({ error: 'OTP expired' });
     }
 
-    // Create user
-    const user = new User({
-      name: storedData.name,
-      email,
-      password: storedData.password,
-      isVerified: true
-    });
+    // Hash password
+    const hashedPassword = await bcrypt.hash(storedData.password, 10);
 
-    await user.save();
+    // Create user
+    const { data: newUser, error: insertError } = await supabase
+      .from('users')
+      .insert([
+        {
+          name: storedData.name,
+          email,
+          password: hashedPassword,
+          is_verified: true
+        }
+      ])
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
 
     // Generate token
-    const token = generateToken(user._id);
+    const token = generateToken(newUser.id);
 
     // Clean up
     otpStore.delete(email);
 
     res.json({
       message: 'Email verified and account created',
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: newUser.id, name: newUser.name, email: newUser.email },
       token
     });
   } catch (error) {
@@ -135,25 +149,30 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password required' });
     }
 
-    const user = await User.findOne({ email });
-    if (!user) {
+    const { data: user, error: fetchError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (fetchError || !user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const isPasswordValid = await user.comparePassword(password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    if (!user.isVerified) {
+    if (!user.is_verified) {
       return res.status(403).json({ error: 'Please verify your email first' });
     }
 
-    const token = generateToken(user._id);
+    const token = generateToken(user.id);
 
     res.json({
       message: 'Login successful',
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user.id, name: user.name, email: user.email },
       token
     });
   } catch (error) {
@@ -165,7 +184,16 @@ router.post('/login', async (req, res) => {
 // Get current user
 router.get('/me', authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select('-password');
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, name, email, created_at')
+      .eq('id', req.userId)
+      .single();
+
+    if (error || !user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch user' });
