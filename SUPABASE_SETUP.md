@@ -1,56 +1,38 @@
-# Supabase Setup Guide
+﻿# MongoDB Setup Guide
 
-## Step 1: Create Supabase Account & Project
+## Local MongoDB
 
-1. Go to **https://supabase.com**
-2. Click **Sign Up**
-3. Create an account (use GitHub or email)
-4. Create a new project:
-   - Project name: `sd-shopping`
-   - Password: Create a strong password
-   - Region: Choose closest to you
-   - Click **Create new project**
+1. Install MongoDB Community Edition:
+   - Windows: https://www.mongodb.com/try/download/community
+   - macOS: `brew tap mongodb/brew && brew install mongodb-community`
 
-## Step 2: Get Your Credentials
+2. Start MongoDB locally:
+   ```bash
+   mongod
+   ```
 
-After project creation (takes ~2 minutes):
+3. Set `MONGODB_URI` in `.env`:
+   ```text
+   MONGODB_URI=mongodb://localhost:27017/sd-shopping
+   ```
 
-1. Go to **Settings** → **API**
-2. Copy these values:
-   - `Project URL` → `SUPABASE_URL` in .env
-   - `anon public` key → `SUPABASE_ANON_KEY` in .env
-   - `service_role secret` key → `SUPABASE_SERVICE_KEY` in .env
+## MongoDB Atlas
 
-## Step 3: Create Database Tables
+1. Create a free cluster at https://www.mongodb.com/cloud/atlas
+2. Create a database user with a password.
+3. Copy the connection string and update `MONGODB_URI`.
 
-1. Go to **SQL Editor** in Supabase dashboard
-2. Click **New Query**
-3. Copy and paste the SQL from `db/schema.sql`
-4. Click **Run**
-
-## Step 4: Update .env
-
-Replace these values in `.env`:
+Example:
 ```
-SUPABASE_URL=your_project_url
-SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_KEY=your_service_key
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/sd-shopping?retryWrites=true&w=majority
 ```
 
-## Step 5: Install & Run
+## Final `.env` Example
 
-```bash
-npm install @supabase/supabase-js
-npm install pg
-npm start
 ```
-
-## Done! 🎉
-
-Your website now uses Supabase (PostgreSQL) instead of MongoDB!
-
-### Troubleshooting
-
-- **"Connection refused"** → Check SUPABASE_URL is correct
-- **"Invalid API key"** → Copy anon key again from Settings
-- **Tables not created** → Run the SQL schema in SQL Editor
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/sd-shopping
+JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
+GMAIL_USER=your_email@gmail.com
+GMAIL_APP_PASSWORD=your_app_password_here
+```

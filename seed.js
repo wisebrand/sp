@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const Product = require('./models/Product');
 
@@ -73,20 +73,16 @@ const products = [
 
 async function seedDatabase() {
   try {
-    // Connect to MongoDB
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/sd-shopping';
-    await mongoose.connect(mongoUri);
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/sd-shopping';
+    await mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
     console.log('Connected to MongoDB');
 
-    // Clear existing products
     await Product.deleteMany({});
     console.log('Cleared existing products');
 
-    // Insert new products
     const insertedProducts = await Product.insertMany(products);
     console.log(`Seeded ${insertedProducts.length} products successfully`);
 
-    // Close connection
     await mongoose.connection.close();
     console.log('Database connection closed');
     process.exit(0);

@@ -1,6 +1,5 @@
-const nodemailer = require('nodemailer');
+﻿const nodemailer = require('nodemailer');
 
-// Configure email service
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -9,12 +8,10 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Generate OTP
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Send OTP email
 async function sendOTPEmail(email, otp) {
   try {
     const mailOptions = {
@@ -23,11 +20,11 @@ async function sendOTPEmail(email, otp) {
       subject: 'Your SD Shop Verification OTP',
       html: `
         <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
-          <h2 style="color: #007bff;">SD Shop Verification</h2>
+          <h2 style="color: #1a73e8;">SD Shop Verification</h2>
           <p>Your one-time password (OTP) is:</p>
-          <h1 style="color: #007bff; letter-spacing: 5px;">${otp}</h1>
-          <p style="color: #999;">This OTP will expire in 5 minutes.</p>
-          <p style="color: #999; font-size: 12px;">If you didn't request this, please ignore this email.</p>
+          <h1 style="color: #1a73e8; letter-spacing: 4px;">${otp}</h1>
+          <p style="color: #555;">This OTP will expire in 5 minutes.</p>
+          <p style="color: #999; font-size: 12px;">If you didn\'t request this, please ignore this email.</p>
         </div>
       `
     };
