@@ -1,6 +1,7 @@
-﻿const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const Product = require('./models/Product');
+const connectMongo = require('./utils/db');
 
 dotenv.config();
 
@@ -73,9 +74,7 @@ const products = [
 
 async function seedDatabase() {
   try {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/sd-shopping';
-    await mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
-    console.log('Connected to MongoDB');
+    await connectMongo();
 
     await Product.deleteMany({});
     console.log('Cleared existing products');

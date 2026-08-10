@@ -1,612 +1,1290 @@
-﻿const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE = (window.location.port === '5000')
+    ? '/api'
+    : 'http://localhost:5000/api';
 
-const state = {
-  products: [],
-  cart: JSON.parse(localStorage.getItem('cart') || '[]'),
-  token: localStorage.getItem('token'),
-  user: JSON.parse(localStorage.getItem('user') || 'null'),
-  currentView: 'home'
-};
-
-const refs = {
-  // Navigation
-  navLinks: document.querySelectorAll('.nav-link'),
-  cartIcon: document.getElementById('cartIcon'),
-  cartCount: document.getElementById('cartCount'),
-  loginBtn: document.getElementById('loginBtn'),
-  registerBtn: document.getElementById('registerBtn'),
-  logoutBtn: document.getElementById('logoutBtn'),
-
-  // Hero
-  heroStats: document.querySelectorAll('.stat-number'),
-
-  // Products
-  productsGrid: document.getElementById('productsGrid'),
-  productsSection: document.getElementById('productsSection'),
-
-  // Cart Sidebar
-  cartSidebar: document.getElementById('cartSidebar'),
-  closeCart: document.getElementById('closeCart'),
-  cartItems: document.getElementById('cartItems'),
-  cartTotal: document.getElementById('cartTotal'),
-  checkoutBtn: document.getElementById('checkoutBtn'),
-
-  // Auth Modal
-  authModal: document.getElementById('authModal'),
-  closeModal: document.getElementById('closeModal'),
-  loginTab: document.getElementById('loginTab'),
-  registerTab: document.getElementById('registerTab'),
-  loginPanel: document.getElementById('loginPanel'),
-  registerPanel: document.getElementById('registerPanel'),
-  loginForm: document.getElementById('loginForm'),
-  registerForm: document.getElementById('registerForm'),
-  otpSection: document.getElementById('otpSection'),
-  otpForm: document.getElementById('otpForm'),
-  otpInput: document.getElementById('otpInput'),
-  resendOtpBtn: document.getElementById('resendOtpBtn'),
-  showRegisterLink: document.getElementById('showRegister'),
-  showLoginLink: document.getElementById('showLogin'),
-
-  // Toast
-  toastContainer: document.getElementById('toastContainer')
-};
-
-// Utility Functions
-function showToast(message, type = 'info') {
-  const toast = document.createElement('div');
-  toast.className = `toast ${type} show`;
-  toast.innerHTML = `
-    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
-    <span>${message}</span>
-  `;
-
-  refs.toastContainer.appendChild(toast);
-
-  setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
-}
-
-async function fetchWithTimeout(url, options = {}, timeout = 10000) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    if (error.name === 'AbortError') {
-      throw new Error('Request timed out. Please check your connection.');
+// Safe JSON parser to prevent HTML response SyntaxError crashes
+async function safeParseResponse(response) {
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+        return await response.json();
     }
-    throw error;
-  }
-}
-
-function handleFetchError(error) {
-  console.error('Fetch error:', error);
-  if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-    showToast('Network error. Please check your internet connection.', 'error');
-  } else if (error.message.includes('timeout')) {
-    showToast('Request timed out. Please try again.', 'error');
-  } else {
-    showToast(error.message || 'An error occurred', 'error');
-  }
-}
-
-function scrollToProducts() {
-  const section = document.getElementById('productsSection');
-  if (section) {
-    section.scrollIntoView({ behavior: 'smooth' });
-  }
-}
-
-// Authentication Functions
-function updateAuthUI() {
-  const signedIn = Boolean(state.token && state.user);
-
-  if (refs.loginBtn) refs.loginBtn.classList.toggle('hidden', signedIn);
-  if (refs.registerBtn) refs.registerBtn.classList.toggle('hidden', signedIn);
-  if (refs.logoutBtn) refs.logoutBtn.classList.toggle('hidden', !signedIn);
-
-  // Update navigation links
-  refs.navLinks.forEach(link => {
-    if (link.getAttribute('href') === '#orders') {
-      link.classList.toggle('hidden', !signedIn);
+    const text = await response.text();
+    if (text.trim().startsWith('<')) {
+        throw new Error('Server endpoint returned HTML instead of JSON. Ensure Express server is running on http://localhost:5000');
     }
-  });
+    try {
+        return JSON.parse(text);
+    } catch (e) {
+        throw new Error('Invalid response received from server');
+    }
 }
 
-function openAuthModal(tab = 'login') {
-  refs.authModal.classList.add('show');
-  setAuthTab(tab);
+// Application State
+let products = [];
+let cart = JSON.parse(localStorage.getItem('sd_cart')) || [];
+let wishlist = JSON.parse(localStorage.getItem('sd_wishlist')) || [];
+let orders = JSON.parse(localStorage.getItem('sd_orders')) || [];
+let currentUser = JSON.parse(localStorage.getItem('sd_user')) || null;
+let authToken = localStorage.getItem('sd_token') || null;
+
+let activeCategory = 'All';
+let appliedDiscount = 0;
+let pendingEmail = '';
+
+// Initialize App on Load
+window.addEventListener('DOMContentLoaded', async () => {
+    updateBadges();
+    updateAuthUI();
+    await fetchProducts();
+    if (authToken) {
+        await fetchOrders();
+    }
+});
+
+// --- TOAST NOTIFICATIONS ---
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    const bgClass = type === 'success' ? 'bg-gray-900 text-white' : 'bg-rose-600 text-white';
+    const icon = type === 'success' ? 'fa-circle-check text-emerald-400' : 'fa-circle-exclamation text-white';
+    
+    toast.className = `${bgClass} px-4 py-3 rounded-xl shadow-lg flex items-center space-x-3 text-sm font-medium toast-slide`;
+    toast.innerHTML = `<i class="fa-solid ${icon} text-base"></i><span>${message}</span>`;
+    
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
 }
 
-function closeAuthModal() {
-  refs.authModal.classList.remove('show');
-  // Reset forms
-  if (refs.loginForm) refs.loginForm.reset();
-  if (refs.registerForm) refs.registerForm.reset();
-  if (refs.otpSection) refs.otpSection.classList.add('hidden');
+// --- TAB SWITCHER ---
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    const target = document.getElementById(`tab-${tabId}`);
+    if (target) target.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    if (tabId === 'cart') renderCart();
+    if (tabId === 'wishlist') renderWishlist();
+    if (tabId === 'orders') renderOrders();
 }
 
-function setAuthTab(tab) {
-  const loginActive = tab === 'login';
-  refs.loginTab.classList.toggle('active', loginActive);
-  refs.registerTab.classList.toggle('active', !loginActive);
-
-  if (refs.loginPanel) {
-    refs.loginPanel.classList.toggle('hidden', !loginActive);
-  }
-  if (refs.registerPanel) {
-    refs.registerPanel.classList.toggle('hidden', loginActive);
-  }
-
-  if (refs.otpSection) {
-    refs.otpSection.classList.add('hidden');
-  }
+function scrollToCatalog() {
+    switchTab('catalog');
 }
 
-function saveAuth(user, token) {
-  state.token = token;
-  state.user = user;
-  localStorage.setItem('token', token);
-  localStorage.setItem('user', JSON.stringify(user));
-  updateAuthUI();
-}
+const DEFAULT_PRODUCTS = [
+    { _id: '1', title: 'Wireless Headphones', description: 'Premium noise-cancelling wireless headphones with 30-hour battery life', price: 199.99, image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60', category: 'Electronics', stock: 50 },
+    { _id: '2', title: 'Smartphone', description: 'Latest model smartphone with 5G connectivity and advanced camera system', price: 899.99, image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60', category: 'Electronics', stock: 30 },
+    { _id: '3', title: 'Laptop', description: 'High-performance laptop for professionals and students', price: 1299.99, image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500&auto=format&fit=crop&q=60', category: 'Electronics', stock: 20 },
+    { _id: '4', title: 'Smartwatch', description: 'Feature-rich smartwatch with health monitoring and fitness tracking', price: 349.99, image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60', category: 'Wearables', stock: 45 },
+    { _id: '5', title: 'Portable Speaker', description: 'Waterproof portable speaker with exceptional sound quality', price: 79.99, image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&auto=format&fit=crop&q=60', category: 'Audio', stock: 60 },
+    { _id: '6', title: 'USB-C Cable', description: 'Durable and fast-charging USB-C cable for all devices', price: 14.99, image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&auto=format&fit=crop&q=60', category: 'Accessories', stock: 100 },
+    { _id: '7', title: 'Screen Protector', description: 'Tempered glass screen protector for smartphones', price: 9.99, image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=500&auto=format&fit=crop&q=60', category: 'Accessories', stock: 150 },
+    { _id: '8', title: 'Phone Case', description: 'Protective and stylish phone case with premium materials', price: 24.99, image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&auto=format&fit=crop&q=60', category: 'Accessories', stock: 80 }
+];
 
-function clearAuth() {
-  state.token = null;
-  state.user = null;
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  updateAuthUI();
-  showToast('Logged out successfully', 'success');
-}
-
-// Product Functions
+// --- PRODUCTS API & RENDERING ---
 async function fetchProducts() {
-  try {
-    const response = await fetchWithTimeout(`${API_BASE_URL}/products`);
-    const products = await response.json();
-    state.products = Array.isArray(products) ? products : [];
-    renderProducts();
-    updateHeroStats();
-  } catch (error) {
-    handleFetchError(error);
-  }
-}
+    const endpoints = [
+        `${API_BASE}/products`,
+        'http://localhost:5000/api/products',
+        'http://127.0.0.1:5000/api/products'
+    ];
 
-function renderProducts() {
-  if (!refs.productsGrid) return;
-  refs.productsGrid.innerHTML = '';
-
-  if (state.products.length === 0) {
-    refs.productsGrid.innerHTML = '<p class="no-products">No products available</p>';
-    return;
-  }
-
-  state.products.forEach((product) => {
-    const card = document.createElement('div');
-    card.className = 'product-card';
-    card.innerHTML = `
-      <img src="${product.image || '/api/placeholder/300/250'}" alt="${product.title}" />
-      <div class="product-info">
-        <h3 class="product-title">${product.title}</h3>
-        <p class="product-description">${product.description}</p>
-        <p class="product-price">$${product.price.toFixed(2)}</p>
-        <div class="product-actions">
-          <button class="btn btn-secondary add-to-cart" data-id="${product._id}">
-            <i class="fas fa-cart-plus"></i> Add to Cart
-          </button>
-        </div>
-      </div>
-    `;
-    refs.productsGrid.appendChild(card);
-  });
-
-  // Attach event listeners
-  refs.productsGrid.querySelectorAll('.add-to-cart').forEach((button) => {
-    button.addEventListener('click', () => addToCart(button.dataset.id));
-  });
-}
-
-function updateHeroStats() {
-  // Update hero statistics with actual data
-  const totalProducts = state.products.length;
-  const totalValue = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-  // Animate numbers
-  animateNumber(refs.heroStats[0], totalProducts);
-  animateNumber(refs.heroStats[1], state.cart.length);
-  animateNumber(refs.heroStats[2], totalValue);
-}
-
-function animateNumber(element, target) {
-  if (!element) return;
-  const start = parseInt(element.textContent) || 0;
-  const duration = 1000;
-  const step = (target - start) / (duration / 16);
-  let current = start;
-
-  const timer = setInterval(() => {
-    current += step;
-    if ((step > 0 && current >= target) || (step < 0 && current <= target)) {
-      element.textContent = target;
-      clearInterval(timer);
-    } else {
-      element.textContent = Math.floor(current);
+    let loaded = false;
+    for (const url of endpoints) {
+        try {
+            const response = await fetch(url);
+            if (response.ok) {
+                const data = await safeParseResponse(response);
+                if (Array.isArray(data) && data.length > 0) {
+                    // Map placeholder images to high quality Unsplash images if needed
+                    products = data.map(p => {
+                        let img = p.image;
+                        if (!img || img.includes('placeholder.com')) {
+                            const match = DEFAULT_PRODUCTS.find(dp => dp.title.toLowerCase() === (p.title || p.name || '').toLowerCase());
+                            if (match) img = match.image;
+                        }
+                        return { ...p, image: img || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60' };
+                    });
+                    loaded = true;
+                    break;
+                }
+            }
+        } catch (err) {
+            console.warn(`Could not fetch products from ${url}:`, err.message);
+        }
     }
-  }, 16);
+
+    if (!loaded || products.length === 0) {
+        console.warn('Falling back to catalog products');
+        products = DEFAULT_PRODUCTS;
+    }
+
+    renderProducts();
 }
 
-// Cart Functions
-function saveCart() {
-  localStorage.setItem('cart', JSON.stringify(state.cart));
+function renderProducts(filteredList = null) {
+    const grid = document.getElementById('product-grid');
+    if (!grid) return;
+    const listToRender = filteredList || products;
+
+    if (listToRender.length === 0) {
+        grid.innerHTML = `<div class="col-span-full py-16 text-center text-gray-400">No products found matching your criteria.</div>`;
+        return;
+    }
+
+    grid.innerHTML = listToRender.map(product => {
+        const productId = product._id || product.id;
+        const productName = product.title || product.name;
+        const isWishlisted = wishlist.some(item => (item._id || item.id) === productId);
+        const rating = (4.5 + (Math.random() * 0.4)).toFixed(1);
+        const image = product.image || 'https://via.placeholder.com/300x250?text=Product';
+
+        return `
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col overflow-hidden group">
+                <div class="relative bg-gray-100 h-52 overflow-hidden cursor-pointer" onclick="openProductModal('${productId}')">
+                    <img src="${image}" alt="${productName}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                    <button onclick="event.stopPropagation(); toggleWishlist('${productId}')" class="absolute top-3 right-3 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow hover:bg-white transition text-gray-600">
+                        <i class="${isWishlisted ? 'fa-solid text-rose-500' : 'fa-regular text-gray-600'} fa-heart"></i>
+                    </button>
+                </div>
+                <div class="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between text-xs text-gray-400 mb-1">
+                            <span class="font-medium">${product.category || 'General'}</span>
+                            <div class="flex items-center text-amber-500">
+                                <i class="fa-solid fa-star text-[10px] mr-1"></i>
+                                <span class="font-medium text-gray-700">${rating}</span>
+                            </div>
+                        </div>
+                        <h3 class="font-semibold text-gray-800 line-clamp-1 cursor-pointer hover:text-indigo-600 transition" onclick="openProductModal('${productId}')">${productName}</h3>
+                        <p class="text-xs text-gray-500 line-clamp-2 mt-1">${product.description || ''}</p>
+                    </div>
+                    <div class="mt-4 flex items-center justify-between">
+                        <span class="text-lg font-bold text-gray-900">$${Number(product.price).toFixed(2)}</span>
+                        <button onclick="addToCart('${productId}')" class="bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white px-3 py-2 rounded-xl transition text-xs font-semibold flex items-center space-x-1">
+                            <i class="fa-solid fa-cart-plus"></i>
+                            <span>Add</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
-function addToCart(productId) {
-  const existingItem = state.cart.find(item => item.productId === productId);
-  if (existingItem) {
-    existingItem.quantity += 1;
-  } else {
-    const product = state.products.find(p => p._id === productId);
-    if (!product) return;
-    state.cart.push({
-      productId,
-      title: product.title,
-      price: product.price,
-      image: product.image,
-      quantity: 1
+// Category Filter Handling
+function filterCategory(category) {
+    activeCategory = category;
+    document.querySelectorAll('.category-btn').forEach(btn => {
+        if (btn.textContent.toLowerCase().includes(category.toLowerCase()) || (category === 'All' && btn.textContent.includes('All'))) {
+            btn.className = "category-btn px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap bg-indigo-600 text-white shadow-sm transition";
+        } else {
+            btn.className = "category-btn px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap bg-white text-gray-600 border border-gray-200 hover:bg-gray-100 transition";
+        }
     });
-  }
-  saveCart();
-  updateCartUI();
-  showToast('Added to cart!', 'success');
+
+    const searchElem = document.getElementById('search-input') || document.getElementById('mobile-search-input');
+    const query = searchElem ? searchElem.value.toLowerCase() : '';
+    applyFiltersAndSearch(query, category);
+}
+
+// Search Handling
+function handleSearch() {
+    const desktopVal = document.getElementById('search-input')?.value || '';
+    const mobileVal = document.getElementById('mobile-search-input')?.value || '';
+    const query = (desktopVal || mobileVal).toLowerCase();
+    applyFiltersAndSearch(query, activeCategory);
+}
+
+function applyFiltersAndSearch(query, category) {
+    let result = products;
+    if (category !== 'All') {
+        result = result.filter(p => (p.category || '').toLowerCase() === category.toLowerCase());
+    }
+    if (query.trim() !== '') {
+        result = result.filter(p => 
+            (p.title || p.name || '').toLowerCase().includes(query) || 
+            (p.category || '').toLowerCase().includes(query) ||
+            (p.description || '').toLowerCase().includes(query)
+        );
+    }
+    renderProducts(result);
+}
+
+// --- PRODUCT DETAILS & REVIEWS MODAL (JUMIA STYLE WITH COLOR VARIANTS & ARROWS) ---
+let selectedReviewRating = 5;
+let currentProductVariants = [];
+let currentColorVariantIdx = 0;
+
+function getProductColorVariants(product) {
+    const mainImg = product.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80';
+    const cat = (product.category || '').toLowerCase();
+
+    if (cat.includes('audio') || cat.includes('headphone')) {
+        return [
+            { name: 'Midnight Black', img: mainImg, colorCode: '#111827' },
+            { name: 'Platinum Silver', img: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=600&auto=format&fit=crop&q=80', colorCode: '#e5e7eb' },
+            { name: 'Rose Gold', img: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=600&auto=format&fit=crop&q=80', colorCode: '#fb7185' }
+        ];
+    } else if (cat.includes('phone') || cat.includes('mobile')) {
+        return [
+            { name: 'Phantom Black', img: mainImg, colorCode: '#0f172a' },
+            { name: 'Titanium White', img: 'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=600&auto=format&fit=crop&q=80', colorCode: '#f8fafc' },
+            { name: 'Sierra Blue', img: 'https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=600&auto=format&fit=crop&q=80', colorCode: '#3b82f6' }
+        ];
+    } else if (cat.includes('laptop') || cat.includes('computing')) {
+        return [
+            { name: 'Space Gray', img: mainImg, colorCode: '#475569' },
+            { name: 'Silver Aluminium', img: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&auto=format&fit=crop&q=80', colorCode: '#cbd5e1' },
+            { name: 'Matte Black', img: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=600&auto=format&fit=crop&q=80', colorCode: '#1e293b' }
+        ];
+    } else {
+        return [
+            { name: 'Classic Black', img: mainImg, colorCode: '#18181b' },
+            { name: 'Arctic White', img: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=600&auto=format&fit=crop&q=80', colorCode: '#f4f4f5' },
+            { name: 'Champagne Gold', img: 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=600&auto=format&fit=crop&q=80', colorCode: '#fde047' }
+        ];
+    }
+}
+
+function selectProductColor(idx) {
+    if (!currentProductVariants || currentProductVariants.length === 0) return;
+    
+    currentColorVariantIdx = (idx + currentProductVariants.length) % currentProductVariants.length;
+    const variant = currentProductVariants[currentColorVariantIdx];
+
+    const mainImg = document.getElementById('main-product-img');
+    if (mainImg) {
+        mainImg.src = variant.img;
+    }
+
+    const fullImg = document.getElementById('fullscreen-img-element');
+    if (fullImg) {
+        fullImg.src = variant.img;
+    }
+
+    const label = document.getElementById('selected-color-label');
+    if (label) {
+        label.textContent = variant.name;
+    }
+
+    const fullLabel = document.getElementById('fullscreen-img-color-label');
+    if (fullLabel) {
+        fullLabel.textContent = variant.name;
+    }
+
+    document.querySelectorAll('.color-thumb-btn').forEach((btn, i) => {
+        if (i === currentColorVariantIdx) {
+            btn.className = "color-thumb-btn w-20 h-20 object-cover rounded-xl border-2 border-indigo-600 shadow-md ring-2 ring-indigo-300 cursor-pointer transition transform scale-105";
+        } else {
+            btn.className = "color-thumb-btn w-20 h-20 object-cover rounded-xl border border-gray-200 opacity-60 cursor-pointer hover:opacity-100 transition";
+        }
+    });
+}
+
+function prevProductColor() {
+    selectProductColor(currentColorVariantIdx - 1);
+}
+
+function nextProductColor() {
+    selectProductColor(currentColorVariantIdx + 1);
+}
+
+function openFullscreenImg() {
+    if (!currentProductVariants || currentProductVariants.length === 0) return;
+    const variant = currentProductVariants[currentColorVariantIdx];
+
+    const fullImg = document.getElementById('fullscreen-img-element');
+    if (fullImg) {
+        fullImg.src = variant.img;
+    }
+
+    const fullLabel = document.getElementById('fullscreen-img-color-label');
+    if (fullLabel) {
+        fullLabel.textContent = variant.name;
+    }
+
+    document.getElementById('fullscreen-img-modal').classList.remove('hidden');
+}
+
+function closeFullscreenImg() {
+    document.getElementById('fullscreen-img-modal').classList.add('hidden');
+}
+
+async function openProductModal(productId) {
+    const product = products.find(p => (p._id || p.id) === productId);
+    if (!product) return;
+
+    const modalContent = document.getElementById('modal-content');
+    const productName = product.title || product.name;
+    currentProductVariants = getProductColorVariants(product);
+    currentColorVariantIdx = 0;
+
+    const mainImage = currentProductVariants[0].img;
+    const origPrice = (product.price * 1.25).toFixed(2);
+
+    // Fetch live product reviews
+    let reviewData = { averageRating: 5.0, totalReviews: 0, reviews: [] };
+    try {
+        const res = await fetch(`${API_BASE}/reviews/${productId}`);
+        if (res.ok) {
+            reviewData = await safeParseResponse(res);
+        }
+    } catch (e) {
+        console.warn('Could not fetch reviews:', e);
+    }
+
+    selectedReviewRating = 5;
+
+    modalContent.innerHTML = `
+        <!-- Header Back Bar -->
+        <div class="flex items-center justify-between pb-3 mb-2 border-b border-gray-100">
+            <button onclick="closeProductModal()" class="inline-flex items-center space-x-2 text-gray-700 hover:text-indigo-600 font-extrabold text-xs bg-gray-100 hover:bg-gray-200 px-3.5 py-2 rounded-xl transition shadow-xs">
+                <i class="fa-solid fa-arrow-left text-sm"></i>
+                <span>Back to Products</span>
+            </button>
+            <span class="text-xs text-gray-400 font-semibold hidden sm:inline">Product Details & Reviews</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-2">
+            <!-- LEFT COLUMN: Color Image Gallery & Delivery Info (5 cols) -->
+            <div class="lg:col-span-5 space-y-4">
+                <!-- Main Image Card with Arrows & Full View Button -->
+                <div class="relative bg-gray-50 rounded-2xl overflow-hidden border border-gray-200 group">
+                    <img id="main-product-img" src="${mainImage}" onclick="openFullscreenImg()" class="w-full h-80 object-cover cursor-pointer hover:scale-105 transition duration-300">
+                    
+                    <!-- SD Express & Discount Badges -->
+                    <div class="absolute top-3 left-3 flex flex-col space-y-1 z-10 pointer-events-none">
+                        <span class="bg-amber-500 text-white font-extrabold text-[10px] px-2.5 py-1 rounded-md uppercase tracking-wider shadow">SD Express</span>
+                        <span class="bg-rose-600 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-md uppercase tracking-wider shadow">-20% OFF</span>
+                    </div>
+
+                    <!-- Full View Button -->
+                    <button onclick="event.stopPropagation(); openFullscreenImg()" class="absolute top-3 right-3 bg-black/60 hover:bg-black/80 text-white text-xs font-bold px-3 py-1.5 rounded-xl backdrop-blur-md shadow-md transition flex items-center space-x-1.5 z-10">
+                        <i class="fa-solid fa-expand text-xs"></i>
+                        <span>Full View</span>
+                    </button>
+
+                    <!-- Navigation Arrows Overlay -->
+                    <button onclick="event.stopPropagation(); prevProductColor()" class="absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 w-9 h-9 rounded-full shadow-md backdrop-blur-sm flex items-center justify-center transition hover:scale-110 z-10">
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <button onclick="event.stopPropagation(); nextProductColor()" class="absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 w-9 h-9 rounded-full shadow-md backdrop-blur-sm flex items-center justify-center transition hover:scale-110 z-10">
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Color Variants Selection Header & Thumbnails -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-bold text-gray-700">Select Color Variation:</span>
+                        <span id="selected-color-label" class="font-extrabold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full text-[11px]">${currentProductVariants[0].name}</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        ${currentProductVariants.map((v, idx) => `
+                            <div onclick="selectProductColor(${idx})" title="${v.name}" class="group relative">
+                                <img src="${v.img}" class="color-thumb-btn w-20 h-20 object-cover rounded-xl ${idx === 0 ? 'border-2 border-indigo-600 shadow-md ring-2 ring-indigo-300 scale-105' : 'border border-gray-200 opacity-60 hover:opacity-100'} cursor-pointer transition">
+                                <span class="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border border-white shadow-xs" style="background-color: ${v.colorCode}"></span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Delivery & Guarantee Badges Card -->
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200 text-xs space-y-3 text-gray-700">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold flex-shrink-0">
+                            <i class="fa-solid fa-truck-fast"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-gray-900 block">Door Delivery</span>
+                            <span class="text-gray-500 text-[11px]">Dispatch within 24-48 hours. Free shipping over $50.</span>
+                        </div>
+                    </div>
+                    <div class="pt-2.5 border-t border-gray-200/80 flex items-center justify-between text-[11px] font-semibold">
+                        <span class="text-gray-600"><i class="fa-solid fa-rotate-left text-emerald-600 mr-1"></i>7-Day Free Return</span>
+                        <span class="text-gray-600"><i class="fa-solid fa-shield text-indigo-600 mr-1"></i>1 Year Warranty</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Product Details, Price & Reviews (7 cols) -->
+            <div class="lg:col-span-7 flex flex-col justify-between space-y-5">
+                <div class="space-y-4">
+                    <!-- Brand & Category Row -->
+                    <div class="flex items-center space-x-2 text-xs">
+                        <span class="bg-indigo-100 text-indigo-700 font-black px-2.5 py-0.5 rounded-full uppercase text-[10px]">Official Store</span>
+                        <span class="text-gray-300">•</span>
+                        <span class="text-gray-500 font-bold uppercase tracking-wider">${product.category || 'General'}</span>
+                    </div>
+
+                    <!-- Product Name -->
+                    <h2 class="text-2xl font-black text-gray-900 leading-tight">${productName}</h2>
+
+                    <!-- Star Rating & Review Count Header -->
+                    <div class="flex items-center space-x-3 pb-3 border-b border-gray-100">
+                        <div class="flex items-center space-x-1 text-amber-400 text-sm">
+                            <i class="fa-solid fa-star"></i>
+                            <span class="text-gray-900 text-base font-black ml-1">${reviewData.averageRating}</span>
+                            <span class="text-xs text-gray-400 font-medium">/ 5</span>
+                        </div>
+                        <span class="text-gray-300">•</span>
+                        <span class="text-xs font-bold text-indigo-600">${reviewData.totalReviews} Verified Customer Ratings</span>
+                        <span class="text-gray-300">•</span>
+                        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">In Stock</span>
+                    </div>
+
+                    <!-- Jumia Price Card -->
+                    <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200 flex items-center justify-between">
+                        <div>
+                            <div class="flex items-baseline space-x-3">
+                                <span class="text-3xl font-black text-gray-900">$${Number(product.price).toFixed(2)}</span>
+                                <span class="text-sm text-gray-400 line-through font-semibold">$${origPrice}</span>
+                            </div>
+                            <span class="text-[11px] text-emerald-600 font-bold block mt-0.5">✓ Best Price Guaranteed</span>
+                        </div>
+                        <span class="bg-rose-50 text-rose-600 text-xs font-black px-3 py-1 rounded-xl border border-rose-200">-20% OFF</span>
+                    </div>
+
+                    <!-- Highlights & Description -->
+                    <div>
+                        <h4 class="text-xs font-black uppercase text-gray-400 tracking-wider mb-1">Product Description</h4>
+                        <p class="text-gray-600 text-xs leading-relaxed">${product.description || 'High quality original product certified by SD Shopping.'}</p>
+                    </div>
+
+                    <!-- CUSTOMER REVIEWS FEED & SUBMISSION -->
+                    <div class="pt-4 border-t border-gray-100 space-y-3">
+                        <h4 class="text-xs font-black uppercase text-gray-900 tracking-wider">Customer Feedback & Reviews</h4>
+                        
+                        <!-- Submit Review Box -->
+                        <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200 space-y-2">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-bold text-gray-700">Write a Customer Review</span>
+                                <div class="flex items-center space-x-1 text-amber-400 cursor-pointer">
+                                    ${[1, 2, 3, 4, 5].map(star => `
+                                        <i onclick="setReviewRating(${star})" id="star-btn-${star}" class="fa-solid fa-star hover:scale-110 transition"></i>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <textarea id="review-comment" rows="2" placeholder="Tell other shoppers what you think about this product..." class="w-full bg-white border border-gray-200 rounded-lg p-2.5 text-xs focus:outline-none focus:border-indigo-500"></textarea>
+                            <button onclick="submitReview('${productId}')" class="bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold px-4 py-1.5 rounded-lg transition">Submit Review</button>
+                        </div>
+
+                        <!-- Review Comments List -->
+                        <div class="space-y-2 max-h-36 overflow-y-auto pr-1">
+                            ${reviewData.reviews.length === 0 ? `
+                                <div class="py-3 text-center text-xs text-gray-400">No reviews yet. Be the first to write a review!</div>
+                            ` : reviewData.reviews.map(r => `
+                                <div class="p-2.5 bg-gray-50/50 rounded-xl border border-gray-100 text-xs space-y-1">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-bold text-gray-800">${r.userName || 'Verified Buyer'}</span>
+                                        <div class="flex items-center text-amber-400 text-[10px]">
+                                            ${Array.from({ length: 5 }).map((_, i) => `
+                                                <i class="fa-solid fa-star ${i < r.rating ? 'text-amber-400' : 'text-gray-200'}"></i>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                    <p class="text-gray-600 text-[11px] leading-snug">${r.comment}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons: Add To Cart & Buy Now -->
+                <div class="pt-4 border-t border-gray-100 space-y-2">
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="addToCart('${productId}'); closeProductModal();" class="bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3.5 rounded-xl shadow-lg transition text-xs uppercase tracking-wider flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-cart-plus text-sm"></i>
+                            <span>ADD TO CART</span>
+                        </button>
+                        <button onclick="addToCart('${productId}'); closeProductModal(); switchTab('cart'); proceedToCheckout();" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3.5 rounded-xl shadow-lg transition text-xs uppercase tracking-wider flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-bolt text-sm"></i>
+                            <span>BUY NOW</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('product-modal').classList.remove('hidden');
+    setReviewRating(5);
+}
+
+function setReviewRating(rating) {
+    selectedReviewRating = rating;
+    for (let i = 1; i <= 5; i++) {
+        const star = document.getElementById(`star-btn-${i}`);
+        if (star) {
+            if (i <= rating) {
+                star.className = "fa-solid fa-star hover:scale-110 transition text-amber-400";
+            } else {
+                star.className = "fa-solid fa-star hover:scale-110 transition text-gray-300";
+            }
+        }
+    }
+}
+
+async function submitReview(productId) {
+    if (!authToken || !currentUser) {
+        showToast('Please sign in to write a review', 'error');
+        openAuthModal('login');
+        return;
+    }
+
+    const commentInput = document.getElementById('review-comment');
+    const comment = commentInput ? commentInput.value.trim() : '';
+
+    if (!comment) {
+        showToast('Please write a review comment', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/reviews`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({
+                productId,
+                rating: selectedReviewRating,
+                comment
+            })
+        });
+
+        const data = await safeParseResponse(response);
+        if (!response.ok) throw new Error(data.error || 'Failed to submit review');
+
+        showToast('Review submitted successfully!');
+        await openProductModal(productId);
+    } catch (error) {
+        console.error('Submit review error:', error);
+        showToast(error.message, 'error');
+    }
+}
+
+function closeProductModal() {
+    document.getElementById('product-modal').classList.add('hidden');
+}
+
+// --- WISHLIST MANAGEMENT ---
+function toggleWishlist(productId) {
+    const product = products.find(p => (p._id || p.id) === productId);
+    if (!product) return;
+
+    const pId = product._id || product.id;
+    const index = wishlist.findIndex(item => (item._id || item.id) === pId);
+
+    if (index > -1) {
+        wishlist.splice(index, 1);
+        showToast('Removed from wishlist', 'error');
+    } else {
+        wishlist.push(product);
+        showToast('Added to wishlist!');
+    }
+
+    localStorage.setItem('sd_wishlist', JSON.stringify(wishlist));
+    updateBadges();
+    renderProducts();
+    if (!document.getElementById('tab-wishlist').classList.contains('hidden')) {
+        renderWishlist();
+    }
+}
+
+function renderWishlist() {
+    const grid = document.getElementById('wishlist-grid');
+    if (!grid) return;
+
+    if (wishlist.length === 0) {
+        grid.innerHTML = `<div class="col-span-full py-16 text-center text-gray-400">Your wishlist is currently empty.</div>`;
+        return;
+    }
+
+    grid.innerHTML = wishlist.map(product => {
+        const pId = product._id || product.id;
+        const pName = product.title || product.name;
+        const image = product.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60';
+
+        return `
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col justify-between">
+                <div>
+                    <img src="${image}" onclick="openProductModal('${pId}')" class="w-full h-40 object-cover rounded-xl mb-3 cursor-pointer hover:opacity-90 transition">
+                    <h4 onclick="openProductModal('${pId}')" class="font-semibold text-gray-800 line-clamp-1 cursor-pointer hover:text-indigo-600 transition">${pName}</h4>
+                    <span class="text-sm font-bold text-indigo-600 mt-1 block">$${Number(product.price).toFixed(2)}</span>
+                </div>
+                <div class="mt-4 flex space-x-2">
+                    <button onclick="addToCart('${pId}')" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg text-xs font-semibold hover:bg-indigo-700 transition">Move to Cart</button>
+                    <button onclick="toggleWishlist('${pId}')" class="bg-gray-100 text-gray-600 px-3 py-2 rounded-lg text-xs hover:bg-gray-200 transition"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// --- CART MANAGEMENT ---
+function addToCart(productId) {
+    const product = products.find(p => (p._id || p.id) === productId);
+    if (!product) return;
+
+    const pId = product._id || product.id;
+    const existing = cart.find(item => (item._id || item.id) === pId);
+
+    if (existing) {
+        existing.qty += 1;
+    } else {
+        cart.push({ ...product, qty: 1 });
+    }
+
+    localStorage.setItem('sd_cart', JSON.stringify(cart));
+    updateBadges();
+    showToast(`Added ${product.title || product.name} to cart!`);
+}
+
+function updateCartQty(productId, delta) {
+    const item = cart.find(i => (i._id || i.id) === productId);
+    if (item) {
+        item.qty += delta;
+        if (item.qty <= 0) {
+            cart = cart.filter(i => (i._id || i.id) !== productId);
+        }
+    }
+    localStorage.setItem('sd_cart', JSON.stringify(cart));
+    updateBadges();
+    renderCart();
 }
 
 function removeFromCart(productId) {
-  state.cart = state.cart.filter(item => item.productId !== productId);
-  saveCart();
-  updateCartUI();
+    cart = cart.filter(i => (i._id || i.id) !== productId);
+    localStorage.setItem('sd_cart', JSON.stringify(cart));
+    updateBadges();
+    renderCart();
+    showToast('Item removed from cart', 'error');
 }
 
-function updateQuantity(productId, delta) {
-  const item = state.cart.find(item => item.productId === productId);
-  if (!item) return;
-  item.quantity = Math.max(1, item.quantity + delta);
-  saveCart();
-  updateCartUI();
+function renderCart() {
+    const container = document.getElementById('cart-items-container');
+    const headerCount = document.getElementById('cart-header-count');
+    if (!container) return;
+
+    const totalItemQty = cart.reduce((sum, i) => sum + i.qty, 0);
+    if (headerCount) {
+        headerCount.textContent = `${totalItemQty} ${totalItemQty === 1 ? 'item' : 'items'}`;
+    }
+
+    if (cart.length === 0) {
+        container.innerHTML = `
+            <div class="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-sm space-y-4">
+                <div class="w-20 h-20 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto text-3xl shadow-inner">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-extrabold text-gray-900">Your cart is empty!</h3>
+                    <p class="text-gray-500 text-xs mt-1 max-w-sm mx-auto">Explore our wide category of top products and discover unbeatable deals today.</p>
+                </div>
+                <button onclick="switchTab('catalog')" class="bg-amber-500 hover:bg-amber-600 text-white font-extrabold px-8 py-3.5 rounded-xl shadow-lg transition text-xs uppercase tracking-wider inline-flex items-center space-x-2">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    <span>START SHOPPING</span>
+                </button>
+            </div>
+        `;
+        document.getElementById('cart-subtotal').textContent = '$0.00';
+        document.getElementById('cart-discount').textContent = '-$0.00';
+        document.getElementById('cart-shipping').textContent = '$0.00';
+        document.getElementById('cart-total').textContent = '$0.00';
+        const checkoutText = document.getElementById('cart-checkout-btn-text');
+        if (checkoutText) checkoutText.textContent = 'CHECKOUT NOW';
+        return;
+    }
+
+    container.innerHTML = cart.map(item => {
+        const pId = item._id || item.id;
+        const pName = item.title || item.name;
+        const image = item.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60';
+        const origPrice = (item.price * 1.25).toFixed(2);
+
+        return `
+            <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm space-y-4">
+                <!-- Top Status Header -->
+                <div class="flex items-center justify-between pb-3 border-b border-gray-100 text-xs">
+                    <span class="bg-amber-50 text-amber-700 font-extrabold text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center space-x-1">
+                        <i class="fa-solid fa-bolt text-amber-500"></i>
+                        <span>SD Express</span>
+                    </span>
+                    <span class="text-emerald-600 font-bold flex items-center space-x-1">
+                        <i class="fa-solid fa-circle-check text-[10px]"></i>
+                        <span>In Stock</span>
+                    </span>
+                </div>
+
+                <!-- Main Content Row -->
+                <div class="flex items-start space-x-4">
+                    <img src="${image}" onclick="openProductModal('${pId}')" class="w-24 h-24 object-cover rounded-xl border border-gray-100 cursor-pointer hover:opacity-90 transition flex-shrink-0">
+                    <div class="flex-1 min-w-0">
+                        <h4 onclick="openProductModal('${pId}')" class="font-bold text-gray-900 text-sm cursor-pointer hover:text-indigo-600 transition line-clamp-2 leading-snug">${pName}</h4>
+                        <span class="text-[11px] text-gray-400 block mt-0.5">Category: ${item.category || 'General'}</span>
+                        
+                        <div class="flex items-center space-x-2 mt-2">
+                            <span class="text-lg font-black text-gray-900">$${Number(item.price).toFixed(2)}</span>
+                            <span class="text-xs text-gray-400 line-through">$${origPrice}</span>
+                            <span class="bg-rose-50 text-rose-600 font-extrabold text-[10px] px-2 py-0.5 rounded-md">-20%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Jumia Bottom Action Bar -->
+                <div class="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+                    <div class="flex items-center space-x-4">
+                        <button onclick="removeFromCart('${pId}')" class="text-rose-600 hover:text-rose-700 text-xs font-bold flex items-center space-x-1 transition">
+                            <i class="fa-solid fa-trash-can"></i>
+                            <span>REMOVE</span>
+                        </button>
+                        <button onclick="toggleWishlist('${pId}')" class="text-gray-500 hover:text-indigo-600 text-xs font-semibold flex items-center space-x-1 transition hidden sm:flex">
+                            <i class="fa-regular fa-heart"></i>
+                            <span>Save for Later</span>
+                        </button>
+                    </div>
+
+                    <!-- Quantity Control Selector -->
+                    <div class="flex items-center space-x-1 bg-gray-50 border border-gray-200 rounded-xl p-1">
+                        <button onclick="updateCartQty('${pId}', -1)" class="w-7 h-7 rounded-lg bg-white shadow-xs text-gray-700 hover:bg-gray-200 font-bold flex items-center justify-center transition text-xs">-</button>
+                        <span class="w-8 text-center text-xs font-extrabold text-gray-900">${item.qty}</span>
+                        <button onclick="updateCartQty('${pId}', 1)" class="w-7 h-7 rounded-lg bg-white shadow-xs text-gray-700 hover:bg-gray-200 font-bold flex items-center justify-center transition text-xs">+</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    calculateTotals();
 }
 
-function updateCartUI() {
-  // Update cart count
-  const totalItems = state.cart.reduce((sum, item) => sum + item.quantity, 0);
-  if (refs.cartCount) {
-    refs.cartCount.textContent = totalItems;
-    refs.cartCount.classList.toggle('hidden', totalItems === 0);
-  }
+function calculateTotals() {
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const discountAmt = subtotal * (appliedDiscount / 100);
+    const shipping = subtotal > 50 || subtotal === 0 ? 0 : 5.00;
+    const total = subtotal - discountAmt + shipping;
 
-  // Update cart sidebar
-  if (!refs.cartItems) return;
-  refs.cartItems.innerHTML = '';
+    document.getElementById('cart-subtotal').textContent = `$${subtotal.toFixed(2)}`;
+    document.getElementById('cart-discount').textContent = `-$${discountAmt.toFixed(2)}`;
+    document.getElementById('cart-shipping').textContent = shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`;
+    document.getElementById('cart-total').textContent = `$${total.toFixed(2)}`;
 
-  if (state.cart.length === 0) {
-    refs.cartItems.innerHTML = `
-      <div class="empty-cart">
-        <i class="fas fa-shopping-cart"></i>
-        <p>Your cart is empty</p>
-      </div>
-    `;
-    if (refs.cartTotal) refs.cartTotal.textContent = '$0.00';
-    return;
-  }
+    const checkoutText = document.getElementById('cart-checkout-btn-text');
+    if (checkoutText) {
+        checkoutText.textContent = `CHECKOUT ($${total.toFixed(2)})`;
+    }
+}
 
-  let total = 0;
-  state.cart.forEach(item => {
-    total += item.price * item.quantity;
+function applyCoupon() {
+    const codeInput = document.getElementById('coupon-input');
+    const code = codeInput ? codeInput.value.trim().toUpperCase() : '';
 
-    const cartItem = document.createElement('div');
-    cartItem.className = 'cart-item';
-    cartItem.innerHTML = `
-      <img src="${item.image || '/api/placeholder/60/60'}" alt="${item.title}" />
-      <div class="cart-item-info">
-        <h4 class="cart-item-title">${item.title}</h4>
-        <p class="cart-item-price">$${(item.price * item.quantity).toFixed(2)}</p>
-        <div class="cart-item-quantity">
-          <button class="quantity-btn" data-id="${item.productId}" data-action="decrease">-</button>
-          <span>${item.quantity}</span>
-          <button class="quantity-btn" data-id="${item.productId}" data-action="increase">+</button>
-          <button class="remove-item" data-id="${item.productId}">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-      </div>
-    `;
-    refs.cartItems.appendChild(cartItem);
-  });
+    if (code === 'SAVE10') {
+        appliedDiscount = 10;
+        showToast('Coupon applied: 10% Off!');
+        calculateTotals();
+    } else {
+        showToast('Invalid coupon code. Try SAVE10', 'error');
+    }
+}
 
-  if (refs.cartTotal) refs.cartTotal.textContent = `$${total.toFixed(2)}`;
+function updateBadges() {
+    const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
+    const cartBadge = document.getElementById('cart-badge');
+    if (cartBadge) {
+        if (cartCount > 0) {
+            cartBadge.textContent = cartCount;
+            cartBadge.classList.remove('hidden');
+        } else {
+            cartBadge.classList.add('hidden');
+        }
+    }
 
-  // Attach event listeners
-  refs.cartItems.querySelectorAll('.quantity-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const action = btn.dataset.action;
-      const productId = btn.dataset.id;
-      updateQuantity(productId, action === 'increase' ? 1 : -1);
+    const wishBadge = document.getElementById('wishlist-badge');
+    if (wishBadge) {
+        if (wishlist.length > 0) {
+            wishBadge.textContent = wishlist.length;
+            wishBadge.classList.remove('hidden');
+        } else {
+            wishBadge.classList.add('hidden');
+        }
+    }
+}
+
+// --- PAYMENT GATEWAY & CHECKOUT ---
+let activePaymentMethod = 'card';
+let pendingOrderTotal = 0;
+
+function proceedToCheckout() {
+    if (cart.length === 0) {
+        showToast('Your shopping cart is empty', 'error');
+        return;
+    }
+
+    if (!authToken || !currentUser) {
+        showToast('Please sign in first to place your order', 'error');
+        openAuthModal('login');
+        return;
+    }
+
+    const shippingAddressInput = document.getElementById('shipping-address-input');
+    const shippingAddress = shippingAddressInput ? shippingAddressInput.value.trim() : '';
+
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const discountAmt = subtotal * (appliedDiscount / 100);
+    const shipping = subtotal > 50 ? 0 : 5.00;
+    pendingOrderTotal = subtotal - discountAmt + shipping;
+
+    document.getElementById('pay-modal-total').textContent = `$${pendingOrderTotal.toFixed(2)}`;
+    document.getElementById('cod-amount').textContent = `$${pendingOrderTotal.toFixed(2)}`;
+    document.getElementById('pay-btn-text').textContent = `Confirm & Pay $${pendingOrderTotal.toFixed(2)}`;
+
+    const payAddressInput = document.getElementById('pay-address');
+    if (payAddressInput) {
+        payAddressInput.value = shippingAddress || '';
+    }
+
+    selectPaymentMethod('card');
+    document.getElementById('payment-modal').classList.remove('hidden');
+}
+
+function closePaymentModal() {
+    document.getElementById('payment-modal').classList.add('hidden');
+}
+
+function selectPaymentMethod(method) {
+    activePaymentMethod = method;
+    const tabs = ['card', 'momo', 'cod'];
+
+    tabs.forEach(t => {
+        const btn = document.getElementById(`pay-tab-${t}`);
+        const form = document.getElementById(`pay-form-${t}`);
+
+        if (t === method) {
+            if (btn) btn.className = "pay-method-btn border-2 border-indigo-600 bg-indigo-50/50 text-indigo-700 py-2.5 px-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center space-y-1 transition";
+            if (form) form.classList.remove('hidden');
+        } else {
+            if (btn) btn.className = "pay-method-btn border border-gray-200 bg-gray-50 text-gray-600 py-2.5 px-2 rounded-xl text-xs font-medium flex flex-col items-center justify-center space-y-1 hover:bg-gray-100 transition";
+            if (form) form.classList.add('hidden');
+        }
     });
-  });
 
-  refs.cartItems.querySelectorAll('.remove-item').forEach(btn => {
-    btn.addEventListener('click', () => removeFromCart(btn.dataset.id));
-  });
+    const submitText = document.getElementById('pay-btn-text');
+    if (submitText) {
+        if (method === 'cod') {
+            submitText.textContent = `Place Order ($${pendingOrderTotal.toFixed(2)})`;
+        } else {
+            submitText.textContent = `Confirm & Pay $${pendingOrderTotal.toFixed(2)}`;
+        }
+    }
 }
 
-function toggleCart() {
-  refs.cartSidebar.classList.toggle('open');
-}
+async function submitPayment(e) {
+    e.preventDefault();
 
-// Auth Form Handlers
-async function handleRegister(event) {
-  event.preventDefault();
-  const form = event.target;
-  const submitBtn = form.querySelector('button[type="submit"]');
-  const name = document.getElementById('registerName').value.trim();
-  const email = document.getElementById('registerEmail').value.trim();
-  const password = document.getElementById('registerPassword').value;
+    const address = document.getElementById('pay-address')?.value.trim();
+    if (!address) {
+        showToast('Please enter a valid delivery address', 'error');
+        return;
+    }
 
-  if (!name || !email || !password) {
-    showToast('Please fill in all fields', 'warning');
-    return;
-  }
+    let paymentMethodName = 'Credit / Debit Card';
+    let momoNoticeText = '';
 
-  submitBtn.classList.add('loading');
-  submitBtn.disabled = true;
+    if (activePaymentMethod === 'card') {
+        const cNum = document.getElementById('card-number')?.value.trim();
+        const cExp = document.getElementById('card-expiry')?.value.trim();
+        const cCvv = document.getElementById('card-cvv')?.value.trim();
+        if (cNum.length < 12 || !cExp || !cCvv) {
+            showToast('Please complete all credit card details', 'error');
+            return;
+        }
+        paymentMethodName = 'Credit / Debit Card';
+    } else if (activePaymentMethod === 'momo') {
+        const net = document.getElementById('momo-network')?.value;
+        const phone = document.getElementById('momo-phone')?.value.trim();
+        if (!phone || phone.length < 8) {
+            showToast('Please enter a valid Mobile Money number', 'error');
+            return;
+        }
+        paymentMethodName = `${net} (${phone})`;
 
-  try {
-    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password })
-    });
+        // Trigger Paystack Live MoMo Charge USSD Prompt
+        try {
+            const momoRes = await fetch(`${API_BASE}/payments/momo-charge`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify({
+                    email: currentUser ? currentUser.email : 'customer@example.com',
+                    phone,
+                    provider: net,
+                    amount: pendingOrderTotal
+                })
+            });
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Registration failed');
+            const momoData = await safeParseResponse(momoRes);
+            if (momoData.displayText) {
+                momoNoticeText = momoData.displayText;
+            }
+        } catch (momoErr) {
+            console.warn('MoMo direct charge notice:', momoErr);
+        }
+    } else if (activePaymentMethod === 'cod') {
+        paymentMethodName = 'Cash on Delivery';
+    }
 
-    // Show OTP verification
-    if (refs.registerPanel) refs.registerPanel.classList.add('hidden');
-    if (refs.otpSection) refs.otpSection.classList.remove('hidden');
-    showToast('Registration successful! Please check your email for OTP.', 'success');
+    const submitBtn = document.getElementById('pay-submit-btn');
+    const submitText = document.getElementById('pay-btn-text');
+    if (submitBtn && submitText) {
+        submitBtn.disabled = true;
+        submitText.textContent = '🔒 Processing Payment...';
+    }
 
-  } catch (error) {
-    handleFetchError(error);
-  } finally {
-    submitBtn.classList.remove('loading');
-    submitBtn.disabled = false;
-  }
-}
+    // Processing delay for USSD prompt dispatch & confirmation
+    await new Promise(res => setTimeout(res, 1200));
 
-async function handleOtpVerification(event) {
-  event.preventDefault();
-  const otp = refs.otpInput.value.trim();
-
-  if (!otp || otp.length !== 6) {
-    showToast('Please enter a valid 6-digit OTP', 'warning');
-    return;
-  }
-
-  try {
-    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/verify-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: document.getElementById('registerEmail').value.trim(), otp })
-    });
-
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'OTP verification failed');
-
-    saveAuth(data.user, data.token);
-    closeAuthModal();
-    showToast('Account verified and logged in!', 'success');
-
-  } catch (error) {
-    handleFetchError(error);
-  }
-}
-
-async function handleResendOtp() {
-  const email = document.getElementById('registerEmail').value.trim();
-  if (!email) {
-    showToast('Email not found', 'error');
-    return;
-  }
-
-  refs.resendOtpBtn.disabled = true;
-  refs.resendOtpBtn.textContent = 'Sending...';
-
-  try {
-    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/resend-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Failed to resend OTP');
-
-    showToast('OTP sent! Check your email.', 'success');
-
-  } catch (error) {
-    handleFetchError(error);
-  } finally {
-    refs.resendOtpBtn.disabled = false;
-    refs.resendOtpBtn.textContent = 'Resend OTP';
-  }
-}
-
-async function handleLogin(event) {
-  event.preventDefault();
-  const form = event.target;
-  const submitBtn = form.querySelector('button[type="submit"]');
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
-
-  if (!email || !password) {
-    showToast('Please enter email and password', 'warning');
-    return;
-  }
-
-  submitBtn.classList.add('loading');
-  submitBtn.disabled = true;
-
-  try {
-    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Login failed');
-
-    saveAuth(data.user, data.token);
-    closeAuthModal();
-    showToast('Login successful!', 'success');
-
-  } catch (error) {
-    handleFetchError(error);
-  } finally {
-    submitBtn.classList.remove('loading');
-    submitBtn.disabled = false;
-  }
-}
-
-async function handleCheckout() {
-  if (state.cart.length === 0) {
-    showToast('Your cart is empty', 'warning');
-    return;
-  }
-
-  if (!state.token) {
-    openAuthModal('login');
-    showToast('Please login to checkout', 'warning');
-    return;
-  }
-
-  refs.checkoutBtn.classList.add('loading');
-  refs.checkoutBtn.disabled = true;
-
-  try {
-    // Calculate total amount
-    const totalAmount = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-    // Default shipping address (can be expanded with a form later)
-    const shippingAddress = {
-      street: '123 Main Street',
-      city: 'New York',
-      state: 'NY',
-      zipCode: '10001',
-      country: 'USA'
+    const orderPayload = {
+        items: cart.map(item => ({
+            productId: item._id || item.id,
+            title: item.title || item.name,
+            price: item.price,
+            quantity: item.qty,
+            image: item.image
+        })),
+        totalAmount: pendingOrderTotal,
+        shippingAddress: address,
+        paymentMethod: paymentMethodName
     };
 
-    const response = await fetchWithTimeout(`${API_BASE_URL}/orders`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${state.token}`
-      },
-      body: JSON.stringify({
-        items: state.cart,
-        totalAmount: parseFloat(totalAmount.toFixed(2)),
-        shippingAddress
-      })
-    });
+    try {
+        const response = await fetch(`${API_BASE}/orders`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify(orderPayload)
+        });
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Checkout failed');
+        const data = await safeParseResponse(response);
+        if (!response.ok) throw new Error(data.error || 'Failed to complete payment');
 
-    state.cart = [];
-    saveCart();
-    updateCartUI();
-    refs.cartSidebar.classList.remove('open');
-    showToast('Order placed successfully!', 'success');
+        closePaymentModal();
+        cart = [];
+        localStorage.setItem('sd_cart', JSON.stringify(cart));
+        updateBadges();
+        await fetchOrders();
 
-  } catch (error) {
-    handleFetchError(error);
-  } finally {
-    refs.checkoutBtn.classList.remove('loading');
-    refs.checkoutBtn.disabled = false;
-  }
-}
-
-// Navigation
-function handleNavigation(event) {
-  event.preventDefault();
-  const target = event.target.closest('a');
-  if (!target) return;
-
-  const href = target.getAttribute('href');
-  if (href === '#cart') {
-    toggleCart();
-  } else if (href === '#login') {
-    openAuthModal('login');
-  } else if (href === '#register') {
-    openAuthModal('register');
-  } else if (href === '#logout') {
-    clearAuth();
-  } else if (href === '#orders') {
-    // Handle orders view
-    showToast('Orders feature coming soon!', 'info');
-  }
-}
-
-// Event Listeners
-function attachEventHandlers() {
-  // Navigation
-  document.addEventListener('click', handleNavigation);
-
-  // Cart
-  if (refs.cartIcon) refs.cartIcon.addEventListener('click', toggleCart);
-  if (refs.closeCart) refs.closeCart.addEventListener('click', () => refs.cartSidebar.classList.remove('open'));
-  if (refs.checkoutBtn) refs.checkoutBtn.addEventListener('click', handleCheckout);
-
-  // Auth Modal
-  if (refs.loginBtn) refs.loginBtn.addEventListener('click', () => openAuthModal('login'));
-  if (refs.registerBtn) refs.registerBtn.addEventListener('click', () => openAuthModal('register'));
-  if (refs.logoutBtn) refs.logoutBtn.addEventListener('click', clearAuth);
-  if (refs.closeModal) refs.closeModal.addEventListener('click', closeAuthModal);
-  if (refs.authModal) refs.authModal.addEventListener('click', (e) => {
-    if (e.target === refs.authModal) closeAuthModal();
-  });
-  if (refs.loginTab) refs.loginTab.addEventListener('click', () => setAuthTab('login'));
-  if (refs.registerTab) refs.registerTab.addEventListener('click', () => setAuthTab('register'));
-  if (refs.showRegisterLink) refs.showRegisterLink.addEventListener('click', (e) => { e.preventDefault(); openAuthModal('register'); });
-  if (refs.showLoginLink) refs.showLoginLink.addEventListener('click', (e) => { e.preventDefault(); openAuthModal('login'); });
-  if (refs.loginForm) refs.loginForm.addEventListener('submit', handleLogin);
-  if (refs.registerForm) refs.registerForm.addEventListener('submit', handleRegister);
-  if (refs.otpForm) refs.otpForm.addEventListener('submit', handleOtpVerification);
-  if (refs.resendOtpBtn) refs.resendOtpBtn.addEventListener('click', handleResendOtp);
-
-  // Keyboard shortcuts
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeAuthModal();
-      refs.cartSidebar.classList.remove('open');
+        if (momoNoticeText) {
+            showToast(`📲 ${momoNoticeText}`);
+        } else {
+            showToast('🎉 Payment successful! Order confirmed.');
+        }
+        switchTab('orders');
+    } catch (error) {
+        console.error('Payment error:', error);
+        showToast(error.message, 'error');
+    } finally {
+        if (submitBtn && submitText) {
+            submitBtn.disabled = false;
+            submitText.textContent = `Confirm & Pay $${pendingOrderTotal.toFixed(2)}`;
+        }
     }
-  });
 }
 
-// Initialize
-function initialize() {
-  attachEventHandlers();
-  updateAuthUI();
-  fetchProducts();
-  updateCartUI();
+async function fetchOrders() {
+    if (!authToken) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/orders`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!response.ok) throw new Error('Failed to fetch orders');
+        orders = await safeParseResponse(response);
+        localStorage.setItem('sd_orders', JSON.stringify(orders));
+        renderOrders();
+    } catch (error) {
+        console.error('Fetch orders error:', error);
+    }
 }
 
-document.addEventListener('DOMContentLoaded', initialize);
+function renderOrders() {
+    const container = document.getElementById('orders-container');
+    if (!container) return;
+
+    if (orders.length === 0) {
+        container.innerHTML = `<div class="py-12 text-center text-gray-400">No active orders found. <button onclick="switchTab('catalog')" class="text-indigo-600 font-semibold underline block mt-2 font-medium">Browse Catalog</button></div>`;
+        return;
+    }
+
+    container.innerHTML = orders.map(order => {
+        const orderId = order._id ? `ORD-${order._id.substring(order._id.length - 6).toUpperCase()}` : (order.id || 'ORD-98231');
+        const txnId = order.transactionId || ('TXN-' + Math.floor(100000 + Math.random() * 900000));
+        const dateStr = order.createdAt ? new Date(order.createdAt).toLocaleDateString() : (order.date || 'Recent');
+        const total = order.totalAmount || order.total || 0;
+        const status = order.status || 'Confirmed';
+        const payMethod = order.paymentMethod || 'Credit Card';
+        const items = order.items || [];
+        const address = typeof order.shippingAddress === 'string' ? order.shippingAddress : (order.shippingAddress?.street || 'Customer Address');
+
+        return `
+            <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-2">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold text-gray-900">${orderId}</span>
+                            <span class="bg-indigo-50 text-indigo-700 text-[10px] font-semibold px-2.5 py-0.5 rounded-full font-mono">${txnId}</span>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-0.5">Placed on ${dateStr} • Delivery to: <span class="text-gray-600 font-medium">${address}</span></p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider flex items-center space-x-1">
+                            <i class="fa-solid fa-circle-check text-[10px]"></i>
+                            <span>${status}</span>
+                        </span>
+                        <span class="font-bold text-indigo-600 text-base">$${Number(total).toFixed(2)}</span>
+                    </div>
+                </div>
+                <div class="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <span class="text-xs font-semibold text-gray-400 uppercase">Items Ordered:</span>
+                        <div class="text-sm font-medium text-gray-800">
+                            ${items.map(i => `${i.quantity || i.qty || 1}x ${i.title || i.name}`).join(', ')}
+                        </div>
+                    </div>
+                    <div class="text-right sm:text-right">
+                        <span class="text-[11px] text-gray-400 block">Payment Method</span>
+                        <span class="text-xs font-bold text-gray-700 bg-gray-100 px-3 py-1 rounded-lg inline-block mt-0.5">
+                            <i class="fa-solid fa-shield text-indigo-500 mr-1"></i>${payMethod}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// --- AUTHENTICATION & OTP SYSTEM ---
+function showAuthError(message) {
+    const errorBox = document.getElementById('auth-modal-error');
+    const errorText = document.getElementById('auth-modal-error-text');
+    if (errorBox && errorText) {
+        errorText.textContent = message;
+        errorBox.classList.remove('hidden');
+    }
+}
+
+function hideAuthError() {
+    const errorBox = document.getElementById('auth-modal-error');
+    if (errorBox) {
+        errorBox.classList.add('hidden');
+    }
+}
+
+function openAuthModal(mode = 'login') {
+    hideAuthError();
+    showAuthMode(mode);
+    document.getElementById('auth-modal').classList.remove('hidden');
+}
+
+function closeAuthModal() {
+    hideAuthError();
+    document.getElementById('auth-modal').classList.add('hidden');
+}
+
+function showAuthMode(mode) {
+    hideAuthError();
+    document.getElementById('auth-login-panel').classList.add('hidden');
+    document.getElementById('auth-register-panel').classList.add('hidden');
+    document.getElementById('auth-otp-panel').classList.add('hidden');
+
+    if (mode === 'login') {
+        document.getElementById('auth-login-panel').classList.remove('hidden');
+    } else if (mode === 'register') {
+        document.getElementById('auth-register-panel').classList.remove('hidden');
+    } else if (mode === 'otp') {
+        document.getElementById('auth-otp-panel').classList.remove('hidden');
+    }
+}
+
+async function handleLoginSubmit(e) {
+    e.preventDefault();
+    hideAuthError();
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    try {
+        const response = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await safeParseResponse(response);
+        if (!response.ok) throw new Error(data.error || 'Login failed');
+
+        authToken = data.token;
+        currentUser = data.user;
+
+        localStorage.setItem('sd_token', authToken);
+        localStorage.setItem('sd_user', JSON.stringify(currentUser));
+
+        updateAuthUI();
+        closeAuthModal();
+        showToast(`Welcome back, ${currentUser.name}!`);
+        await fetchOrders();
+    } catch (error) {
+        console.error('Login error:', error);
+        showAuthError(error.message);
+        showToast(error.message, 'error');
+    }
+}
+
+async function handleRegisterSubmit(e) {
+    e.preventDefault();
+    hideAuthError();
+    const name = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+
+    try {
+        const response = await fetch(`${API_BASE}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password })
+        });
+
+        const data = await safeParseResponse(response);
+        if (!response.ok) throw new Error(data.error || 'Registration failed');
+
+        pendingEmail = email;
+        document.getElementById('otp-target-email').textContent = email;
+
+        // Show dev OTP if present
+        const devBanner = document.getElementById('dev-otp-banner');
+        const simulatedCode = document.getElementById('simulated-otp-code');
+        if (data.devOtp) {
+            simulatedCode.textContent = data.devOtp;
+            devBanner.classList.remove('hidden');
+        } else {
+            devBanner.classList.add('hidden');
+        }
+
+        showAuthMode('otp');
+        showToast('OTP sent to your email!');
+    } catch (error) {
+        console.error('Register error:', error);
+        showAuthError(error.message);
+        showToast(error.message, 'error');
+    }
+}
+
+async function handleOtpSubmit(e) {
+    e.preventDefault();
+    hideAuthError();
+    const otp = document.getElementById('otp-input').value.trim();
+
+    try {
+        const response = await fetch(`${API_BASE}/auth/verify-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: pendingEmail, otp })
+        });
+
+        const data = await safeParseResponse(response);
+        if (!response.ok) throw new Error(data.error || 'Verification failed');
+
+        authToken = data.token;
+        currentUser = data.user;
+
+        localStorage.setItem('sd_token', authToken);
+        localStorage.setItem('sd_user', JSON.stringify(currentUser));
+
+        updateAuthUI();
+        closeAuthModal();
+        showToast(`Account created! Welcome ${currentUser.name}`);
+        await fetchOrders();
+    } catch (error) {
+        console.error('Verify OTP error:', error);
+        showAuthError(error.message);
+        showToast(error.message, 'error');
+    }
+}
+
+async function resendOTP() {
+    if (!pendingEmail) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/auth/resend-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: pendingEmail })
+        });
+
+        const data = await safeParseResponse(response);
+        if (!response.ok) throw new Error(data.error || 'Failed to resend OTP');
+
+        const devBanner = document.getElementById('dev-otp-banner');
+        const simulatedCode = document.getElementById('simulated-otp-code');
+        if (data.devOtp) {
+            simulatedCode.textContent = data.devOtp;
+            devBanner.classList.remove('hidden');
+        }
+
+        showToast('Fresh OTP code sent to your email!');
+    } catch (error) {
+        console.error('Resend OTP error:', error);
+        showToast(error.message, 'error');
+    }
+}
+
+function logout() {
+    authToken = null;
+    currentUser = null;
+    orders = [];
+    localStorage.removeItem('sd_token');
+    localStorage.removeItem('sd_user');
+    localStorage.removeItem('sd_orders');
+
+    updateAuthUI();
+    showToast('Logged out successfully');
+}
+
+function updateAuthUI() {
+    const btnText = document.getElementById('auth-btn-text');
+    const authBtnHeader = document.getElementById('auth-btn-header');
+    const userMenuName = document.getElementById('user-menu-name');
+    const navOrdersBtn = document.getElementById('nav-orders-btn');
+
+    if (currentUser) {
+        btnText.textContent = currentUser.name || currentUser.email.split('@')[0];
+        if (userMenuName) userMenuName.textContent = currentUser.name || currentUser.email;
+        if (navOrdersBtn) navOrdersBtn.classList.remove('hidden');
+        authBtnHeader.onclick = toggleUserMenu;
+    } else {
+        btnText.textContent = 'Sign In';
+        if (navOrdersBtn) navOrdersBtn.classList.add('hidden');
+        authBtnHeader.onclick = () => openAuthModal('login');
+    }
+}
+
+function toggleUserMenu() {
+    if (!currentUser) {
+        openAuthModal('login');
+        return;
+    }
+    const dropdown = document.getElementById('user-dropdown');
+    if (dropdown) dropdown.classList.toggle('hidden');
+}
