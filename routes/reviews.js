@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../utils/jwt');
 const Review = require('../models/Review');
+const User = require('../models/User');
 
 // In-memory reviews store fallback for offline/delayed DB
 const memoryReviews = new Map();
@@ -73,7 +74,14 @@ router.post('/', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Rating must be between 1 and 5' });
     }
 
-    const userName = req.userName || 'Verified Buyer';
+    let userName = req.userName || req.body.userName;
+    if (!userName && req.userId) {
+      try {
+        const userObj = await User.findById(req.userId).maxTimeMS(1500);
+        if (userObj && userObj.name) userName = userObj.name;
+      } catch (err) {}
+    }
+    if (!userName) userName = 'Verified Buyer';
 
     const reviewData = {
       productId,

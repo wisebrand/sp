@@ -18,9 +18,97 @@
         }
         .scrollbar-none::-webkit-scrollbar { display: none; }
         .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* --- Top Progress Bar --- */
+        #top-progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            width: 0%;
+            background: linear-gradient(90deg, #4f46e5, #8b5cf6, #06b6d4, #4f46e5);
+            background-size: 200% 100%;
+            z-index: 999999;
+            transition: width 0.25s ease-out, opacity 0.3s ease-out;
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.8), 0 0 4px rgba(139, 92, 246, 0.6);
+            pointer-events: none;
+            opacity: 0;
+        }
+        #top-progress-bar.active {
+            opacity: 1;
+            animation: topBarShimmer 1.2s infinite linear;
+        }
+        @keyframes topBarShimmer {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+
+        /* --- Animated Bar in Loading Modal --- */
+        .loading-bar-track {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: 6px;
+            background-color: #e0e7ff;
+            border-radius: 9999px;
+        }
+        .loading-bar-animated {
+            position: absolute;
+            height: 100%;
+            width: 50%;
+            background: linear-gradient(90deg, #4f46e5, #8b5cf6, #ec4899);
+            border-radius: 9999px;
+            animation: indeterminateSlide 1.3s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+            box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+        }
+        @keyframes indeterminateSlide {
+            0% { left: -50%; width: 30%; }
+            50% { left: 25%; width: 60%; }
+            100% { left: 105%; width: 30%; }
+        }
+
+        /* Loading Button Pulsing Effect */
+        .btn-loading {
+            position: relative;
+            pointer-events: none !important;
+            opacity: 0.85 !important;
+            cursor: wait !important;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+
+    <!-- Top Slim Animated Progress Loading Bar -->
+    <div id="top-progress-bar"></div>
+
+    <!-- Global "Please Wait..." Loading Overlay Modal -->
+    <div id="global-loading-overlay" class="fixed inset-0 z-[99998] bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4 transition-all duration-300 opacity-0">
+        <div class="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 p-6 sm:p-7 max-w-xs sm:max-w-sm w-full flex flex-col items-center text-center transform scale-95 transition-all duration-300">
+            <!-- Animated Spinner Icon with Glowing Gradient Ring -->
+            <div class="relative w-14 h-14 mb-4 flex items-center justify-center">
+                <div class="w-14 h-14 rounded-full border-4 border-indigo-100 border-t-indigo-600 animate-spin"></div>
+                <i class="fa-solid fa-hourglass-half text-indigo-600 text-lg absolute animate-pulse"></i>
+            </div>
+            
+            <!-- Message Headline -->
+            <h3 id="loading-overlay-title" class="text-base font-bold text-gray-900 tracking-tight flex items-center justify-center space-x-1.5">
+                <span>Please wait</span>
+                <span class="inline-flex space-x-0.5 text-indigo-600">
+                    <span class="animate-bounce" style="animation-delay: 0ms">.</span>
+                    <span class="animate-bounce" style="animation-delay: 150ms">.</span>
+                    <span class="animate-bounce" style="animation-delay: 300ms">.</span>
+                </span>
+            </h3>
+            
+            <!-- Subtitle / Action Details -->
+            <p id="loading-overlay-subtitle" class="text-xs text-gray-500 mt-1 mb-4 font-medium">Processing your request...</p>
+            
+            <!-- Animated Loading Progress Bar -->
+            <div class="loading-bar-track">
+                <div class="loading-bar-animated"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-[9999] flex flex-col space-y-2"></div>
@@ -134,11 +222,17 @@
 
         <!-- TAB 2: SHOPPING CART & CHECKOUT (JUMIA STYLE) -->
         <div id="tab-cart" class="tab-content hidden">
-            <!-- Jumia Header Banner -->
+            <!-- Jumia Header Banner with Back Button -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-6 border-b border-gray-200 gap-3">
-                <div class="flex items-center space-x-3">
-                    <h2 class="text-2xl font-black text-gray-900 tracking-tight">Shopping Cart</h2>
-                    <span id="cart-header-count" class="bg-indigo-100 text-indigo-700 text-xs font-extrabold px-3 py-1 rounded-full">0 items</span>
+                <div class="flex items-center space-x-4">
+                    <button onclick="goBack()" class="inline-flex items-center space-x-2 text-xs font-bold text-gray-700 hover:text-indigo-600 bg-white hover:bg-gray-100 px-3.5 py-2 rounded-xl border border-gray-200 shadow-sm transition">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>Back to Shopping</span>
+                    </button>
+                    <div class="flex items-center space-x-2">
+                        <h2 class="text-2xl font-black text-gray-900 tracking-tight">Shopping Cart</h2>
+                        <span id="cart-header-count" class="bg-indigo-100 text-indigo-700 text-xs font-extrabold px-3 py-1 rounded-full">0 items</span>
+                    </div>
                 </div>
                 <div class="flex items-center space-x-2 bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-xl border border-emerald-200">
                     <i class="fa-solid fa-truck-fast"></i>
@@ -182,7 +276,7 @@
                             <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">Have a Voucher Code?</label>
                             <div class="flex space-x-2">
                                 <input type="text" id="coupon-input" placeholder="SAVE10" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-mono uppercase focus:outline-none focus:border-indigo-500">
-                                <button onclick="applyCoupon()" class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl text-xs font-bold transition">APPLY</button>
+                                <button id="apply-coupon-btn" onclick="applyCoupon()" class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl text-xs font-bold transition">APPLY</button>
                             </div>
                         </div>
 
@@ -202,7 +296,7 @@
                         </div>
 
                         <!-- Jumia Primary Checkout Call To Action Button -->
-                        <button onclick="proceedToCheckout()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-sm uppercase tracking-wide">
+                        <button id="cart-checkout-btn" onclick="proceedToCheckout()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-sm uppercase tracking-wide">
                             <i class="fa-solid fa-lock"></i>
                             <span id="cart-checkout-btn-text">CHECKOUT NOW</span>
                         </button>
@@ -235,7 +329,15 @@
 
         <!-- TAB 3: WISHLIST -->
         <div id="tab-wishlist" class="tab-content hidden">
-            <h2 class="text-2xl font-bold mb-6">My Wishlist</h2>
+            <div class="flex items-center justify-between pb-4 mb-6 border-b border-gray-200">
+                <div class="flex items-center space-x-4">
+                    <button onclick="goBack()" class="inline-flex items-center space-x-2 text-xs font-bold text-gray-700 hover:text-indigo-600 bg-white hover:bg-gray-100 px-3.5 py-2 rounded-xl border border-gray-200 shadow-sm transition">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>Back to Shopping</span>
+                    </button>
+                    <h2 class="text-2xl font-bold text-gray-900">My Wishlist</h2>
+                </div>
+            </div>
             <div id="wishlist-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Dynamically populated via JS -->
             </div>
@@ -243,9 +345,14 @@
 
         <!-- TAB 4: ORDERS & TRACKING -->
         <div id="tab-orders" class="tab-content hidden">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold">Order Management & Tracking</h2>
-                <button onclick="switchTab('catalog')" class="text-sm font-semibold text-indigo-600 hover:underline">← Back to Shopping</button>
+            <div class="flex items-center justify-between pb-4 mb-6 border-b border-gray-200">
+                <div class="flex items-center space-x-4">
+                    <button onclick="goBack()" class="inline-flex items-center space-x-2 text-xs font-bold text-gray-700 hover:text-indigo-600 bg-white hover:bg-gray-100 px-3.5 py-2 rounded-xl border border-gray-200 shadow-sm transition">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>Back to Shopping</span>
+                    </button>
+                    <h2 class="text-2xl font-bold text-gray-900">Order Management & Tracking</h2>
+                </div>
             </div>
             <div id="orders-container" class="space-y-4">
                 <!-- Dynamically populated via JS -->
@@ -321,6 +428,12 @@
             
             <!-- STEP 1: LOGIN PANEL -->
             <div id="auth-login-panel">
+                <!-- Back to Store Button -->
+                <button onclick="closeAuthModal()" class="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-500 hover:text-indigo-600 transition mb-3">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Back to Store</span>
+                </button>
+
                 <div class="text-center mb-6">
                     <div class="bg-indigo-50 text-indigo-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">SD</div>
                     <h3 class="text-xl font-bold">Welcome Back</h3>
@@ -335,7 +448,7 @@
                         <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Password</label>
                         <input type="password" id="login-password" required placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
                     </div>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow transition">Sign In</button>
+                    <button type="submit" id="login-submit-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow transition">Sign In</button>
                 </form>
                 <div class="text-center mt-4 pt-4 border-t border-gray-100 text-xs text-gray-500">
                     Don't have an account? 
@@ -345,6 +458,12 @@
 
             <!-- STEP 2: REGISTER PANEL -->
             <div id="auth-register-panel" class="hidden">
+                <!-- Back to Login Button -->
+                <button onclick="showAuthMode('login')" class="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-500 hover:text-indigo-600 transition mb-3">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Back to Sign In</span>
+                </button>
+
                 <div class="text-center mb-6">
                     <div class="bg-indigo-50 text-indigo-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">SD</div>
                     <h3 class="text-xl font-bold">Create Account</h3>
@@ -363,7 +482,7 @@
                         <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Password</label>
                         <input type="password" id="reg-password" required placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
                     </div>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow transition">Send OTP Code</button>
+                    <button type="submit" id="reg-submit-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow transition">Send OTP Code</button>
                 </form>
                 <div class="text-center mt-4 pt-4 border-t border-gray-100 text-xs text-gray-500">
                     Already have an account? 
@@ -373,6 +492,12 @@
 
             <!-- STEP 3: OTP VERIFICATION PANEL -->
             <div id="auth-otp-panel" class="hidden">
+                <!-- Back to Register Button -->
+                <button onclick="showAuthMode('register')" class="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-500 hover:text-indigo-600 transition mb-3">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Back to Register</span>
+                </button>
+
                 <div class="text-center mb-6">
                     <div class="bg-indigo-50 text-indigo-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
                         <i class="fa-solid fa-shield-halved"></i>
@@ -387,11 +512,11 @@
                     <div>
                         <input type="text" id="otp-input" maxlength="6" required placeholder="123456" class="w-full text-center tracking-widest text-2xl font-bold bg-gray-50 border border-gray-200 rounded-lg py-3 focus:outline-none focus:border-indigo-500">
                     </div>
-                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl shadow transition">Verify & Complete Registration</button>
+                    <button type="submit" id="otp-submit-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl shadow transition">Verify & Complete Registration</button>
                 </form>
                 <div class="flex items-center justify-between mt-4 text-xs">
                     <button onclick="showAuthMode('register')" class="text-gray-500 hover:underline">← Change Email</button>
-                    <button onclick="resendOTP()" class="text-indigo-600 font-semibold hover:underline">Resend OTP</button>
+                    <button id="resend-otp-btn" onclick="resendOTP()" class="text-indigo-600 font-semibold hover:underline">Resend OTP</button>
                 </div>
             </div>
 
@@ -401,9 +526,16 @@
     <!-- PAYMENT & CHECKOUT MODAL -->
     <div id="payment-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 relative shadow-2xl animate-scale max-h-[90vh] overflow-y-auto">
-            <button onclick="closePaymentModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+            <!-- Top Action Header with Back to Cart and Close -->
+            <div class="flex items-center justify-between pb-3 mb-2 border-b border-gray-100">
+                <button onclick="closePaymentModal()" class="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-600 hover:text-indigo-600 bg-gray-100 hover:bg-gray-200 px-3.5 py-1.5 rounded-xl transition">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Back to Cart</span>
+                </button>
+                <button onclick="closePaymentModal()" class="text-gray-400 hover:text-gray-600 text-xl w-8 h-8 rounded-full flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
             
             <div class="text-center mb-6">
                 <div class="bg-indigo-50 text-indigo-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 text-xl font-bold">

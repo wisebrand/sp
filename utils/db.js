@@ -1,7 +1,14 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const dns = require('dns');
 
 dotenv.config();
+
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {
+  // Ignore fallback DNS error if environment prohibits custom DNS
+}
 
 async function connectMongo() {
   const primaryUri = process.env.MONGODB_URI;
@@ -12,7 +19,8 @@ async function connectMongo() {
   const options = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 15000
+    serverSelectionTimeoutMS: 5000,
+    connectTimeoutMS: 5000
   };
 
   if (primaryUri) {
@@ -36,14 +44,16 @@ async function connectMongo() {
 
   try {
     const { MongoMemoryServer } = require('mongodb-memory-server');
-    const mongoServer = await MongoMemoryServer.create();
+    const mongoServer = await Promise.race([
+      MongoMemoryServer.create(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('MongoMemoryServer download/startup timed out')), 2000))
+    ]);
     const uri = mongoServer.getUri();
     await mongoose.connect(uri, options);
     console.log('✅ Connected to In-Memory MongoDB:', uri);
   } catch (memError) {
-    console.error('❌ Could not connect to MongoDB Atlas, Local MongoDB, or In-Memory MongoDB.');
-    console.error('   To fix MongoDB Atlas access: Whitelist your current IP at https://cloud.mongodb.com');
-    console.error('   To run locally: Ensure local MongoDB service is started (mongod).');
+    console.warn('⚠️ MongoDB not available:', memError.message);
+    console.warn('⚡ Operating in DB-offline fallback mode for products and auth.');
   }
 }
 

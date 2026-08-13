@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const jwt = require('jsonwebtoken');
+const { verifyToken } = require('../utils/jwt');
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY || 'sk_test_a5626f9c017f40a01a66cab1218e3765cec220df';
 const PAYSTACK_PUBLIC = process.env.PAYSTACK_PUBLIC_KEY || 'pk_test_fda52ee71d243f9f64f750eaebf5887fcfef737a';
@@ -10,8 +10,10 @@ const optionalAuth = (req, res, next) => {
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.split(' ')[1];
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_super_secret_jwt_key_change_this_in_production_123456789');
-      req.userId = decoded.userId;
+      const decoded = verifyToken(token);
+      if (decoded) {
+        req.userId = decoded.userId;
+      }
     } catch (err) {}
   }
   next();

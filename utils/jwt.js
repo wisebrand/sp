@@ -3,8 +3,11 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'default_jwt_secret_key_change_in_production';
 
 // Generate JWT token
-function generateToken(userId) {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
+function generateToken(userOrId) {
+  const payload = typeof userOrId === 'object' && userOrId !== null
+    ? { userId: userOrId._id || userOrId.id, name: userOrId.name }
+    : { userId: userOrId };
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
 }
 
 // Verify JWT token
@@ -30,6 +33,7 @@ function authMiddleware(req, res, next) {
     }
 
     req.userId = decoded.userId;
+    req.userName = decoded.name || decoded.userName;
     next();
   } catch (error) {
     res.status(401).json({ error: 'Authentication failed' });

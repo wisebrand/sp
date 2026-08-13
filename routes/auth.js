@@ -84,15 +84,22 @@ router.post('/verify-otp', async (req, res) => {
       return res.status(400).json({ error: 'Invalid or expired OTP' });
     }
 
-    // Create user in DB
+    // Create/update user in DB
     let user = null;
     try {
-      user = new User({
-        name: storedOtp.name,
-        email: storedOtp.email,
-        password: storedOtp.password,
-        isVerified: true
-      });
+      user = await User.findOne({ email: normalizedEmail }).maxTimeMS(2000);
+      if (user) {
+        user.name = storedOtp.name;
+        user.password = storedOtp.password;
+        user.isVerified = true;
+      } else {
+        user = new User({
+          name: storedOtp.name,
+          email: storedOtp.email,
+          password: storedOtp.password,
+          isVerified: true
+        });
+      }
       await user.save();
       await Otp.deleteOne({ email: normalizedEmail }).catch(() => {});
     } catch (userDbErr) {
@@ -102,7 +109,7 @@ router.post('/verify-otp', async (req, res) => {
 
     pendingOtps.delete(normalizedEmail);
 
-    const token = generateToken(user._id);
+    const token = generateToken(user);
     res.json({
       message: 'Account created successfully',
       user: { id: user._id, name: user.name, email: user.email },
@@ -169,15 +176,16 @@ router.post('/login', async (req, res) => {
       if (!isValid) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
-      const token = generateToken(user._id);
+      const token = generateToken(user);
       return res.json({ message: 'Login successful', user: { id: user._id, name: user.name, email: user.email }, token });
     }
 
     // Demo fallback login if DB query is unreachable
-    const token = generateToken('demo_user_id');
+    const demoUser = { id: 'demo_user_id', name: email.split('@')[0], email: normalizedEmail };
+    const token = generateToken(demoUser);
     return res.json({
       message: 'Login successful',
-      user: { id: 'demo_user_id', name: email.split('@')[0], email: normalizedEmail },
+      user: demoUser,
       token
     });
   } catch (error) {

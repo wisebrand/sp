@@ -19,6 +19,121 @@ async function safeParseResponse(response) {
     }
 }
 
+// --- LOADING BAR & "PLEASE WAIT..." OVERLAY SYSTEM ---
+let loadingProgressInterval = null;
+let activeLoadingCount = 0;
+
+function showLoading(title = 'Please wait', subtitle = 'Processing your request...') {
+    activeLoadingCount++;
+    
+    // 1. Top Slim Progress Bar
+    const topBar = document.getElementById('top-progress-bar');
+    if (topBar) {
+        topBar.classList.add('active');
+        topBar.style.opacity = '1';
+        topBar.style.width = '35%';
+        clearInterval(loadingProgressInterval);
+        loadingProgressInterval = setInterval(() => {
+            const currentWidth = parseFloat(topBar.style.width) || 35;
+            if (currentWidth < 88) {
+                topBar.style.width = (currentWidth + Math.random() * 6) + '%';
+            }
+        }, 150);
+    }
+
+    // 2. Global Centered Overlay Modal
+    const overlay = document.getElementById('global-loading-overlay');
+    const titleEl = document.getElementById('loading-overlay-title');
+    const subtitleEl = document.getElementById('loading-overlay-subtitle');
+
+    if (titleEl) {
+        titleEl.innerHTML = `
+            <span>${title}</span>
+            <span class="inline-flex space-x-0.5 text-indigo-600">
+                <span class="animate-bounce" style="animation-delay: 0ms">.</span>
+                <span class="animate-bounce" style="animation-delay: 150ms">.</span>
+                <span class="animate-bounce" style="animation-delay: 300ms">.</span>
+            </span>
+        `;
+    }
+    if (subtitleEl) {
+        subtitleEl.textContent = subtitle;
+    }
+
+    if (overlay) {
+        overlay.classList.remove('hidden');
+        // Force reflow for smooth opacity transition
+        void overlay.offsetWidth;
+        overlay.classList.remove('opacity-0');
+        overlay.classList.add('opacity-100');
+        const modalBox = overlay.firstElementChild;
+        if (modalBox) {
+            modalBox.classList.remove('scale-95');
+            modalBox.classList.add('scale-100');
+        }
+    }
+}
+
+function hideLoading() {
+    activeLoadingCount = Math.max(0, activeLoadingCount - 1);
+    if (activeLoadingCount > 0) return;
+
+    clearInterval(loadingProgressInterval);
+    const topBar = document.getElementById('top-progress-bar');
+    if (topBar) {
+        topBar.style.width = '100%';
+        setTimeout(() => {
+            topBar.classList.remove('active');
+            topBar.style.opacity = '0';
+            setTimeout(() => {
+                topBar.style.width = '0%';
+            }, 300);
+        }, 220);
+    }
+
+    const overlay = document.getElementById('global-loading-overlay');
+    if (overlay) {
+        overlay.classList.remove('opacity-100');
+        overlay.classList.add('opacity-0');
+        const modalBox = overlay.firstElementChild;
+        if (modalBox) {
+            modalBox.classList.remove('scale-100');
+            modalBox.classList.add('scale-95');
+        }
+        setTimeout(() => {
+            if (activeLoadingCount === 0) {
+                overlay.classList.add('hidden');
+            }
+        }, 250);
+    }
+}
+
+function setButtonLoading(btnOrId, isLoading, loadingText = 'Please wait...') {
+    const btn = typeof btnOrId === 'string' ? document.getElementById(btnOrId) : btnOrId;
+    if (!btn) return;
+
+    if (isLoading) {
+        if (!btn.dataset.originalHtml) {
+            btn.dataset.originalHtml = btn.innerHTML;
+        }
+        btn.disabled = true;
+        btn.classList.add('btn-loading');
+        btn.innerHTML = `
+            <span class="inline-flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-circle-notch fa-spin text-sm"></i>
+                <span>${loadingText}</span>
+            </span>
+        `;
+    } else {
+        if (btn.dataset.originalHtml) {
+            btn.innerHTML = btn.dataset.originalHtml;
+            delete btn.dataset.originalHtml;
+        }
+        btn.disabled = false;
+        btn.classList.remove('btn-loading');
+    }
+}
+
 // Application State
 let products = [];
 let cart = JSON.parse(localStorage.getItem('sd_cart')) || [];
@@ -35,9 +150,14 @@ let pendingEmail = '';
 window.addEventListener('DOMContentLoaded', async () => {
     updateBadges();
     updateAuthUI();
-    await fetchProducts();
-    if (authToken) {
-        await fetchOrders();
+    showLoading('Please wait', 'Connecting to database & loading catalog...');
+    try {
+        await fetchProducts();
+        if (authToken) {
+            await fetchOrders();
+        }
+    } finally {
+        setTimeout(() => hideLoading(), 400);
     }
 });
 
@@ -60,8 +180,16 @@ function showToast(message, type = 'success') {
     }, 3500);
 }
 
-// --- TAB SWITCHER ---
-function switchTab(tabId) {
+// --- NAVIGATION & TAB HISTORY ---
+let tabHistory = ['catalog'];
+
+function switchTab(tabId, pushHistory = true) {
+    if (pushHistory) {
+        if (tabHistory.length === 0 || tabHistory[tabHistory.length - 1] !== tabId) {
+            tabHistory.push(tabId);
+        }
+    }
+
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     const target = document.getElementById(`tab-${tabId}`);
     if (target) target.classList.remove('hidden');
@@ -70,6 +198,16 @@ function switchTab(tabId) {
     if (tabId === 'cart') renderCart();
     if (tabId === 'wishlist') renderWishlist();
     if (tabId === 'orders') renderOrders();
+}
+
+function goBack() {
+    if (tabHistory.length > 1) {
+        tabHistory.pop(); // Pop current view
+        const prevTab = tabHistory[tabHistory.length - 1] || 'catalog';
+        switchTab(prevTab, false);
+    } else {
+        switchTab('catalog', false);
+    }
 }
 
 function scrollToCatalog() {
@@ -547,6 +685,8 @@ async function submitReview(productId) {
         return;
     }
 
+    showLoading('Please wait', 'Submitting your verified customer review...');
+
     try {
         const response = await fetch(`${API_BASE}/reviews`, {
             method: 'POST',
@@ -569,6 +709,8 @@ async function submitReview(productId) {
     } catch (error) {
         console.error('Submit review error:', error);
         showToast(error.message, 'error');
+    } finally {
+        hideLoading();
     }
 }
 
@@ -634,6 +776,22 @@ function renderWishlist() {
 function addToCart(productId) {
     const product = products.find(p => (p._id || p.id) === productId);
     if (!product) return;
+
+    // Trigger swift visual top bar progress
+    const topBar = document.getElementById('top-progress-bar');
+    if (topBar) {
+        topBar.classList.add('active');
+        topBar.style.opacity = '1';
+        topBar.style.width = '60%';
+        setTimeout(() => {
+            topBar.style.width = '100%';
+            setTimeout(() => {
+                topBar.classList.remove('active');
+                topBar.style.opacity = '0';
+                setTimeout(() => { topBar.style.width = '0%'; }, 200);
+            }, 180);
+        }, 120);
+    }
 
     const pId = product._id || product.id;
     const existing = cart.find(item => (item._id || item.id) === pId);
@@ -784,16 +942,31 @@ function calculateTotals() {
     }
 }
 
-function applyCoupon() {
+async function applyCoupon() {
     const codeInput = document.getElementById('coupon-input');
     const code = codeInput ? codeInput.value.trim().toUpperCase() : '';
 
-    if (code === 'SAVE10') {
-        appliedDiscount = 10;
-        showToast('Coupon applied: 10% Off!');
-        calculateTotals();
-    } else {
-        showToast('Invalid coupon code. Try SAVE10', 'error');
+    if (!code) {
+        showToast('Please enter a coupon code', 'error');
+        return;
+    }
+
+    setButtonLoading('apply-coupon-btn', true, 'Please wait...');
+    showLoading('Please wait', 'Validating discount voucher...');
+
+    await new Promise(r => setTimeout(r, 450));
+
+    try {
+        if (code === 'SAVE10') {
+            appliedDiscount = 10;
+            showToast('🎉 Coupon applied: 10% Off!');
+            calculateTotals();
+        } else {
+            showToast('Invalid coupon code. Try SAVE10', 'error');
+        }
+    } finally {
+        setButtonLoading('apply-coupon-btn', false);
+        hideLoading();
     }
 }
 
@@ -824,7 +997,7 @@ function updateBadges() {
 let activePaymentMethod = 'card';
 let pendingOrderTotal = 0;
 
-function proceedToCheckout() {
+async function proceedToCheckout() {
     if (cart.length === 0) {
         showToast('Your shopping cart is empty', 'error');
         return;
@@ -836,25 +1009,34 @@ function proceedToCheckout() {
         return;
     }
 
-    const shippingAddressInput = document.getElementById('shipping-address-input');
-    const shippingAddress = shippingAddressInput ? shippingAddressInput.value.trim() : '';
+    setButtonLoading('cart-checkout-btn', true, 'Please wait...');
+    showLoading('Please wait', 'Setting up secure checkout...');
 
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-    const discountAmt = subtotal * (appliedDiscount / 100);
-    const shipping = subtotal > 50 ? 0 : 5.00;
-    pendingOrderTotal = subtotal - discountAmt + shipping;
+    await new Promise(r => setTimeout(r, 350));
 
-    document.getElementById('pay-modal-total').textContent = `$${pendingOrderTotal.toFixed(2)}`;
-    document.getElementById('cod-amount').textContent = `$${pendingOrderTotal.toFixed(2)}`;
-    document.getElementById('pay-btn-text').textContent = `Confirm & Pay $${pendingOrderTotal.toFixed(2)}`;
+    try {
+        const shippingAddressInput = document.getElementById('shipping-address-input');
+        const shippingAddress = shippingAddressInput ? shippingAddressInput.value.trim() : '';
 
-    const payAddressInput = document.getElementById('pay-address');
-    if (payAddressInput) {
-        payAddressInput.value = shippingAddress || '';
+        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        const discountAmt = subtotal * (appliedDiscount / 100);
+        const shipping = subtotal > 50 ? 0 : 5.00;
+        pendingOrderTotal = subtotal - discountAmt + shipping;
+
+        document.getElementById('pay-modal-total').textContent = `$${pendingOrderTotal.toFixed(2)}`;
+        document.getElementById('cod-amount').textContent = `$${pendingOrderTotal.toFixed(2)}`;
+        document.getElementById('pay-btn-text').textContent = `Confirm & Pay $${pendingOrderTotal.toFixed(2)}`;
+
+        const payAddressInput = document.getElementById('pay-address');
+        if (payAddressInput && shippingAddress) {
+            payAddressInput.value = shippingAddress;
+        }
+
+        document.getElementById('payment-modal').classList.remove('hidden');
+    } finally {
+        setButtonLoading('cart-checkout-btn', false);
+        hideLoading();
     }
-
-    selectPaymentMethod('card');
-    document.getElementById('payment-modal').classList.remove('hidden');
 }
 
 function closePaymentModal() {
@@ -891,7 +1073,7 @@ function selectPaymentMethod(method) {
 async function submitPayment(e) {
     e.preventDefault();
 
-    const address = document.getElementById('pay-address')?.value.trim();
+    const address = (document.getElementById('pay-address')?.value || '').trim();
     if (!address) {
         showToast('Please enter a valid delivery address', 'error');
         return;
@@ -901,17 +1083,17 @@ async function submitPayment(e) {
     let momoNoticeText = '';
 
     if (activePaymentMethod === 'card') {
-        const cNum = document.getElementById('card-number')?.value.trim();
-        const cExp = document.getElementById('card-expiry')?.value.trim();
-        const cCvv = document.getElementById('card-cvv')?.value.trim();
+        const cNum = (document.getElementById('card-number')?.value || '').trim();
+        const cExp = (document.getElementById('card-expiry')?.value || '').trim();
+        const cCvv = (document.getElementById('card-cvv')?.value || '').trim();
         if (cNum.length < 12 || !cExp || !cCvv) {
             showToast('Please complete all credit card details', 'error');
             return;
         }
         paymentMethodName = 'Credit / Debit Card';
     } else if (activePaymentMethod === 'momo') {
-        const net = document.getElementById('momo-network')?.value;
-        const phone = document.getElementById('momo-phone')?.value.trim();
+        const net = document.getElementById('momo-network')?.value || 'Mobile Money';
+        const phone = (document.getElementById('momo-phone')?.value || '').trim();
         if (!phone || phone.length < 8) {
             showToast('Please enter a valid Mobile Money number', 'error');
             return;
@@ -945,15 +1127,11 @@ async function submitPayment(e) {
         paymentMethodName = 'Cash on Delivery';
     }
 
-    const submitBtn = document.getElementById('pay-submit-btn');
-    const submitText = document.getElementById('pay-btn-text');
-    if (submitBtn && submitText) {
-        submitBtn.disabled = true;
-        submitText.textContent = '🔒 Processing Payment...';
-    }
+    setButtonLoading('pay-submit-btn', true, 'Please wait...');
+    showLoading('Please wait', 'Processing payment & placing order securely...');
 
     // Processing delay for USSD prompt dispatch & confirmation
-    await new Promise(res => setTimeout(res, 1200));
+    await new Promise(res => setTimeout(res, 1000));
 
     const orderPayload = {
         items: cart.map(item => ({
@@ -997,15 +1175,20 @@ async function submitPayment(e) {
         console.error('Payment error:', error);
         showToast(error.message, 'error');
     } finally {
-        if (submitBtn && submitText) {
-            submitBtn.disabled = false;
-            submitText.textContent = `Confirm & Pay $${pendingOrderTotal.toFixed(2)}`;
-        }
+        setButtonLoading('pay-submit-btn', false);
+        hideLoading();
     }
 }
 
 async function fetchOrders() {
     if (!authToken) return;
+
+    const topBar = document.getElementById('top-progress-bar');
+    if (topBar) {
+        topBar.classList.add('active');
+        topBar.style.opacity = '1';
+        topBar.style.width = '40%';
+    }
 
     try {
         const response = await fetch(`${API_BASE}/orders`, {
@@ -1017,6 +1200,15 @@ async function fetchOrders() {
         renderOrders();
     } catch (error) {
         console.error('Fetch orders error:', error);
+    } finally {
+        if (topBar) {
+            topBar.style.width = '100%';
+            setTimeout(() => {
+                topBar.classList.remove('active');
+                topBar.style.opacity = '0';
+                setTimeout(() => { topBar.style.width = '0%'; }, 200);
+            }, 180);
+        }
     }
 }
 
@@ -1125,6 +1317,9 @@ async function handleLoginSubmit(e) {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
 
+    setButtonLoading('login-submit-btn', true, 'Please wait...');
+    showLoading('Please wait', 'Authenticating your account...');
+
     try {
         const response = await fetch(`${API_BASE}/auth/login`, {
             method: 'POST',
@@ -1149,6 +1344,9 @@ async function handleLoginSubmit(e) {
         console.error('Login error:', error);
         showAuthError(error.message);
         showToast(error.message, 'error');
+    } finally {
+        setButtonLoading('login-submit-btn', false);
+        hideLoading();
     }
 }
 
@@ -1158,6 +1356,9 @@ async function handleRegisterSubmit(e) {
     const name = document.getElementById('reg-name').value.trim();
     const email = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value;
+
+    setButtonLoading('reg-submit-btn', true, 'Please wait...');
+    showLoading('Please wait', 'Sending Gmail OTP verification code...');
 
     try {
         const response = await fetch(`${API_BASE}/auth/register`, {
@@ -1188,6 +1389,9 @@ async function handleRegisterSubmit(e) {
         console.error('Register error:', error);
         showAuthError(error.message);
         showToast(error.message, 'error');
+    } finally {
+        setButtonLoading('reg-submit-btn', false);
+        hideLoading();
     }
 }
 
@@ -1195,6 +1399,9 @@ async function handleOtpSubmit(e) {
     e.preventDefault();
     hideAuthError();
     const otp = document.getElementById('otp-input').value.trim();
+
+    setButtonLoading('otp-submit-btn', true, 'Please wait...');
+    showLoading('Please wait', 'Verifying 6-digit OTP code...');
 
     try {
         const response = await fetch(`${API_BASE}/auth/verify-otp`, {
@@ -1220,11 +1427,17 @@ async function handleOtpSubmit(e) {
         console.error('Verify OTP error:', error);
         showAuthError(error.message);
         showToast(error.message, 'error');
+    } finally {
+        setButtonLoading('otp-submit-btn', false);
+        hideLoading();
     }
 }
 
 async function resendOTP() {
     if (!pendingEmail) return;
+
+    setButtonLoading('resend-otp-btn', true, 'Please wait...');
+    showLoading('Please wait', 'Resending new verification code...');
 
     try {
         const response = await fetch(`${API_BASE}/auth/resend-otp`, {
@@ -1247,6 +1460,9 @@ async function resendOTP() {
     } catch (error) {
         console.error('Resend OTP error:', error);
         showToast(error.message, 'error');
+    } finally {
+        setButtonLoading('resend-otp-btn', false);
+        hideLoading();
     }
 }
 
