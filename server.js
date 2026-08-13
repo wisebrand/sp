@@ -41,10 +41,10 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 async function startServer() {
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n✅ SD Shopping Server is running on http://localhost:${PORT}`);
   });
-  connectMongo();
+  connectMongo().catch(err => console.warn('Mongo connection notice:', err.message));
 }
 
 startServer();
