@@ -134,7 +134,10 @@
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </span>
                     <input type="text" id="search-input" oninput="handleSearchWithAI(this.value)" onfocus="showAISuggestions(this.value, false)" placeholder="Search products, brands, or ask AI..." 
-                        class="w-full pl-10 pr-12 py-2 bg-gray-100 border border-transparent rounded-full text-sm focus:outline-none focus:bg-white focus:border-indigo-500 transition">
+                        class="w-full pl-10 pr-16 py-2 bg-gray-100 border border-transparent rounded-full text-sm focus:outline-none focus:bg-white focus:border-indigo-500 transition">
+                    <button id="search-clear-btn" onclick="clearSearch()" type="button" class="hidden absolute inset-y-0 right-12 flex items-center text-gray-400 hover:text-gray-600 transition" title="Clear search">
+                        <i class="fa-solid fa-circle-xmark text-xs"></i>
+                    </button>
                     <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                         <span class="bg-indigo-50 text-indigo-700 font-extrabold text-[10px] px-1.5 py-0.5 rounded border border-indigo-200/80 flex items-center space-x-1 shadow-xs">
                             <i class="fa-solid fa-wand-magic-sparkles text-[9px] text-indigo-600 animate-pulse"></i>
@@ -197,7 +200,10 @@
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </span>
                 <input type="text" id="mobile-search-input" oninput="handleSearchWithAI(this.value)" onfocus="showAISuggestions(this.value, true)" placeholder="Search products, brands, or ask AI..." 
-                    class="w-full pl-10 pr-12 py-2 bg-gray-100 border border-transparent rounded-full text-sm focus:outline-none focus:bg-white focus:border-indigo-500">
+                    class="w-full pl-10 pr-16 py-2 bg-gray-100 border border-transparent rounded-full text-sm focus:outline-none focus:bg-white focus:border-indigo-500">
+                <button id="mobile-search-clear-btn" onclick="clearSearch()" type="button" class="hidden absolute inset-y-0 right-12 flex items-center text-gray-400 hover:text-gray-600 transition" title="Clear search">
+                    <i class="fa-solid fa-circle-xmark text-xs"></i>
+                </button>
                 <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <span class="bg-indigo-50 text-indigo-700 font-extrabold text-[10px] px-1.5 py-0.5 rounded border border-indigo-200/80 flex items-center space-x-1 shadow-xs">
                         <i class="fa-solid fa-wand-magic-sparkles text-[9px] text-indigo-600 animate-pulse"></i>

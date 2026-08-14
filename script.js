@@ -400,8 +400,34 @@ function handleSearchWithAI(val) {
     if (desktopInput && desktopInput.value !== val) desktopInput.value = val;
     if (mobileInput && mobileInput.value !== val) mobileInput.value = val;
 
+    const dBtn = document.getElementById('search-clear-btn');
+    const mBtn = document.getElementById('mobile-search-clear-btn');
+    if (dBtn) {
+        if (val) dBtn.classList.remove('hidden');
+        else dBtn.classList.add('hidden');
+    }
+    if (mBtn) {
+        if (val) mBtn.classList.remove('hidden');
+        else mBtn.classList.add('hidden');
+    }
+
     applyFiltersAndRender();
     showAISuggestions(val);
+}
+
+function clearSearch() {
+    const dInput = document.getElementById('search-input');
+    const mInput = document.getElementById('mobile-search-input');
+    if (dInput) dInput.value = '';
+    if (mInput) mInput.value = '';
+
+    const dBtn = document.getElementById('search-clear-btn');
+    const mBtn = document.getElementById('mobile-search-clear-btn');
+    if (dBtn) dBtn.classList.add('hidden');
+    if (mBtn) mBtn.classList.add('hidden');
+
+    closeAISuggestions();
+    applyFiltersAndRender();
 }
 
 function handleSearch() {
@@ -1136,7 +1162,21 @@ function renderWishlist() {
     if (!grid) return;
 
     if (wishlist.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-16 text-center text-gray-400">Your wishlist is currently empty.</div>`;
+        grid.innerHTML = `
+            <div class="col-span-full bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-sm space-y-4">
+                <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner">
+                    <i class="fa-solid fa-heart"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-extrabold text-gray-900">Your Wishlist is Empty</h3>
+                    <p class="text-xs text-gray-500 mt-1 max-w-sm mx-auto">Explore our catalog and click the heart icon on your favorite items to save them here for later.</p>
+                </div>
+                <button onclick="switchTab('catalog')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl shadow transition text-xs inline-flex items-center space-x-2">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    <span>Discover Trending Products</span>
+                </button>
+            </div>
+        `;
         return;
     }
 
@@ -1166,7 +1206,25 @@ function addToCart(productId) {
     const product = products.find(p => (p._id || p.id) === productId);
     if (!product) return;
 
-    // Trigger swift visual top bar progress
+    const pId = product._id || product.id;
+    const maxStock = product.stock !== undefined ? product.stock : 50;
+    const existing = cart.find(item => (item._id || item.id) === pId);
+
+    if (existing) {
+        if (existing.qty >= maxStock) {
+            showToast(`⚠️ Maximum stock limit reached (${maxStock} available)`, 'error');
+            return;
+        }
+        existing.qty += 1;
+    } else {
+        if (maxStock <= 0) {
+            showToast('⚠️ Item is currently out of stock', 'error');
+            return;
+        }
+        cart.push({ ...product, qty: 1 });
+    }
+
+    // Trigger visual top bar progress
     const topBar = document.getElementById('top-progress-bar');
     if (topBar) {
         topBar.classList.add('active');
@@ -1182,15 +1240,6 @@ function addToCart(productId) {
         }, 120);
     }
 
-    const pId = product._id || product.id;
-    const existing = cart.find(item => (item._id || item.id) === pId);
-
-    if (existing) {
-        existing.qty += 1;
-    } else {
-        cart.push({ ...product, qty: 1 });
-    }
-
     localStorage.setItem('sd_cart', JSON.stringify(cart));
     updateBadges();
     showToast(`Added ${product.title || product.name} to cart!`);
@@ -1199,6 +1248,14 @@ function addToCart(productId) {
 function updateCartQty(productId, delta) {
     const item = cart.find(i => (i._id || i.id) === productId);
     if (item) {
+        const fullProduct = products.find(p => (p._id || p.id) === productId) || item;
+        const maxStock = fullProduct.stock !== undefined ? fullProduct.stock : 50;
+
+        if (delta > 0 && item.qty >= maxStock) {
+            showToast(`⚠️ Maximum stock limit reached (${maxStock} available)`, 'error');
+            return;
+        }
+
         item.qty += delta;
         if (item.qty <= 0) {
             cart = cart.filter(i => (i._id || i.id) !== productId);
@@ -1423,8 +1480,18 @@ async function proceedToCheckout() {
         document.getElementById('pay-btn-text').textContent = `Confirm & Pay $${pendingOrderTotal.toFixed(2)}`;
 
         const payAddressInput = document.getElementById('pay-address');
-        if (payAddressInput && shippingAddress) {
-            payAddressInput.value = shippingAddress;
+        const momoPhoneInput = document.getElementById('momo-phone');
+
+        if (payAddressInput) {
+            if (shippingAddress) {
+                payAddressInput.value = shippingAddress;
+            } else if (currentUser && (currentUser.address || currentUser.city)) {
+                payAddressInput.value = [currentUser.address, currentUser.city].filter(Boolean).join(', ');
+            }
+        }
+
+        if (momoPhoneInput && currentUser && currentUser.phone && !momoPhoneInput.value) {
+            momoPhoneInput.value = currentUser.phone;
         }
 
         document.getElementById('payment-modal').classList.remove('hidden');
@@ -1753,7 +1820,7 @@ function renderOrders() {
                     </div>
 
                     <!-- Action Controls -->
-                    <div class="flex items-center space-x-2">
+                    <div class="flex flex-wrap items-center gap-2">
                         <button onclick="openTrackingModal('${id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm transition inline-flex items-center space-x-1.5">
                             <i class="fa-solid fa-location-crosshairs"></i>
                             <span>Tracking</span>
@@ -1761,8 +1828,15 @@ function renderOrders() {
 
                         <button onclick="openInvoiceModal('${id}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold px-3.5 py-2 rounded-xl transition inline-flex items-center space-x-1.5" title="View & Print Official Receipt">
                             <i class="fa-solid fa-file-invoice text-indigo-600"></i>
-                            <span>Receipt</span>
+                            <span>Invoice</span>
                         </button>
+
+                        ${(status === 'pending' || status === 'processing') ? `
+                            <button onclick="cancelOrder('${id}')" class="bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 border border-rose-200 text-xs font-bold px-3 py-2 rounded-xl transition inline-flex items-center space-x-1.5" title="Cancel this order">
+                                <i class="fa-solid fa-ban"></i>
+                                <span>Cancel</span>
+                            </button>
+                        ` : ''}
 
                         ${nextStatusAction ? `
                             <button onclick="advanceOrderStatus('${id}', '${nextStatusAction}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl transition inline-flex items-center space-x-1" title="Simulate courier delivery step">
@@ -1775,6 +1849,30 @@ function renderOrders() {
             </div>
         `;
     }).join('');
+}
+
+async function cancelOrder(orderId) {
+    if (!confirm('Are you sure you want to cancel this order? This action cannot be undone.')) return;
+
+    showLoading('Cancelling Order', 'Processing order cancellation...');
+    try {
+        const response = await fetch(`${API_BASE}/orders/${orderId}/cancel`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        const data = await safeParseResponse(response);
+        if (!response.ok) throw new Error(data.error || 'Failed to cancel order');
+
+        showToast('🎉 Order cancelled successfully');
+        await loadOrders();
+    } catch (e) {
+        console.error('Cancel order error:', e);
+        showToast(e.message, 'error');
+    } finally {
+        hideLoading();
+    }
 }
 
 // --- LIVE TRACKING MODAL ENGINE ---

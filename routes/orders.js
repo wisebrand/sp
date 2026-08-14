@@ -239,4 +239,52 @@ router.get('/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// 6. Cancel Order by Customer (Allowed when status is 'pending' or 'processing')
+router.put('/:id/cancel', authMiddleware, async (req, res) => {
+  try {
+    let order = null;
+    const cancelEntry = generateTrackingEntry('cancelled');
+
+    try {
+      order = await Order.findOne({ _id: req.params.id, userId: req.userId }).maxTimeMS(2000);
+      if (order) {
+        if (order.status === 'delivered') {
+          return res.status(400).json({ error: 'Delivered orders cannot be cancelled.' });
+        }
+        if (order.status === 'shipped') {
+          return res.status(400).json({ error: 'Order is already in transit with courier and cannot be cancelled.' });
+        }
+        if (order.status === 'cancelled') {
+          return res.status(400).json({ error: 'Order is already cancelled.' });
+        }
+
+        order.status = 'cancelled';
+        order.statusHistory = order.statusHistory || [];
+        order.statusHistory.push(cancelEntry);
+        order.updatedAt = new Date();
+        await order.save();
+      }
+    } catch (dbErr) {}
+
+    // In-memory update
+    const userOrders = memoryOrders.get(req.userId) || [];
+    const cachedIdx = userOrders.findIndex(o => (o._id || o.id) === req.params.id);
+    if (cachedIdx !== -1) {
+      userOrders[cachedIdx].status = 'cancelled';
+      userOrders[cachedIdx].statusHistory = userOrders[cachedIdx].statusHistory || [];
+      userOrders[cachedIdx].statusHistory.push(cancelEntry);
+      order = userOrders[cachedIdx];
+    }
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.json({ message: 'Order cancelled successfully', order });
+  } catch (error) {
+    console.error('Cancel order error:', error);
+    res.status(500).json({ error: 'Failed to cancel order' });
+  }
+});
+
 module.exports = router;
