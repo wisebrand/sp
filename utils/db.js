@@ -15,7 +15,8 @@ mongoose.set('strictQuery', false);
 mongoose.set('bufferCommands', false);
 
 async function connectMongo() {
-  const primaryUri = process.env.MONGODB_URI;
+  const rawUri = process.env.MONGODB_URI || '';
+  const primaryUri = rawUri.trim().replace(/^["']|["']$/g, '');
   const localUri = 'mongodb://127.0.0.1:27017/sd-shopping';
 
   const options = {
@@ -25,7 +26,7 @@ async function connectMongo() {
     connectTimeoutMS: 2500
   };
 
-  if (primaryUri) {
+  if (primaryUri && (primaryUri.startsWith('mongodb://') || primaryUri.startsWith('mongodb+srv://'))) {
     try {
       await mongoose.connect(primaryUri, options);
       console.log('✅ Connected to MongoDB Atlas');
@@ -33,6 +34,8 @@ async function connectMongo() {
     } catch (atlasError) {
       console.warn('⚠️ MongoDB Atlas notice:', atlasError.message);
     }
+  } else if (primaryUri) {
+    console.warn('⚠️ MONGODB_URI notice: Expected connection string starting with "mongodb+srv://" or "mongodb://"');
   }
 
   try {
