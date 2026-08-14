@@ -1371,9 +1371,14 @@ function renderOrders() {
 
                     <!-- Action Controls -->
                     <div class="flex items-center space-x-2">
-                        <button onclick="openTrackingModal('${id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm transition inline-flex items-center space-x-1.5">
+                        <button onclick="openTrackingModal('${id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm transition inline-flex items-center space-x-1.5">
                             <i class="fa-solid fa-location-crosshairs"></i>
-                            <span>Live Tracking</span>
+                            <span>Tracking</span>
+                        </button>
+
+                        <button onclick="openInvoiceModal('${id}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold px-3.5 py-2 rounded-xl transition inline-flex items-center space-x-1.5" title="View & Print Official Receipt">
+                            <i class="fa-solid fa-file-invoice text-indigo-600"></i>
+                            <span>Receipt</span>
                         </button>
 
                         ${nextStatusAction ? `
@@ -1503,6 +1508,129 @@ async function openTrackingModal(orderIdOrTracking) {
 
 function closeTrackingModal() {
     const modal = document.getElementById('tracking-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+// --- PRINTABLE INVOICE / RECEIPT ENGINE ---
+
+function openInvoiceModal(orderId) {
+    const modal = document.getElementById('invoice-modal');
+    const content = document.getElementById('invoice-modal-content');
+    if (!modal || !content) return;
+
+    const order = orders.find(o => (o._id || o.id) === orderId);
+    if (!order) {
+        showToast('Order details not found', 'error');
+        return;
+    }
+
+    const id = order._id || order.id || 'order_0';
+    const orderIdCode = `ORD-${id.toString().substring(Math.max(0, id.toString().length - 6)).toUpperCase()}`;
+    const trackingNum = order.trackingNumber || 'SD-TRK-982104';
+    const total = Number(order.totalAmount || 0).toFixed(2);
+    const items = order.items || [];
+    const address = typeof order.shippingAddress === 'string' ? order.shippingAddress : (order.shippingAddress?.street || order.shippingAddress?.address || 'Customer Delivery Address');
+    const payMethod = order.paymentMethod || 'Credit Card';
+    const dateStr = new Date(order.createdAt || Date.now()).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    const customerName = (currentUser && currentUser.name) || 'Valued Customer';
+    const customerEmail = (currentUser && currentUser.email) || 'customer@example.com';
+
+    modal.classList.remove('hidden');
+    content.innerHTML = `
+        <div class="space-y-6">
+            <!-- Receipt Header -->
+            <div class="flex items-start justify-between border-b border-gray-200 pb-5">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white font-black flex items-center justify-center text-lg">SD</div>
+                    <div>
+                        <h3 class="text-xl font-black text-gray-900 tracking-tight">SD Shopping</h3>
+                        <p class="text-[11px] text-gray-400">Official Purchase Invoice</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">PAID & VERIFIED</span>
+                    <p class="text-xs font-mono font-bold text-gray-800 mt-1">${orderIdCode}</p>
+                </div>
+            </div>
+
+            <!-- Meta Details Grid -->
+            <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl text-xs">
+                <div>
+                    <span class="text-gray-400 font-bold block uppercase text-[10px]">Billed To:</span>
+                    <strong class="text-gray-900 block text-sm">${customerName}</strong>
+                    <span class="text-gray-500">${customerEmail}</span>
+                    <span class="text-gray-600 block mt-1">${address}</span>
+                </div>
+                <div class="text-right space-y-1">
+                    <div>
+                        <span class="text-gray-400 font-bold uppercase text-[10px]">Issue Date:</span>
+                        <span class="text-gray-800 font-semibold block">${dateStr}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 font-bold uppercase text-[10px]">Tracking Number:</span>
+                        <span class="text-indigo-600 font-mono font-bold block">${trackingNum}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 font-bold uppercase text-[10px]">Payment Method:</span>
+                        <span class="text-gray-800 font-semibold block">${payMethod}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Table -->
+            <div>
+                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Order Items</h4>
+                <div class="border border-gray-200 rounded-xl overflow-hidden">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-gray-100/75 text-gray-600 font-bold border-b border-gray-200 uppercase text-[10px]">
+                            <tr>
+                                <th class="p-3">Item Description</th>
+                                <th class="p-3 text-center">Qty</th>
+                                <th class="p-3 text-right">Unit Price</th>
+                                <th class="p-3 text-right">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            ${items.map(item => {
+                                const qty = item.quantity || item.qty || 1;
+                                const unitPrice = Number(item.price || 0);
+                                const itemSubtotal = unitPrice * qty;
+                                return `
+                                    <tr>
+                                        <td class="p-3 font-semibold text-gray-900">${item.title || item.name}</td>
+                                        <td class="p-3 text-center text-gray-500 font-mono">${qty}</td>
+                                        <td class="p-3 text-right text-gray-600 font-mono">$${unitPrice.toFixed(2)}</td>
+                                        <td class="p-3 text-right font-bold text-gray-900 font-mono">$${itemSubtotal.toFixed(2)}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Total Amount Line -->
+            <div class="flex justify-between items-center pt-2 border-t border-gray-200">
+                <span class="text-xs font-bold text-gray-500 uppercase">Grand Total (Paid)</span>
+                <span class="text-2xl font-black text-indigo-600 font-mono">$${total}</span>
+            </div>
+
+            <!-- Invoice Modal Buttons -->
+            <div class="pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 print:hidden">
+                <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow transition inline-flex items-center space-x-2">
+                    <i class="fa-solid fa-print"></i>
+                    <span>Print Receipt / PDF</span>
+                </button>
+                <button onclick="closeInvoiceModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold px-4 py-2.5 rounded-xl transition">
+                    Close Invoice
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function closeInvoiceModal() {
+    const modal = document.getElementById('invoice-modal');
     if (modal) modal.classList.add('hidden');
 }
 

@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../utils/jwt');
 const Order = require('../models/Order');
+const User = require('../models/User');
+const { sendOrderReceiptEmail } = require('../utils/email');
 
 // In-memory orders cache fallback
 const memoryOrders = new Map();
@@ -83,6 +85,24 @@ router.post('/', authMiddleware, async (req, res) => {
     const userOrders = memoryOrders.get(req.userId) || [];
     userOrders.unshift(order);
     memoryOrders.set(req.userId, userOrders);
+
+    // Dispatch official email receipt asynchronously
+    (async () => {
+      try {
+        let recipientEmail = null;
+        if (req.user && req.user.email) {
+          recipientEmail = req.user.email;
+        } else {
+          const u = await User.findById(req.userId).maxTimeMS(1500).catch(() => null);
+          if (u) recipientEmail = u.email;
+        }
+        if (recipientEmail) {
+          await sendOrderReceiptEmail(recipientEmail, order);
+        }
+      } catch (err) {
+        console.warn('Receipt dispatch notice:', err.message);
+      }
+    })();
 
     res.status(201).json({ message: 'Order created and paid successfully', order });
   } catch (error) {
