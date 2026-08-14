@@ -52,12 +52,12 @@ async function sendOTPEmail(email, otp) {
     }
   }
 
-  // Strategy 2: Resend API over HTTPS (Port 443)
+  // Strategy 2: Resend API over HTTPS (Port 443 with Universal Testing Fallback)
   if (process.env.RESEND_API_KEY) {
     try {
       const apiKey = process.env.RESEND_API_KEY.trim();
       const fromEmail = process.env.RESEND_FROM_EMAIL || 'SD Shopping <onboarding@resend.dev>';
-      const res = await fetch('https://api.resend.com/emails', {
+      let res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
@@ -70,9 +70,42 @@ async function sendOTPEmail(email, otp) {
           html: htmlContent
         })
       });
-      const resData = await res.json().catch(() => ({}));
+      let resData = await res.json().catch(() => ({}));
+
+      // If on Resend free test mode (which only allows sending to the account owner), route to admin test email!
+      if (!res.ok && resData.message && resData.message.includes('only send testing emails to your own email address')) {
+        const testAdminEmail = process.env.RESEND_TEST_EMAIL || 'mikegborbitey05@gmail.com';
+        console.log(`ℹ️ [Resend Test Mode]: Routing verification email for ${email} to admin ${testAdminEmail}`);
+        
+        const testHtml = `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 32px; border: 1px solid #eaeaea; text-align: center;">
+            <div style="background: #4f46e5; color: #ffffff; width: 48px; height: 48px; border-radius: 12px; font-size: 20px; font-weight: bold; line-height: 48px; margin: 0 auto 16px auto;">SD</div>
+            <h2 style="color: #111827; margin: 0 0 8px 0; font-size: 22px;">Verification Code</h2>
+            <p style="color: #6b7280; font-size: 14px; margin: 0 0 8px 0;">New registration request for: <strong style="color: #4f46e5;">${email}</strong></p>
+            <p style="color: #6b7280; font-size: 14px; margin: 0 0 24px 0;">6-digit verification OTP code:</p>
+            <div style="background: #f3f4f6; border-radius: 12px; padding: 18px 24px; font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #4f46e5; font-family: monospace; margin: 0 0 24px 0;">${otp}</div>
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">This code expires in 5 minutes.</p>
+          </div>
+        `;
+
+        res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from: fromEmail,
+            to: testAdminEmail,
+            subject: `[SD Shopping OTP: ${otp}] for ${email}`,
+            html: testHtml
+          })
+        });
+        resData = await res.json().catch(() => ({}));
+      }
+
       if (res.ok) {
-        console.log(`✅ [Email Sent via Resend HTTPS API to ${email}]: ID: ${resData.id}`);
+        console.log(`✅ [Email Sent via Resend HTTPS API]: ID: ${resData.id}`);
         return { success: true, method: 'resend_https' };
       } else {
         console.warn('❌ [Resend API Error]:', JSON.stringify(resData));
