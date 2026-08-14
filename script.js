@@ -1499,7 +1499,8 @@ function updateBadges() {
     const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
     const cartBadge = document.getElementById('cart-badge');
     const mobileCartBadge = document.getElementById('mobile-cart-badge');
-    [cartBadge, mobileCartBadge].forEach(b => {
+    const dockCartBadge = document.getElementById('dock-cart-badge');
+    [cartBadge, mobileCartBadge, dockCartBadge].forEach(b => {
         if (b) {
             if (cartCount > 0) {
                 b.textContent = cartCount;
@@ -1512,7 +1513,8 @@ function updateBadges() {
 
     const wishBadge = document.getElementById('wishlist-badge');
     const mobileWishBadge = document.getElementById('mobile-wishlist-badge');
-    [wishBadge, mobileWishBadge].forEach(b => {
+    const dockWishBadge = document.getElementById('dock-wishlist-badge');
+    [wishBadge, mobileWishBadge, dockWishBadge].forEach(b => {
         if (b) {
             if (wishlist.length > 0) {
                 b.textContent = wishlist.length;
@@ -1945,7 +1947,7 @@ async function cancelOrder(orderId) {
         if (!response.ok) throw new Error(data.error || 'Failed to cancel order');
 
         showToast('🎉 Order cancelled successfully');
-        await loadOrders();
+        await fetchOrders();
     } catch (e) {
         console.error('Cancel order error:', e);
         showToast(e.message, 'error');
@@ -1953,6 +1955,10 @@ async function cancelOrder(orderId) {
         hideLoading();
     }
 }
+
+// Aliases to prevent any undefined function reference
+const loadOrders = fetchOrders;
+const loadOrder = fetchOrders;
 
 // --- LIVE TRACKING MODAL ENGINE ---
 
@@ -2457,16 +2463,20 @@ function updateAuthUI() {
     const authBtnHeader = document.getElementById('auth-btn-header');
     const userMenuName = document.getElementById('user-menu-name');
     const navOrdersBtn = document.getElementById('nav-orders-btn');
+    const dockProfileText = document.getElementById('dock-profile-text');
 
     if (currentUser) {
-        btnText.textContent = currentUser.name || currentUser.email.split('@')[0];
+        const displayName = currentUser.name ? currentUser.name.split(' ')[0] : currentUser.email.split('@')[0];
+        if (btnText) btnText.textContent = currentUser.name || currentUser.email.split('@')[0];
         if (userMenuName) userMenuName.textContent = currentUser.name || currentUser.email;
         if (navOrdersBtn) navOrdersBtn.classList.remove('hidden');
-        authBtnHeader.onclick = toggleUserMenu;
+        if (authBtnHeader) authBtnHeader.onclick = toggleUserMenu;
+        if (dockProfileText) dockProfileText.textContent = displayName;
     } else {
-        btnText.textContent = 'Sign In';
+        if (btnText) btnText.textContent = 'Sign In';
         if (navOrdersBtn) navOrdersBtn.classList.add('hidden');
-        authBtnHeader.onclick = () => openAuthModal('login');
+        if (authBtnHeader) authBtnHeader.onclick = () => openAuthModal('login');
+        if (dockProfileText) dockProfileText.textContent = 'Profile';
     }
 }
 

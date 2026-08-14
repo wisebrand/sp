@@ -152,45 +152,13 @@
                 </div>
             </div>
 
-            <!-- Nav Actions -->
-            <div class="flex items-center space-x-5">
-                <button onclick="switchTab('orders')" id="nav-orders-btn" class="hidden md:flex items-center space-x-1 text-sm text-gray-600 hover:text-indigo-600 transition font-medium">
-                    <i class="fa-solid fa-box font-normal text-base"></i>
-                    <span>Orders</span>
+            <!-- Nav Actions (Clean Cart Only) -->
+            <div class="flex items-center space-x-3">
+                <button onclick="switchTab('cart')" class="relative flex items-center space-x-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold transition shadow-xs">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span>Cart</span>
+                    <span id="cart-badge" class="bg-indigo-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold hidden">0</span>
                 </button>
-                <button onclick="switchTab('wishlist')" class="relative text-gray-600 hover:text-indigo-600 transition">
-                    <i class="fa-regular fa-heart text-xl"></i>
-                    <span id="wishlist-badge" class="absolute -top-1 -right-2 bg-rose-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden">0</span>
-                </button>
-                <button onclick="switchTab('cart')" class="relative text-gray-600 hover:text-indigo-600 transition">
-                    <i class="fa-solid fa-cart-shopping text-xl"></i>
-                    <span id="cart-badge" class="absolute -top-1 -right-2 bg-indigo-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden">0</span>
-                </button>
-                <div class="relative">
-                    <button onclick="toggleUserMenu()" id="auth-btn-header" class="flex items-center space-x-2 text-sm font-medium bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full transition">
-                        <i class="fa-regular fa-user"></i>
-                        <span id="auth-btn-text">Sign In</span>
-                    </button>
-                    <!-- User Dropdown Menu -->
-                    <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
-                        <div class="px-4 py-2 border-b border-gray-100">
-                            <p class="text-xs text-gray-400">Signed in as</p>
-                            <p id="user-menu-name" class="text-sm font-bold text-gray-800 truncate"></p>
-                        </div>
-                        <button onclick="switchTab('profile'); toggleUserMenu();" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2">
-                            <i class="fa-solid fa-user-gear text-indigo-600"></i>
-                            <span>My Profile</span>
-                        </button>
-                        <button onclick="switchTab('orders'); toggleUserMenu();" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2">
-                            <i class="fa-solid fa-box text-gray-400"></i>
-                            <span>My Orders</span>
-                        </button>
-                        <button onclick="logout(); toggleUserMenu();" class="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 flex items-center space-x-2">
-                            <i class="fa-solid fa-right-from-bracket"></i>
-                            <span>Logout</span>
-                        </button>
-                    </div>
-                </div>
             </div>
         </div>
         <!-- Mobile Search Bar -->
@@ -218,7 +186,7 @@
             </div>
         </div>
 
-        <!-- Secondary Category & Quick Services Navigation Bar -->
+        <!-- Secondary Category Navigation Bar -->
         <nav class="bg-gray-900 text-white text-xs border-t border-gray-800 hidden sm:block">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-10">
                 <!-- Left Quick Category Buttons -->
@@ -238,20 +206,16 @@
                     </button>
                 </div>
 
-                <!-- Right Quick Services -->
+                <!-- Right Quick Info -->
                 <div class="hidden lg:flex items-center space-x-5 text-gray-300 text-[11px]">
-                    <button onclick="switchTab('orders')" class="hover:text-white transition flex items-center space-x-1">
+                    <span class="text-gray-400 flex items-center space-x-1 text-[11px]">
                         <i class="fa-solid fa-truck-fast text-indigo-400"></i>
-                        <span>Track Order</span>
-                    </button>
-                    <button onclick="switchTab('profile')" class="hover:text-white transition flex items-center space-x-1">
-                        <i class="fa-solid fa-user-gear text-indigo-400"></i>
-                        <span>Account Hub</span>
-                    </button>
+                        <span>Express Delivery</span>
+                    </span>
                     <span class="text-gray-700">|</span>
-                    <span class="text-gray-400 flex items-center space-x-1 text-[10px]">
+                    <span class="text-gray-400 flex items-center space-x-1 text-[11px]">
                         <i class="fa-solid fa-shield-check text-emerald-400"></i>
-                        <span>Buyer Protection</span>
+                        <span>Buyer Protection Guarantee</span>
                     </span>
                 </div>
             </div>
@@ -1068,6 +1032,43 @@
                 </button>
             </form>
         </div>
+    </div>
+
+    <!-- Global Navigation Dock (Desktop Floating Dock + Mobile Bottom Bar) -->
+    <!-- Desktop Floating Dock -->
+    <div class="hidden sm:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-white/95 backdrop-blur-xl border border-gray-200/80 shadow-2xl rounded-2xl py-2.5 px-6 items-center space-x-7 transition-all hover:shadow-indigo-500/10">
+        <button onclick="switchTab('catalog')" id="dock-btn-catalog" class="dock-nav-item flex items-center space-x-2 text-gray-600 hover:text-indigo-600 text-xs font-bold transition group">
+            <div class="w-8 h-8 rounded-xl bg-gray-100 group-hover:bg-indigo-50 flex items-center justify-center transition text-indigo-600">
+                <i class="fa-solid fa-house"></i>
+            </div>
+            <span>Shop</span>
+        </button>
+        <button onclick="switchTab('wishlist')" id="dock-btn-wishlist" class="dock-nav-item relative flex items-center space-x-2 text-gray-600 hover:text-indigo-600 text-xs font-bold transition group">
+            <div class="w-8 h-8 rounded-xl bg-gray-100 group-hover:bg-rose-50 flex items-center justify-center transition text-rose-500">
+                <i class="fa-regular fa-heart"></i>
+            </div>
+            <span>Wishlist</span>
+            <span id="dock-wishlist-badge" class="bg-rose-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden">0</span>
+        </button>
+        <button onclick="switchTab('cart')" id="dock-btn-cart" class="dock-nav-item relative flex items-center space-x-2 text-gray-600 hover:text-indigo-600 text-xs font-bold transition group">
+            <div class="w-8 h-8 rounded-xl bg-gray-100 group-hover:bg-indigo-50 flex items-center justify-center transition text-indigo-600">
+                <i class="fa-solid fa-cart-shopping"></i>
+            </div>
+            <span>Cart</span>
+            <span id="dock-cart-badge" class="bg-indigo-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden">0</span>
+        </button>
+        <button onclick="switchTab('orders')" id="dock-btn-orders" class="dock-nav-item flex items-center space-x-2 text-gray-600 hover:text-indigo-600 text-xs font-bold transition group">
+            <div class="w-8 h-8 rounded-xl bg-gray-100 group-hover:bg-indigo-50 flex items-center justify-center transition text-indigo-600">
+                <i class="fa-solid fa-box"></i>
+            </div>
+            <span>Orders</span>
+        </button>
+        <button onclick="switchTab('profile')" id="dock-btn-profile" class="dock-nav-item flex items-center space-x-2 text-gray-600 hover:text-indigo-600 text-xs font-bold transition group">
+            <div class="w-8 h-8 rounded-xl bg-gray-100 group-hover:bg-indigo-50 flex items-center justify-center transition text-indigo-600">
+                <i class="fa-regular fa-user"></i>
+            </div>
+            <span id="dock-profile-text">Profile</span>
+        </button>
     </div>
 
     <!-- Mobile Bottom Sticky App Navigation Bar -->
