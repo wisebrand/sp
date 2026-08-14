@@ -20,11 +20,12 @@ async function sendOTPEmail(email, otp) {
 
   let lastError = null;
 
+  const brevoKey = (process.env.BREVO_API_KEY || process.env.BREVO_KEY || process.env.SENDINBLUE_API_KEY || process.env.BREVO_TOKEN || '').trim().replace(/^["']|["']$/g, '');
+
   // Strategy 1: Brevo REST API over HTTPS (Port 443 - Delivers directly to ANY recipient's inbox)
-  if (process.env.BREVO_API_KEY) {
+  if (brevoKey) {
     try {
-      const brevoKey = process.env.BREVO_API_KEY.trim();
-      const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.GMAIL_USER || 'mikegborbitey05@gmail.com';
+      const senderEmail = (process.env.BREVO_SENDER_EMAIL || process.env.GMAIL_USER || 'mikegborbitey05@gmail.com').trim();
       const res = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
@@ -44,12 +45,25 @@ async function sendOTPEmail(email, otp) {
         return { success: true, method: 'brevo_https' };
       } else {
         console.warn('❌ [Brevo API Error]:', JSON.stringify(brevoData));
-        lastError = brevoData.message || 'Brevo delivery failed';
+        return {
+          success: false,
+          error: brevoData.message || 'Brevo rejected the email. Please check your Brevo sender email configuration.'
+        };
       }
     } catch (brevoErr) {
       console.warn('Brevo HTTPS API exception:', brevoErr.message);
       lastError = brevoErr.message;
     }
+  }
+
+  // If on cloud hosting (Render) without BREVO_API_KEY, fast fail instead of timing out on blocked SMTP ports
+  const isCloudHost = process.env.RENDER || process.env.NODE_ENV === 'production' || process.env.PORT && process.env.PORT !== '5000';
+  if (isCloudHost && !brevoKey) {
+    console.warn('⚠️ [Cloud Host Notice]: Render blocks SMTP ports 465/587. BREVO_API_KEY is required in Render Environment.');
+    return {
+      success: false,
+      error: 'BREVO_API_KEY is not detected in Render Environment Variables. Please add BREVO_API_KEY in Render dashboard and save changes.'
+    };
   }
 
   // Strategy 2: Direct Gmail SMTP Transporter (Local Development Fallback)
