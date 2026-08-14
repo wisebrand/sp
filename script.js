@@ -286,7 +286,16 @@ function renderProducts(filteredList = null) {
     const listToRender = filteredList || products;
 
     if (listToRender.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-16 text-center text-gray-400">No products found matching your criteria.</div>`;
+        grid.innerHTML = `
+            <div class="col-span-full py-16 text-center text-gray-400 bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+                <i class="fa-solid fa-filter-circle-xmark text-4xl text-gray-300 mb-3"></i>
+                <h3 class="text-base font-bold text-gray-700">No matching products found</h3>
+                <p class="text-xs text-gray-400 mt-1">Try adjusting your search terms, price slider, or rating filters.</p>
+                <button onclick="resetFilters()" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-5 py-2 rounded-xl transition">
+                    Reset All Filters
+                </button>
+            </div>
+        `;
         return;
     }
 
@@ -294,32 +303,38 @@ function renderProducts(filteredList = null) {
         const productId = product._id || product.id;
         const productName = product.title || product.name;
         const isWishlisted = wishlist.some(item => (item._id || item.id) === productId);
-        const rating = (4.5 + (Math.random() * 0.4)).toFixed(1);
+        const rating = (Number(product.rating) || 4.8).toFixed(1);
+        const ratingCount = product.ratingCount || (product.reviews ? product.reviews.length : 24);
+        const brand = product.brand || 'SD Premium';
         const image = product.image || 'https://via.placeholder.com/300x250?text=Product';
 
         return `
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col overflow-hidden group">
-                <div class="relative bg-gray-100 h-52 overflow-hidden cursor-pointer" onclick="openProductModal('${productId}')">
+                <div class="relative bg-gray-50 h-52 overflow-hidden cursor-pointer" onclick="openProductModal('${productId}')">
                     <img src="${image}" alt="${productName}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                     <button onclick="event.stopPropagation(); toggleWishlist('${productId}')" class="absolute top-3 right-3 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow hover:bg-white transition text-gray-600">
                         <i class="${isWishlisted ? 'fa-solid text-rose-500' : 'fa-regular text-gray-600'} fa-heart"></i>
                     </button>
+                    <span class="absolute bottom-2.5 left-2.5 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
+                        ${brand}
+                    </span>
                 </div>
                 <div class="p-5 flex-1 flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between text-xs text-gray-400 mb-1">
-                            <span class="font-medium">${product.category || 'General'}</span>
-                            <div class="flex items-center text-amber-500">
-                                <i class="fa-solid fa-star text-[10px] mr-1"></i>
-                                <span class="font-medium text-gray-700">${rating}</span>
+                            <span class="font-bold text-indigo-600 uppercase text-[10px] tracking-wider">${product.category || 'General'}</span>
+                            <div class="flex items-center text-amber-500 text-xs font-bold">
+                                <i class="fa-solid fa-star text-[10px] mr-1 text-amber-400"></i>
+                                <span class="text-gray-800">${rating}</span>
+                                <span class="text-gray-400 text-[10px] ml-0.5 font-normal">(${ratingCount})</span>
                             </div>
                         </div>
-                        <h3 class="font-semibold text-gray-800 line-clamp-1 cursor-pointer hover:text-indigo-600 transition" onclick="openProductModal('${productId}')">${productName}</h3>
+                        <h3 class="font-bold text-gray-900 line-clamp-1 cursor-pointer hover:text-indigo-600 transition" onclick="openProductModal('${productId}')">${productName}</h3>
                         <p class="text-xs text-gray-500 line-clamp-2 mt-1">${product.description || ''}</p>
                     </div>
                     <div class="mt-4 flex items-center justify-between">
-                        <span class="text-lg font-bold text-gray-900">$${Number(product.price).toFixed(2)}</span>
-                        <button onclick="addToCart('${productId}')" class="bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white px-3 py-2 rounded-xl transition text-xs font-semibold flex items-center space-x-1">
+                        <span class="text-lg font-black text-gray-900">$${Number(product.price).toFixed(2)}</span>
+                        <button onclick="addToCart('${productId}')" class="bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white px-3.5 py-2 rounded-xl transition text-xs font-bold flex items-center space-x-1 shadow-xs">
                             <i class="fa-solid fa-cart-plus"></i>
                             <span>Add</span>
                         </button>
@@ -330,42 +345,122 @@ function renderProducts(filteredList = null) {
     }).join('');
 }
 
-// Category Filter Handling
+// Advanced Search & Filter Controller
+let currentMaxPrice = 1500;
+
+function handlePriceSlider(val) {
+    currentMaxPrice = Number(val);
+    const display = document.getElementById('price-slider-display');
+    if (display) display.textContent = `$${currentMaxPrice}`;
+    applyFiltersAndRender();
+}
+
 function filterCategory(category) {
     activeCategory = category;
     document.querySelectorAll('.category-btn').forEach(btn => {
         if (btn.textContent.toLowerCase().includes(category.toLowerCase()) || (category === 'All' && btn.textContent.includes('All'))) {
-            btn.className = "category-btn px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap bg-indigo-600 text-white shadow-sm transition";
+            btn.className = "category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-indigo-600 text-white shadow-sm transition";
         } else {
-            btn.className = "category-btn px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap bg-white text-gray-600 border border-gray-200 hover:bg-gray-100 transition";
+            btn.className = "category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition";
         }
     });
 
-    const searchElem = document.getElementById('search-input') || document.getElementById('mobile-search-input');
-    const query = searchElem ? searchElem.value.toLowerCase() : '';
-    applyFiltersAndSearch(query, category);
+    applyFiltersAndRender();
 }
 
-// Search Handling
 function handleSearch() {
+    applyFiltersAndRender();
+}
+
+function resetFilters() {
+    activeCategory = 'All';
+    currentMaxPrice = 1500;
+    const priceSlider = document.getElementById('price-slider');
+    if (priceSlider) priceSlider.value = '1500';
+    const priceDisplay = document.getElementById('price-slider-display');
+    if (priceDisplay) priceDisplay.textContent = '$1500';
+
+    const brandSelect = document.getElementById('brand-filter');
+    if (brandSelect) brandSelect.value = 'All';
+
+    const ratingSelect = document.getElementById('rating-filter');
+    if (ratingSelect) ratingSelect.value = '0';
+
+    const sortSelect = document.getElementById('sort-select');
+    if (sortSelect) sortSelect.value = 'featured';
+
+    const searchDesktop = document.getElementById('search-input');
+    if (searchDesktop) searchDesktop.value = '';
+    const searchMobile = document.getElementById('mobile-search-input');
+    if (searchMobile) searchMobile.value = '';
+
+    document.querySelectorAll('.category-btn').forEach(btn => {
+        if (btn.textContent.includes('All')) {
+            btn.className = "category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-indigo-600 text-white shadow-sm transition";
+        } else {
+            btn.className = "category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition";
+        }
+    });
+
+    applyFiltersAndRender();
+}
+
+function applyFiltersAndRender() {
     const desktopVal = document.getElementById('search-input')?.value || '';
     const mobileVal = document.getElementById('mobile-search-input')?.value || '';
-    const query = (desktopVal || mobileVal).toLowerCase();
-    applyFiltersAndSearch(query, activeCategory);
-}
+    const query = (desktopVal || mobileVal).toLowerCase().trim();
 
-function applyFiltersAndSearch(query, category) {
-    let result = products;
-    if (category !== 'All') {
-        result = result.filter(p => (p.category || '').toLowerCase() === category.toLowerCase());
+    const selectedBrand = document.getElementById('brand-filter')?.value || 'All';
+    const minRating = Number(document.getElementById('rating-filter')?.value || 0);
+    const sortBy = document.getElementById('sort-select')?.value || 'featured';
+
+    let result = [...products];
+
+    // Category filter
+    if (activeCategory !== 'All') {
+        result = result.filter(p => (p.category || '').toLowerCase() === activeCategory.toLowerCase());
     }
-    if (query.trim() !== '') {
-        result = result.filter(p => 
-            (p.title || p.name || '').toLowerCase().includes(query) || 
+
+    // Brand filter
+    if (selectedBrand !== 'All') {
+        result = result.filter(p => (p.brand || '').toLowerCase() === selectedBrand.toLowerCase());
+    }
+
+    // Search query filter
+    if (query !== '') {
+        result = result.filter(p =>
+            (p.title || p.name || '').toLowerCase().includes(query) ||
             (p.category || '').toLowerCase().includes(query) ||
+            (p.brand || '').toLowerCase().includes(query) ||
             (p.description || '').toLowerCase().includes(query)
         );
     }
+
+    // Max Price filter
+    result = result.filter(p => Number(p.price || 0) <= currentMaxPrice);
+
+    // Min Rating filter
+    if (minRating > 0) {
+        result = result.filter(p => Number(p.rating || 4.5) >= minRating);
+    }
+
+    // Sorting
+    if (sortBy === 'price-asc') {
+        result.sort((a, b) => Number(a.price) - Number(b.price));
+    } else if (sortBy === 'price-desc') {
+        result.sort((a, b) => Number(b.price) - Number(a.price));
+    } else if (sortBy === 'rating') {
+        result.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
+    } else if (sortBy === 'newest') {
+        result.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    }
+
+    // Update results count
+    const countElem = document.getElementById('product-results-count');
+    if (countElem) {
+        countElem.textContent = `Showing ${result.length} of ${products.length} products`;
+    }
+
     renderProducts(result);
 }
 
@@ -470,8 +565,22 @@ function closeFullscreenImg() {
 }
 
 async function openProductModal(productId) {
-    const product = products.find(p => (p._id || p.id) === productId);
+    let product = products.find(p => (p._id || p.id) === productId);
     if (!product) return;
+
+    // Try fetching freshest product data with reviews
+    try {
+        const res = await fetch(`${API_BASE}/products/${productId}`);
+        if (res.ok) {
+            const data = await safeParseResponse(res);
+            if (data && data.title) {
+                product = data;
+                // update in local list
+                const idx = products.findIndex(p => (p._id || p.id) === productId);
+                if (idx !== -1) products[idx] = data;
+            }
+        }
+    } catch (e) {}
 
     const modalContent = document.getElementById('modal-content');
     const productName = product.title || product.name;
@@ -480,17 +589,10 @@ async function openProductModal(productId) {
 
     const mainImage = currentProductVariants[0].img;
     const origPrice = (product.price * 1.25).toFixed(2);
-
-    // Fetch live product reviews
-    let reviewData = { averageRating: 5.0, totalReviews: 0, reviews: [] };
-    try {
-        const res = await fetch(`${API_BASE}/reviews/${productId}`);
-        if (res.ok) {
-            reviewData = await safeParseResponse(res);
-        }
-    } catch (e) {
-        console.warn('Could not fetch reviews:', e);
-    }
+    const avgRating = (Number(product.rating) || 4.8).toFixed(1);
+    const reviewList = product.reviews || [];
+    const totalReviews = product.ratingCount || reviewList.length || 18;
+    const brand = product.brand || 'SD Originals';
 
     selectedReviewRating = 5;
 
@@ -571,7 +673,7 @@ async function openProductModal(productId) {
                 <div class="space-y-4">
                     <!-- Brand & Category Row -->
                     <div class="flex items-center space-x-2 text-xs">
-                        <span class="bg-indigo-100 text-indigo-700 font-black px-2.5 py-0.5 rounded-full uppercase text-[10px]">Official Store</span>
+                        <span class="bg-indigo-100 text-indigo-700 font-black px-2.5 py-0.5 rounded-full uppercase text-[10px]">${brand}</span>
                         <span class="text-gray-300">•</span>
                         <span class="text-gray-500 font-bold uppercase tracking-wider">${product.category || 'General'}</span>
                     </div>
@@ -583,11 +685,11 @@ async function openProductModal(productId) {
                     <div class="flex items-center space-x-3 pb-3 border-b border-gray-100">
                         <div class="flex items-center space-x-1 text-amber-400 text-sm">
                             <i class="fa-solid fa-star"></i>
-                            <span class="text-gray-900 text-base font-black ml-1">${reviewData.averageRating}</span>
+                            <span class="text-gray-900 text-base font-black ml-1">${avgRating}</span>
                             <span class="text-xs text-gray-400 font-medium">/ 5</span>
                         </div>
                         <span class="text-gray-300">•</span>
-                        <span class="text-xs font-bold text-indigo-600">${reviewData.totalReviews} Verified Customer Ratings</span>
+                        <span class="text-xs font-bold text-indigo-600">${totalReviews} Customer Ratings</span>
                         <span class="text-gray-300">•</span>
                         <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">In Stock</span>
                     </div>
@@ -629,20 +731,23 @@ async function openProductModal(productId) {
                         </div>
 
                         <!-- Review Comments List -->
-                        <div class="space-y-2 max-h-36 overflow-y-auto pr-1">
-                            ${reviewData.reviews.length === 0 ? `
-                                <div class="py-3 text-center text-xs text-gray-400">No reviews yet. Be the first to write a review!</div>
-                            ` : reviewData.reviews.map(r => `
+                        <div class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                            ${reviewList.length === 0 ? `
+                                <div class="py-3 text-center text-xs text-gray-400">No written reviews yet. Be the first to review this product!</div>
+                            ` : reviewList.map(r => `
                                 <div class="p-2.5 bg-gray-50/50 rounded-xl border border-gray-100 text-xs space-y-1">
                                     <div class="flex items-center justify-between">
-                                        <span class="font-bold text-gray-800">${r.userName || 'Verified Buyer'}</span>
+                                        <div class="flex items-center space-x-1.5">
+                                            <span class="font-bold text-gray-800">${r.userName || 'Verified Buyer'}</span>
+                                            <span class="bg-emerald-50 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded">Verified Purchase</span>
+                                        </div>
                                         <div class="flex items-center text-amber-400 text-[10px]">
                                             ${Array.from({ length: 5 }).map((_, i) => `
-                                                <i class="fa-solid fa-star ${i < r.rating ? 'text-amber-400' : 'text-gray-200'}"></i>
+                                                <i class="fa-solid fa-star ${i < (r.rating || 5) ? 'text-amber-400' : 'text-gray-200'}"></i>
                                             `).join('')}
                                         </div>
                                     </div>
-                                    <p class="text-gray-600 text-[11px] leading-snug">${r.comment}</p>
+                                    <p class="text-gray-600 text-[11px] leading-snug">${r.comment || 'Great quality product.'}</p>
                                 </div>
                             `).join('')}
                         </div>
@@ -699,26 +804,41 @@ async function submitReview(productId) {
         return;
     }
 
-    showLoading('Please wait', 'Submitting your verified customer review...');
+    showLoading('Submitting Review', 'Recording your verified customer review...');
 
     try {
-        const response = await fetch(`${API_BASE}/reviews`, {
+        let res = await fetch(`${API_BASE}/products/${productId}/reviews`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${authToken}`
             },
             body: JSON.stringify({
-                productId,
                 rating: selectedReviewRating,
                 comment
             })
         });
 
-        const data = await safeParseResponse(response);
-        if (!response.ok) throw new Error(data.error || 'Failed to submit review');
+        if (!res.ok) {
+            res = await fetch(`${API_BASE}/reviews`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify({
+                    productId,
+                    rating: selectedReviewRating,
+                    comment
+                })
+            });
+        }
 
-        showToast('Review submitted successfully!');
+        const data = await safeParseResponse(res);
+        if (!res.ok) throw new Error(data.error || 'Failed to submit review');
+
+        showToast('Thank you! Your review has been published.');
+        await fetchProducts();
         await openProductModal(productId);
     } catch (error) {
         console.error('Submit review error:', error);
