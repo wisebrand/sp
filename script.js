@@ -1108,24 +1108,30 @@ async function applyCoupon() {
 function updateBadges() {
     const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
     const cartBadge = document.getElementById('cart-badge');
-    if (cartBadge) {
-        if (cartCount > 0) {
-            cartBadge.textContent = cartCount;
-            cartBadge.classList.remove('hidden');
-        } else {
-            cartBadge.classList.add('hidden');
+    const mobileCartBadge = document.getElementById('mobile-cart-badge');
+    [cartBadge, mobileCartBadge].forEach(b => {
+        if (b) {
+            if (cartCount > 0) {
+                b.textContent = cartCount;
+                b.classList.remove('hidden');
+            } else {
+                b.classList.add('hidden');
+            }
         }
-    }
+    });
 
     const wishBadge = document.getElementById('wishlist-badge');
-    if (wishBadge) {
-        if (wishlist.length > 0) {
-            wishBadge.textContent = wishlist.length;
-            wishBadge.classList.remove('hidden');
-        } else {
-            wishBadge.classList.add('hidden');
+    const mobileWishBadge = document.getElementById('mobile-wishlist-badge');
+    [wishBadge, mobileWishBadge].forEach(b => {
+        if (b) {
+            if (wishlist.length > 0) {
+                b.textContent = wishlist.length;
+                b.classList.remove('hidden');
+            } else {
+                b.classList.add('hidden');
+            }
         }
-    }
+    });
 }
 
 // --- PAYMENT GATEWAY & CHECKOUT ---

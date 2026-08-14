@@ -189,6 +189,45 @@
                     class="w-full pl-10 pr-4 py-2 bg-gray-100 border border-transparent rounded-full text-sm focus:outline-none focus:bg-white focus:border-indigo-500">
             </div>
         </div>
+
+        <!-- Secondary Category & Quick Services Navigation Bar -->
+        <nav class="bg-gray-900 text-white text-xs border-t border-gray-800 hidden sm:block">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-10">
+                <!-- Left Quick Category Buttons -->
+                <div class="flex items-center space-x-6 overflow-x-auto scrollbar-none py-1 text-[11px] font-medium">
+                    <button onclick="switchTab('catalog'); filterCategory('All');" class="flex items-center space-x-1.5 font-extrabold text-indigo-400 hover:text-white transition whitespace-nowrap">
+                        <i class="fa-solid fa-bars"></i>
+                        <span>All Categories</span>
+                    </button>
+                    <button onclick="switchTab('catalog'); filterCategory('Electronics');" class="hover:text-indigo-400 transition whitespace-nowrap text-gray-300">Electronics</button>
+                    <button onclick="switchTab('catalog'); filterCategory('Audio');" class="hover:text-indigo-400 transition whitespace-nowrap text-gray-300">Audio & Sound</button>
+                    <button onclick="switchTab('catalog'); filterCategory('Wearables');" class="hover:text-indigo-400 transition whitespace-nowrap text-gray-300">Smart Wearables</button>
+                    <button onclick="switchTab('catalog'); filterCategory('Accessories');" class="hover:text-indigo-400 transition whitespace-nowrap text-gray-300">Gadget Accessories</button>
+                    <span class="text-gray-700">|</span>
+                    <button onclick="switchTab('catalog');" class="text-amber-400 font-extrabold hover:text-amber-300 transition flex items-center space-x-1 whitespace-nowrap">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>Flash Deals</span>
+                    </button>
+                </div>
+
+                <!-- Right Quick Services -->
+                <div class="hidden lg:flex items-center space-x-5 text-gray-300 text-[11px]">
+                    <button onclick="switchTab('orders')" class="hover:text-white transition flex items-center space-x-1">
+                        <i class="fa-solid fa-truck-fast text-indigo-400"></i>
+                        <span>Track Order</span>
+                    </button>
+                    <button onclick="switchTab('profile')" class="hover:text-white transition flex items-center space-x-1">
+                        <i class="fa-solid fa-user-gear text-indigo-400"></i>
+                        <span>Account Hub</span>
+                    </button>
+                    <span class="text-gray-700">|</span>
+                    <span class="text-gray-400 flex items-center space-x-1 text-[10px]">
+                        <i class="fa-solid fa-shield-check text-emerald-400"></i>
+                        <span>Buyer Protection</span>
+                    </span>
+                </div>
+            </div>
+        </nav>
     </header>
 
     <!-- Main Content Area -->
@@ -1001,6 +1040,32 @@
                 </button>
             </form>
         </div>
+    </div>
+
+    <!-- Mobile Bottom Sticky App Navigation Bar -->
+    <div class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-2xl py-2 px-3 flex items-center justify-around">
+        <button onclick="switchTab('catalog')" class="flex flex-col items-center text-gray-600 hover:text-indigo-600 focus:text-indigo-600 text-[10px] font-bold space-y-0.5 transition">
+            <i class="fa-solid fa-house text-lg"></i>
+            <span>Shop</span>
+        </button>
+        <button onclick="switchTab('wishlist')" class="relative flex flex-col items-center text-gray-600 hover:text-indigo-600 focus:text-indigo-600 text-[10px] font-bold space-y-0.5 transition">
+            <i class="fa-regular fa-heart text-lg"></i>
+            <span>Wishlist</span>
+            <span id="mobile-wishlist-badge" class="absolute -top-1 right-2 bg-rose-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden">0</span>
+        </button>
+        <button onclick="switchTab('cart')" class="relative flex flex-col items-center text-gray-600 hover:text-indigo-600 focus:text-indigo-600 text-[10px] font-bold space-y-0.5 transition">
+            <i class="fa-solid fa-cart-shopping text-lg"></i>
+            <span>Cart</span>
+            <span id="mobile-cart-badge" class="absolute -top-1 right-2 bg-indigo-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden">0</span>
+        </button>
+        <button onclick="switchTab('orders')" class="flex flex-col items-center text-gray-600 hover:text-indigo-600 focus:text-indigo-600 text-[10px] font-bold space-y-0.5 transition">
+            <i class="fa-solid fa-box text-lg"></i>
+            <span>Orders</span>
+        </button>
+        <button onclick="switchTab('profile')" class="flex flex-col items-center text-gray-600 hover:text-indigo-600 focus:text-indigo-600 text-[10px] font-bold space-y-0.5 transition">
+            <i class="fa-regular fa-user text-lg"></i>
+            <span>Profile</span>
+        </button>
     </div>
 
     <!-- Application Script Logic -->
