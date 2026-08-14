@@ -2043,11 +2043,35 @@ function toggleUserMenu() {
 }
 
 // --- USER PROFILE & ACCOUNT MANAGEMENT ---
-async function loadUserProfile() {
+function switchProfileSubTab(subTab = 'hub') {
+    const hubView = document.getElementById('profile-view-hub');
+    const personalView = document.getElementById('profile-view-personal');
+    const securityView = document.getElementById('profile-view-security');
+
+    if (hubView) hubView.classList.add('hidden');
+    if (personalView) personalView.classList.add('hidden');
+    if (securityView) securityView.classList.add('hidden');
+
+    if (subTab === 'personal') {
+        if (personalView) personalView.classList.remove('hidden');
+    } else if (subTab === 'security') {
+        if (securityView) securityView.classList.remove('hidden');
+    } else {
+        if (hubView) hubView.classList.remove('hidden');
+    }
+}
+
+async function loadUserProfile(targetSubTab = null) {
     if (!authToken || !currentUser) {
         showToast('Please sign in to view your profile', 'error');
         openAuthModal('login');
         return;
+    }
+
+    if (targetSubTab) {
+        switchProfileSubTab(targetSubTab);
+    } else {
+        switchProfileSubTab('hub');
     }
 
     const nameDisplay = document.getElementById('profile-display-name');
