@@ -1226,60 +1226,337 @@ async function fetchOrders() {
     }
 }
 
+// --- ORDER STATUS & LIVE TRACKING ENGINE ---
+
+const ORDER_STATUS_CONFIG = {
+    pending: { label: 'Order Placed', color: 'bg-amber-100 text-amber-800 border-amber-300', icon: 'fa-receipt', step: 1, percent: 15 },
+    processing: { label: 'Processing & Packed', color: 'bg-indigo-100 text-indigo-800 border-indigo-300', icon: 'fa-box-open', step: 2, percent: 45 },
+    shipped: { label: 'Shipped & In Transit', color: 'bg-purple-100 text-purple-800 border-purple-300', icon: 'fa-truck-fast', step: 3, percent: 75 },
+    delivered: { label: 'Delivered', color: 'bg-emerald-100 text-emerald-800 border-emerald-300', icon: 'fa-circle-check', step: 4, percent: 100 },
+    cancelled: { label: 'Cancelled', color: 'bg-rose-100 text-rose-800 border-rose-300', icon: 'fa-ban', step: 0, percent: 0 }
+};
+
+function getStatusBadge(status = 'processing') {
+    const s = (status || 'processing').toLowerCase();
+    const config = ORDER_STATUS_CONFIG[s] || ORDER_STATUS_CONFIG.processing;
+    return `
+        <span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-extrabold border ${config.color}">
+            <i class="fa-solid ${config.icon} text-[10px]"></i>
+            <span>${config.label}</span>
+        </span>
+    `;
+}
+
+function renderOrderStepper(status = 'processing') {
+    const s = (status || 'processing').toLowerCase();
+    if (s === 'cancelled') {
+        return `
+            <div class="mt-4 p-3 bg-rose-50 text-rose-700 rounded-xl text-xs font-semibold flex items-center space-x-2 border border-rose-200">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>This order was cancelled. Payment has been refunded.</span>
+            </div>
+        `;
+    }
+
+    const currentStep = ORDER_STATUS_CONFIG[s]?.step || 2;
+    const steps = [
+        { num: 1, name: 'Placed', icon: 'fa-receipt' },
+        { num: 2, name: 'Packed', icon: 'fa-box-open' },
+        { num: 3, name: 'Shipped', icon: 'fa-truck-fast' },
+        { num: 4, name: 'Delivered', icon: 'fa-house-circle-check' }
+    ];
+
+    return `
+        <div class="mt-5 pt-4 border-t border-gray-100">
+            <div class="relative flex items-center justify-between">
+                <!-- Background track line -->
+                <div class="absolute left-6 right-6 top-4 -translate-y-1/2 h-1.5 bg-gray-200 rounded-full z-0"></div>
+                <!-- Active progress track line -->
+                <div class="absolute left-6 top-4 -translate-y-1/2 h-1.5 bg-indigo-600 rounded-full z-0 transition-all duration-500" style="width: calc(${((currentStep - 1) / 3) * 100}% - 12px);"></div>
+
+                ${steps.map(step => {
+                    const isDone = step.num < currentStep;
+                    const isCurrent = step.num === currentStep;
+                    
+                    let circleStyle = 'bg-white border-2 border-gray-300 text-gray-400';
+                    if (isDone) circleStyle = 'bg-indigo-600 border-2 border-indigo-600 text-white';
+                    if (isCurrent) circleStyle = 'bg-indigo-600 border-4 border-indigo-200 text-white shadow-md ring-2 ring-indigo-500 animate-pulse';
+
+                    return `
+                        <div class="relative z-10 flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition duration-300 ${circleStyle}">
+                                <i class="fa-solid ${isDone ? 'fa-check' : step.icon}"></i>
+                            </div>
+                            <span class="text-[10px] sm:text-[11px] font-bold mt-1.5 ${isCurrent ? 'text-indigo-600' : isDone ? 'text-gray-900' : 'text-gray-400'}">${step.name}</span>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+    `;
+}
+
 function renderOrders() {
     const container = document.getElementById('orders-container');
     if (!container) return;
 
     if (orders.length === 0) {
-        container.innerHTML = `<div class="py-12 text-center text-gray-400">No active orders found. <button onclick="switchTab('catalog')" class="text-indigo-600 font-semibold underline block mt-2 font-medium">Browse Catalog</button></div>`;
+        container.innerHTML = `
+            <div class="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-sm">
+                <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                    <i class="fa-solid fa-box-archive"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900">No Orders Found</h3>
+                <p class="text-xs text-gray-500 mt-1 max-w-sm mx-auto">You have not placed any orders yet. Explore our catalog and place your first order!</p>
+                <button onclick="switchTab('catalog')" class="mt-5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-6 py-2.5 rounded-xl shadow transition inline-flex items-center space-x-2">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    <span>Browse Products</span>
+                </button>
+            </div>
+        `;
         return;
     }
 
     container.innerHTML = orders.map(order => {
-        const orderId = order._id ? `ORD-${order._id.substring(order._id.length - 6).toUpperCase()}` : (order.id || 'ORD-98231');
-        const txnId = order.transactionId || ('TXN-' + Math.floor(100000 + Math.random() * 900000));
-        const dateStr = order.createdAt ? new Date(order.createdAt).toLocaleDateString() : (order.date || 'Recent');
+        const id = order._id || order.id || 'order_0';
+        const orderId = `ORD-${id.substring(Math.max(0, id.length - 6)).toUpperCase()}`;
+        const trackingNum = order.trackingNumber || ('SD-TRK-' + Math.floor(100000 + Math.random() * 900000));
+        const dateStr = order.createdAt ? new Date(order.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Recent';
         const total = order.totalAmount || order.total || 0;
-        const status = order.status || 'Confirmed';
+        const status = (order.status || 'processing').toLowerCase();
         const payMethod = order.paymentMethod || 'Credit Card';
         const items = order.items || [];
-        const address = typeof order.shippingAddress === 'string' ? order.shippingAddress : (order.shippingAddress?.street || 'Customer Address');
+        const address = typeof order.shippingAddress === 'string' ? order.shippingAddress : (order.shippingAddress?.street || order.shippingAddress?.address || 'Customer Delivery Address');
+
+        // Next simulated stage
+        let nextStatusText = '';
+        let nextStatusAction = '';
+        if (status === 'pending') { nextStatusText = 'Advance to Packed'; nextStatusAction = 'processing'; }
+        else if (status === 'processing') { nextStatusText = 'Advance to Shipped'; nextStatusAction = 'shipped'; }
+        else if (status === 'shipped') { nextStatusText = 'Advance to Delivered'; nextStatusAction = 'delivered'; }
 
         return `
-            <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-2">
+            <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition">
+                <!-- Top Row: Order ID, Tracking Badge, Date & Status -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-3">
                     <div>
-                        <div class="flex items-center space-x-2">
-                            <span class="font-bold text-gray-900">${orderId}</span>
-                            <span class="bg-indigo-50 text-indigo-700 text-[10px] font-semibold px-2.5 py-0.5 rounded-full font-mono">${txnId}</span>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="font-black text-gray-900 text-sm sm:text-base">${orderId}</span>
+                            <button onclick="copyToClipboard('${trackingNum}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-lg inline-flex items-center space-x-1 transition" title="Click to copy tracking code">
+                                <i class="fa-solid fa-barcode text-gray-400"></i>
+                                <span>${trackingNum}</span>
+                                <i class="fa-regular fa-copy text-[10px] text-gray-400"></i>
+                            </button>
                         </div>
-                        <p class="text-xs text-gray-400 mt-0.5">Placed on ${dateStr} • Delivery to: <span class="text-gray-600 font-medium">${address}</span></p>
+                        <p class="text-xs text-gray-500 mt-1">Placed on <span class="font-medium text-gray-700">${dateStr}</span> • Shipping to: <span class="text-gray-700 font-medium">${address}</span></p>
                     </div>
-                    <div class="flex items-center space-x-3">
-                        <span class="bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider flex items-center space-x-1">
-                            <i class="fa-solid fa-circle-check text-[10px]"></i>
-                            <span>${status}</span>
-                        </span>
-                        <span class="font-bold text-indigo-600 text-base">$${Number(total).toFixed(2)}</span>
+
+                    <div class="flex items-center space-x-3 self-start sm:self-center">
+                        ${getStatusBadge(status)}
+                        <span class="font-black text-indigo-600 text-lg">$${Number(total).toFixed(2)}</span>
                     </div>
                 </div>
-                <div class="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+
+                <!-- 4-Step Interactive Stepper Bar -->
+                ${renderOrderStepper(status)}
+
+                <!-- Items & Action Buttons -->
+                <div class="pt-5 mt-2 flex flex-col md:flex-row md:items-center justify-between gap-4 border-t border-gray-100/80">
                     <div class="space-y-1">
-                        <span class="text-xs font-semibold text-gray-400 uppercase">Items Ordered:</span>
-                        <div class="text-sm font-medium text-gray-800">
-                            ${items.map(i => `${i.quantity || i.qty || 1}x ${i.title || i.name}`).join(', ')}
+                        <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Items in Package:</span>
+                        <div class="text-xs font-semibold text-gray-800 flex flex-wrap gap-1.5">
+                            ${items.map(i => `<span class="bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-md">${i.quantity || i.qty || 1}x ${i.title || i.name}</span>`).join('')}
                         </div>
                     </div>
-                    <div class="text-right sm:text-right">
-                        <span class="text-[11px] text-gray-400 block">Payment Method</span>
-                        <span class="text-xs font-bold text-gray-700 bg-gray-100 px-3 py-1 rounded-lg inline-block mt-0.5">
-                            <i class="fa-solid fa-shield text-indigo-500 mr-1"></i>${payMethod}
-                        </span>
+
+                    <!-- Action Controls -->
+                    <div class="flex items-center space-x-2">
+                        <button onclick="openTrackingModal('${id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm transition inline-flex items-center space-x-1.5">
+                            <i class="fa-solid fa-location-crosshairs"></i>
+                            <span>Live Tracking</span>
+                        </button>
+
+                        ${nextStatusAction ? `
+                            <button onclick="advanceOrderStatus('${id}', '${nextStatusAction}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl transition inline-flex items-center space-x-1" title="Simulate courier delivery step">
+                                <i class="fa-solid fa-forward-step text-indigo-600"></i>
+                                <span>${nextStatusText}</span>
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
             </div>
         `;
     }).join('');
+}
+
+// --- LIVE TRACKING MODAL ENGINE ---
+
+async function openTrackingModal(orderIdOrTracking) {
+    const modal = document.getElementById('tracking-modal');
+    const content = document.getElementById('tracking-modal-content');
+    if (!modal || !content) return;
+
+    modal.classList.remove('hidden');
+    content.innerHTML = `
+        <div class="py-12 text-center text-gray-500 space-y-3">
+            <i class="fa-solid fa-circle-notch fa-spin text-3xl text-indigo-600"></i>
+            <p class="text-xs font-semibold">Connecting to SD Express Tracking Satellite...</p>
+        </div>
+    `;
+
+    try {
+        let order = orders.find(o => (o._id || o.id) === orderIdOrTracking || o.trackingNumber === orderIdOrTracking);
+
+        // If not in local array, fetch from server public tracking route
+        if (!order) {
+            const res = await fetch(`${API_BASE}/orders/track/${encodeURIComponent(orderIdOrTracking)}`);
+            const data = await safeParseResponse(res);
+            if (!res.ok) throw new Error(data.error || 'Tracking lookup failed');
+            order = data;
+        }
+
+        const id = order._id || order.id || order.orderId || 'ORD-0';
+        const trackingNum = order.trackingNumber || 'SD-TRK-982104';
+        const status = (order.status || 'processing').toLowerCase();
+        const carrier = order.carrier || 'SD Express Delivery';
+        const estDate = order.estimatedDelivery ? new Date(order.estimatedDelivery).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }) : '3 Business Days';
+        const history = order.statusHistory && order.statusHistory.length > 0 ? order.statusHistory : [
+            { status: 'pending', title: 'Order Placed', description: 'Order received & verified.', location: 'SD Hub', timestamp: order.createdAt || new Date() },
+            { status: 'processing', title: 'Packed & Processed', description: 'Items securely packed.', location: 'Fulfillment Hub', timestamp: new Date() }
+        ];
+
+        content.innerHTML = `
+            <!-- Modal Header -->
+            <div class="pb-4 border-b border-gray-200">
+                <div class="flex items-center space-x-2">
+                    <span class="bg-indigo-100 text-indigo-700 text-xs font-black uppercase px-2.5 py-0.5 rounded-full">Live Tracking</span>
+                    <span class="text-xs text-gray-400">• Carrier: <strong class="text-gray-700">${carrier}</strong></span>
+                </div>
+                <div class="flex flex-wrap items-center justify-between mt-2 gap-2">
+                    <div>
+                        <h3 class="text-xl font-black text-gray-900 font-mono">${trackingNum}</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">Estimated Delivery: <strong class="text-emerald-700">${estDate}</strong></p>
+                    </div>
+                    <div>
+                        ${getStatusBadge(status)}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stepper Progress Bar -->
+            <div class="py-4">
+                ${renderOrderStepper(status)}
+            </div>
+
+            <!-- Activity Logs Timeline -->
+            <div class="mt-4 pt-4 border-t border-gray-100">
+                <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Tracking Activity Log</h4>
+                
+                <div class="space-y-4 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-200">
+                    ${[...history].reverse().map((entry, idx) => {
+                        const timeStr = entry.timestamp ? new Date(entry.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Just now';
+                        const isLatest = idx === 0;
+                        return `
+                            <div class="relative pl-8 flex flex-col sm:flex-row sm:items-start justify-between gap-1">
+                                <div class="absolute left-1.5 top-1.5 w-3.5 h-3.5 rounded-full ${isLatest ? 'bg-indigo-600 ring-4 ring-indigo-100' : 'bg-gray-400'}"></div>
+                                <div>
+                                    <h5 class="text-xs font-bold ${isLatest ? 'text-indigo-900 font-black' : 'text-gray-800'}">${entry.title || 'Status Update'}</h5>
+                                    <p class="text-xs text-gray-500 mt-0.5">${entry.description || ''}</p>
+                                    <span class="text-[11px] text-gray-400 inline-flex items-center space-x-1 mt-1">
+                                        <i class="fa-solid fa-location-dot text-[10px] text-indigo-500"></i>
+                                        <span>${entry.location || 'Distribution Center'}</span>
+                                    </span>
+                                </div>
+                                <span class="text-[11px] font-mono text-gray-400 whitespace-nowrap">${timeStr}</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+
+            <!-- Modal Footer Actions -->
+            <div class="mt-6 pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
+                <button onclick="copyToClipboard('${trackingNum}')" class="text-xs font-bold text-gray-600 hover:text-indigo-600 bg-gray-100 hover:bg-gray-200 px-3.5 py-2 rounded-xl transition inline-flex items-center space-x-1.5">
+                    <i class="fa-regular fa-copy"></i>
+                    <span>Copy Tracking Code</span>
+                </button>
+                <button onclick="closeTrackingModal()" class="bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold px-5 py-2 rounded-xl shadow transition">
+                    Close Tracker
+                </button>
+            </div>
+        `;
+    } catch (err) {
+        content.innerHTML = `
+            <div class="py-8 text-center space-y-3">
+                <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto text-xl">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <h4 class="text-sm font-bold text-gray-900">Package Not Found</h4>
+                <p class="text-xs text-gray-500">${err.message}</p>
+                <button onclick="closeTrackingModal()" class="mt-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold px-4 py-2 rounded-xl transition">
+                    Close
+                </button>
+            </div>
+        `;
+    }
+}
+
+function closeTrackingModal() {
+    const modal = document.getElementById('tracking-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+async function handleQuickTrack(e) {
+    e.preventDefault();
+    const input = document.getElementById('quick-track-input');
+    if (!input || !input.value.trim()) return;
+
+    const trackingNum = input.value.trim();
+    openTrackingModal(trackingNum);
+}
+
+async function advanceOrderStatus(orderId, nextStatus) {
+    if (!authToken) {
+        openAuthModal('login');
+        return;
+    }
+
+    showLoading('Updating package status', `Advancing order to ${nextStatus}...`);
+
+    try {
+        const res = await fetch(`${API_BASE}/orders/${orderId}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ status: nextStatus })
+        });
+
+        const data = await safeParseResponse(res);
+        if (!res.ok) throw new Error(data.error || 'Failed to advance status');
+
+        // Update local orders list
+        const idx = orders.findIndex(o => (o._id || o.id) === orderId);
+        if (idx !== -1) {
+            orders[idx] = data.order || { ...orders[idx], status: nextStatus };
+        }
+
+        renderOrders();
+        showToast(`Order status updated to "${nextStatus.toUpperCase()}"!`);
+    } catch (err) {
+        console.error('Advance status error:', err);
+        showToast(err.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function copyToClipboard(text) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text);
+        showToast('Tracking number copied to clipboard!');
+    }
 }
 
 // --- AUTHENTICATION & OTP SYSTEM ---

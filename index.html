@@ -345,21 +345,65 @@
 
         <!-- TAB 4: ORDERS & TRACKING -->
         <div id="tab-orders" class="tab-content hidden">
-            <div class="flex items-center justify-between pb-4 mb-6 border-b border-gray-200">
+            <!-- Orders Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-6 border-b border-gray-200 gap-3">
                 <div class="flex items-center space-x-4">
                     <button onclick="goBack()" class="inline-flex items-center space-x-2 text-xs font-bold text-gray-700 hover:text-indigo-600 bg-white hover:bg-gray-100 px-3.5 py-2 rounded-xl border border-gray-200 shadow-sm transition">
                         <i class="fa-solid fa-arrow-left"></i>
                         <span>Back to Shopping</span>
                     </button>
-                    <h2 class="text-2xl font-bold text-gray-900">Order Management & Tracking</h2>
+                    <div>
+                        <h2 class="text-2xl font-black text-gray-900 tracking-tight">Order Tracking & History</h2>
+                        <p class="text-xs text-gray-500">Track shipment status in real-time from placement to delivery.</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 bg-indigo-50 text-indigo-700 text-xs font-semibold px-3 py-1.5 rounded-xl border border-indigo-200">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <span>Live GPS Transit Hubs</span>
                 </div>
             </div>
+
+            <!-- Quick Tracking Search Bar Card -->
+            <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-indigo-950 text-white rounded-2xl p-6 mb-6 shadow-md">
+                <div class="max-w-2xl">
+                    <span class="bg-indigo-500/30 text-indigo-200 text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full border border-indigo-400/30">Package Tracker</span>
+                    <h3 class="text-xl font-bold mt-2">Track Any Package Live</h3>
+                    <p class="text-xs text-indigo-200 mt-1 mb-4">Enter your 9-digit tracking number (e.g. SD-TRK-123456) to see live delivery timeline and courier updates.</p>
+                    
+                    <form onsubmit="handleQuickTrack(event)" class="flex flex-col sm:flex-row gap-2">
+                        <div class="relative flex-1">
+                            <i class="fa-solid fa-barcode absolute left-3.5 top-3 text-gray-400"></i>
+                            <input type="text" id="quick-track-input" required placeholder="Enter tracking number (e.g. SD-TRK-948271)" class="w-full bg-white text-gray-900 placeholder-gray-400 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono uppercase focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        </div>
+                        <button type="submit" id="quick-track-btn" class="bg-indigo-500 hover:bg-indigo-400 text-white text-xs font-bold px-6 py-2.5 rounded-xl shadow transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <span>Track Package</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Orders List Container -->
             <div id="orders-container" class="space-y-4">
                 <!-- Dynamically populated via JS -->
             </div>
         </div>
 
     </main>
+
+    <!-- LIVE PACKAGE TRACKING MODAL -->
+    <div id="tracking-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 sm:p-8 relative shadow-2xl animate-scale max-h-[92vh] overflow-y-auto">
+            <!-- Modal Close Button -->
+            <button onclick="closeTrackingModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 text-xl font-bold bg-gray-100 hover:bg-gray-200 w-9 h-9 rounded-full flex items-center justify-center transition z-10">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div id="tracking-modal-content">
+                <!-- Populated dynamically by script.js -->
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="bg-white border-t border-gray-100 mt-12 py-8 text-center text-xs text-gray-400">

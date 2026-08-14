@@ -6,6 +6,25 @@ const Order = require('../models/Order');
 // In-memory orders cache fallback
 const memoryOrders = new Map();
 
+// Helper to generate tracking entry
+function generateTrackingEntry(status) {
+  const map = {
+    pending: { title: 'Order Placed', description: 'Order confirmed and verified.', location: 'SD Shopping Hub' },
+    processing: { title: 'Packed & Processed', description: 'Items securely packed and prepared for carrier.', location: 'Fulfillment Center' },
+    shipped: { title: 'Shipped & In Transit', description: 'Package handed to courier and currently on route.', location: 'Regional Transit Hub' },
+    delivered: { title: 'Delivered', description: 'Package successfully delivered to shipping address.', location: 'Customer Doorstep' },
+    cancelled: { title: 'Order Cancelled', description: 'Order was cancelled and payment refunded.', location: 'SD Shopping Support' }
+  };
+  return {
+    status,
+    title: map[status]?.title || 'Status Updated',
+    description: map[status]?.description || 'Order status was updated.',
+    location: map[status]?.location || 'Logistics Center',
+    timestamp: new Date()
+  };
+}
+
+// 1. Create New Order
 router.post('/', authMiddleware, async (req, res) => {
   try {
     const { items, totalAmount, shippingAddress, paymentMethod } = req.body;
@@ -14,6 +33,26 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 
     const transactionId = 'TXN-' + Math.floor(100000 + Math.random() * 900000);
+    const trackingNumber = 'SD-TRK-' + Math.floor(100000 + Math.random() * 900000);
+    const estimatedDelivery = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+
+    const initialHistory = [
+      {
+        status: 'pending',
+        title: 'Order Placed',
+        description: 'Order confirmed and payment verified.',
+        location: 'SD Shopping Hub',
+        timestamp: new Date()
+      },
+      {
+        status: 'processing',
+        title: 'Packed & Processed',
+        description: 'Items securely packed and labeled for dispatch.',
+        location: 'Main Fulfillment Hub',
+        timestamp: new Date()
+      }
+    ];
+
     const orderData = {
       userId: req.userId,
       items,
@@ -21,9 +60,14 @@ router.post('/', authMiddleware, async (req, res) => {
       shippingAddress,
       paymentMethod: paymentMethod || 'Credit Card',
       paymentStatus: 'completed',
-      status: 'confirmed',
+      status: 'processing',
+      trackingNumber,
+      carrier: 'SD Express Delivery',
+      estimatedDelivery,
+      statusHistory: initialHistory,
       transactionId,
-      createdAt: new Date()
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
 
     let order = null;
@@ -47,6 +91,49 @@ router.post('/', authMiddleware, async (req, res) => {
   }
 });
 
+// 2. Public Tracking Lookup by Tracking Number (No auth required)
+router.get('/track/:trackingNumber', async (req, res) => {
+  try {
+    const rawNumber = req.params.trackingNumber.trim();
+    let order = null;
+
+    try {
+      order = await Order.findOne({ trackingNumber: new RegExp('^' + rawNumber + '$', 'i') }).maxTimeMS(2000);
+    } catch (dbErr) {}
+
+    // Check in-memory store
+    if (!order) {
+      for (const ordersList of memoryOrders.values()) {
+        const found = ordersList.find(o => o.trackingNumber && o.trackingNumber.toLowerCase() === rawNumber.toLowerCase());
+        if (found) {
+          order = found;
+          break;
+        }
+      }
+    }
+
+    if (!order) {
+      return res.status(404).json({ error: `No package found matching tracking number "${rawNumber}".` });
+    }
+
+    res.json({
+      orderId: order._id || order.id,
+      trackingNumber: order.trackingNumber,
+      carrier: order.carrier || 'SD Express Delivery',
+      status: order.status,
+      estimatedDelivery: order.estimatedDelivery,
+      statusHistory: order.statusHistory || [],
+      itemsCount: order.items ? order.items.length : 0,
+      shippingCity: order.shippingAddress ? (order.shippingAddress.city || order.shippingAddress.address) : 'Standard Shipping',
+      createdAt: order.createdAt
+    });
+  } catch (error) {
+    console.error('Track order error:', error);
+    res.status(500).json({ error: 'Failed to track order' });
+  }
+});
+
+// 3. Get All Orders for Logged-In User
 router.get('/', authMiddleware, async (req, res) => {
   try {
     let orders = [];
@@ -71,6 +158,51 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
+// 4. Update Order Status & Append Tracking Entry
+router.patch('/:id/status', authMiddleware, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const allowed = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ error: `Invalid status. Must be one of: ${allowed.join(', ')}` });
+    }
+
+    let order = null;
+    const entry = generateTrackingEntry(status);
+
+    try {
+      order = await Order.findOne({ _id: req.params.id, userId: req.userId }).maxTimeMS(2000);
+      if (order) {
+        order.status = status;
+        order.statusHistory = order.statusHistory || [];
+        order.statusHistory.push(entry);
+        order.updatedAt = new Date();
+        await order.save();
+      }
+    } catch (dbErr) {}
+
+    // Update in-memory cache
+    const userOrders = memoryOrders.get(req.userId) || [];
+    const cachedIdx = userOrders.findIndex(o => (o._id || o.id) === req.params.id);
+    if (cachedIdx !== -1) {
+      userOrders[cachedIdx].status = status;
+      userOrders[cachedIdx].statusHistory = userOrders[cachedIdx].statusHistory || [];
+      userOrders[cachedIdx].statusHistory.push(entry);
+      order = userOrders[cachedIdx];
+    }
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.json({ message: `Order status updated to ${status}`, order });
+  } catch (error) {
+    console.error('Update order status error:', error);
+    res.status(500).json({ error: 'Failed to update order status' });
+  }
+});
+
+// 5. Get Single Order by ID
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
     const order = await Order.findOne({ _id: req.params.id, userId: req.userId }).maxTimeMS(2500);
