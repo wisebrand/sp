@@ -58,8 +58,6 @@ async function sendOTPEmail(email, otp) {
     { host: 'smtp.gmail.com', port: 465, secure: true }
   ];
 
-  let lastError = null;
-
   for (const config of configurations) {
     try {
       const transporter = nodemailer.createTransport({
