@@ -50,28 +50,35 @@ async function sendOTPEmail(email, otp) {
     }
   }
 
-  // Strategy 2: Brevo REST API over HTTPS (Port 443)
+  // Strategy 2: Brevo REST API over HTTPS (Port 443 - Sends to ANY recipient email without domain lock)
   if (process.env.BREVO_API_KEY) {
     try {
+      const brevoKey = process.env.BREVO_API_KEY.trim();
+      const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.GMAIL_USER || 'mikegborbitey05@gmail.com';
       const res = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
-          'api-key': process.env.BREVO_API_KEY,
+          'api-key': brevoKey,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          sender: { name: 'SD Shopping', email: user },
+          sender: { name: 'SD Shopping', email: senderEmail },
           to: [{ email }],
           subject: 'Your SD Shopping Verification OTP Code',
           htmlContent
         })
       });
+      const brevoData = await res.json().catch(() => ({}));
       if (res.ok) {
-        console.log(`✅ [Email Sent via Brevo HTTPS API to ${email}]`);
+        console.log(`✅ [Email Sent via Brevo HTTPS API to ${email}]: MessageId: ${brevoData.messageId || 'OK'}`);
         return { success: true, method: 'brevo_https' };
+      } else {
+        console.warn('❌ [Brevo API Error]:', JSON.stringify(brevoData));
+        return { success: false, error: brevoData.message || 'Brevo rejected delivery' };
       }
     } catch (brevoErr) {
-      console.warn('Brevo HTTPS API notice:', brevoErr.message);
+      console.warn('Brevo HTTPS API exception:', brevoErr.message);
+      return { success: false, error: brevoErr.message };
     }
   }
 
