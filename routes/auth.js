@@ -8,6 +8,7 @@ const Otp = require('../models/Otp');
 // In-memory fallback map for pending OTPs when DB is offline or delayed
 const pendingOtps = new Map();
 
+// 1. Send OTP Registration Route
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -16,29 +17,33 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Name, email, and password are required' });
     }
 
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
+
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check existing verified user
+    // Check if verified account already exists
     try {
       const existingUser = await User.findOne({ email: normalizedEmail }).maxTimeMS(3000);
       if (existingUser && existingUser.isVerified) {
-        return res.status(409).json({ error: 'Email is already registered. Please sign in.' });
+        return res.status(409).json({ error: 'An account with this email is already registered. Please sign in.' });
       }
     } catch (dbErr) {
-      console.warn('User find notice:', dbErr.message);
+      console.warn('User lookup notice:', dbErr.message);
     }
 
     const otp = generateOTP();
 
     // Store in-memory fallback
-    pendingOtps.set(normalizedEmail, { name, email: normalizedEmail, password, otp, createdAt: new Date() });
+    pendingOtps.set(normalizedEmail, { name: name.trim(), email: normalizedEmail, password, otp, createdAt: new Date() });
 
-    // Store in MongoDB if available
+    // Store in MongoDB Otp collection (auto-expires in 5 minutes)
     try {
       await Otp.deleteMany({ email: normalizedEmail }).maxTimeMS(3000);
-      await Otp.create({ email: normalizedEmail, name, password, otp });
+      await Otp.create({ email: normalizedEmail, name: name.trim(), password, otp });
     } catch (otpDbErr) {
-      console.warn('OTP DB save notice (using in-memory fallback):', otpDbErr.message);
+      console.warn('OTP DB save notice:', otpDbErr.message);
     }
 
     // Send email via HTTPS API or Gmail SSL/TLS transporter
@@ -51,7 +56,7 @@ router.post('/register', async (req, res) => {
 
     if (!emailResult.success) {
       return res.status(502).json({
-        error: `Could not deliver verification email to ${normalizedEmail}. ${emailResult.error || 'Connection timed out on host.'}`
+        error: `Could not deliver verification email to ${normalizedEmail}. ${emailResult.error || 'Please check your email address or try again.'}`
       });
     }
 
@@ -60,16 +65,17 @@ router.post('/register', async (req, res) => {
       email: normalizedEmail
     });
   } catch (error) {
-    console.error('Register error:', error);
+    console.error('Registration error:', error);
     res.status(500).json({ error: error.message || 'Registration failed' });
   }
 });
 
+// 2. Verify OTP & Complete Account Creation
 router.post('/verify-otp', async (req, res) => {
   try {
     const { email, otp } = req.body;
     if (!email || !otp) {
-      return res.status(400).json({ error: 'Email and OTP are required' });
+      return res.status(400).json({ error: 'Email and 6-digit OTP code are required' });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -89,10 +95,10 @@ router.post('/verify-otp', async (req, res) => {
     }
 
     if (!storedOtp || storedOtp.otp !== cleanOtp) {
-      return res.status(400).json({ error: 'Invalid or expired OTP code. Please check your email or click Resend.' });
+      return res.status(400).json({ error: 'Invalid or expired OTP code. Please check your email or click Resend OTP.' });
     }
 
-    // Create or update user in MongoDB
+    // Create or update verified user in MongoDB
     let user = null;
     try {
       user = await User.findOne({ email: normalizedEmail }).maxTimeMS(3000);
@@ -119,7 +125,7 @@ router.post('/verify-otp', async (req, res) => {
 
     const token = generateToken(user);
     res.json({
-      message: 'Account verified & created successfully',
+      message: 'Account verified and created successfully! Welcome to SD Shopping.',
       user: { id: user._id, name: user.name, email: user.email },
       token
     });

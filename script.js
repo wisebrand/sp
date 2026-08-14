@@ -1372,7 +1372,7 @@ async function handleRegisterSubmit(e) {
     const password = document.getElementById('reg-password').value;
 
     setButtonLoading('reg-submit-btn', true, 'Please wait...');
-    showLoading('Please wait', 'Sending Gmail OTP verification code...');
+    showLoading('Please wait', 'Sending 6-digit verification code...');
 
     try {
         const response = await fetch(`${API_BASE}/auth/register`, {
