@@ -5,8 +5,9 @@ const { generateOTP, sendOTPEmail } = require('../utils/email');
 const User = require('../models/User');
 const Otp = require('../models/Otp');
 
-// In-memory fallback map for pending OTPs when DB is offline or delayed
+// In-memory persistent maps for OTPs and Users when DB is connecting or offline
 const pendingOtps = new Map();
+const memoryUsers = new Map();
 
 // 1. Send OTP Registration Route
 router.post('/register', async (req, res) => {
@@ -23,14 +24,16 @@ router.post('/register', async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check if verified account already exists
-    try {
-      const existingUser = await User.findOne({ email: normalizedEmail }).maxTimeMS(3000);
-      if (existingUser && existingUser.isVerified) {
-        return res.status(409).json({ error: 'An account with this email is already registered. Please sign in.' });
-      }
-    } catch (dbErr) {
-      console.warn('User lookup notice:', dbErr.message);
+    // Check if verified account already exists in memory or MongoDB
+    let existingUser = memoryUsers.get(normalizedEmail);
+    if (!existingUser) {
+      try {
+        existingUser = await User.findOne({ email: normalizedEmail }).maxTimeMS(1500);
+      } catch (dbErr) {}
+    }
+
+    if (existingUser && existingUser.isVerified) {
+      return res.status(409).json({ error: 'An account with this email is already registered. Please sign in.' });
     }
 
     const otp = generateOTP();
@@ -38,13 +41,11 @@ router.post('/register', async (req, res) => {
     // Store in-memory fallback
     pendingOtps.set(normalizedEmail, { name: name.trim(), email: normalizedEmail, password, otp, createdAt: new Date() });
 
-    // Store in MongoDB Otp collection (auto-expires in 5 minutes)
+    // Store in MongoDB Otp collection if available
     try {
-      await Otp.deleteMany({ email: normalizedEmail }).maxTimeMS(3000);
+      await Otp.deleteMany({ email: normalizedEmail }).maxTimeMS(1500);
       await Otp.create({ email: normalizedEmail, name: name.trim(), password, otp });
-    } catch (otpDbErr) {
-      console.warn('OTP DB save notice:', otpDbErr.message);
-    }
+    } catch (otpDbErr) {}
 
     // Send email via HTTPS API or Gmail SSL/TLS transporter
     const emailResult = await sendOTPEmail(normalizedEmail, otp);
@@ -80,18 +81,13 @@ router.post('/verify-otp', async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
     const cleanOtp = otp.toString().trim();
-    let storedOtp = null;
+    let storedOtp = pendingOtps.get(normalizedEmail);
 
-    // Check DB first
-    try {
-      storedOtp = await Otp.findOne({ email: normalizedEmail }).maxTimeMS(3000);
-    } catch (dbErr) {
-      console.warn('Otp find DB notice:', dbErr.message);
-    }
-
-    // Fallback to in-memory store
+    // Check DB if not in memory
     if (!storedOtp) {
-      storedOtp = pendingOtps.get(normalizedEmail);
+      try {
+        storedOtp = await Otp.findOne({ email: normalizedEmail }).maxTimeMS(1500);
+      } catch (dbErr) {}
     }
 
     if (!storedOtp || storedOtp.otp !== cleanOtp) {
@@ -101,7 +97,7 @@ router.post('/verify-otp', async (req, res) => {
     // Create or update verified user in MongoDB
     let user = null;
     try {
-      user = await User.findOne({ email: normalizedEmail }).maxTimeMS(3000);
+      user = await User.findOne({ email: normalizedEmail }).maxTimeMS(1500);
       if (user) {
         user.name = storedOtp.name;
         user.password = storedOtp.password;
@@ -117,9 +113,17 @@ router.post('/verify-otp', async (req, res) => {
       }
       await Otp.deleteMany({ email: normalizedEmail }).catch(() => {});
     } catch (userDbErr) {
-      console.warn('User save DB notice:', userDbErr.message);
       user = { _id: 'user_' + Date.now(), name: storedOtp.name, email: storedOtp.email };
     }
+
+    // Persist in memory store for instant zero-latency login
+    memoryUsers.set(normalizedEmail, {
+      _id: user._id || 'user_' + Date.now(),
+      name: storedOtp.name,
+      email: normalizedEmail,
+      password: storedOtp.password,
+      isVerified: true
+    });
 
     pendingOtps.delete(normalizedEmail);
 
@@ -135,6 +139,7 @@ router.post('/verify-otp', async (req, res) => {
   }
 });
 
+// 3. Resend OTP Route
 router.post('/resend-otp', async (req, res) => {
   try {
     const { email } = req.body;
@@ -155,7 +160,7 @@ router.post('/resend-otp', async (req, res) => {
 
     // Update MongoDB Otp document if available
     try {
-      await Otp.deleteMany({ email: normalizedEmail }).maxTimeMS(3000);
+      await Otp.deleteMany({ email: normalizedEmail }).maxTimeMS(1500);
       await Otp.create({ email: normalizedEmail, name: stored ? stored.name : 'User', password: stored ? stored.password : 'password', otp });
     } catch (e) {}
 
@@ -182,6 +187,7 @@ router.post('/resend-otp', async (req, res) => {
   }
 });
 
+// 4. Instant Login Route
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -189,41 +195,43 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    const normalizedEmail = email.toLowerCase();
+    const normalizedEmail = email.toLowerCase().trim();
     let user = null;
 
     try {
-      user = await User.findOne({ email: normalizedEmail }).maxTimeMS(2000);
-    } catch (dbErr) {
-      console.warn('Login DB notice:', dbErr.message);
-    }
+      user = await User.findOne({ email: normalizedEmail }).maxTimeMS(1500);
+    } catch (dbErr) {}
 
     if (user) {
       const isValid = await user.comparePassword(password);
       if (!isValid) {
-        return res.status(401).json({ error: 'Invalid credentials' });
+        return res.status(401).json({ error: 'Invalid password. Please try again.' });
       }
       const token = generateToken(user);
       return res.json({ message: 'Login successful', user: { id: user._id, name: user.name, email: user.email }, token });
     }
 
-    // Demo fallback login if DB query is unreachable
-    const demoUser = { id: 'demo_user_id', name: email.split('@')[0], email: normalizedEmail };
-    const token = generateToken(demoUser);
-    return res.json({
-      message: 'Login successful',
-      user: demoUser,
-      token
-    });
+    // Check memory store
+    const memUser = memoryUsers.get(normalizedEmail);
+    if (memUser) {
+      if (memUser.password !== password) {
+        return res.status(401).json({ error: 'Invalid password. Please try again.' });
+      }
+      const token = generateToken(memUser);
+      return res.json({ message: 'Login successful', user: { id: memUser._id, name: memUser.name, email: memUser.email }, token });
+    }
+
+    return res.status(401).json({ error: 'No account found with this email. Please sign up.' });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Login failed' });
   }
 });
 
+// 5. Get User Profile Route
 router.get('/me', authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select('name email createdAt').maxTimeMS(2000);
+    const user = await User.findById(req.userId).select('name email createdAt').maxTimeMS(1500);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
