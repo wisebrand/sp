@@ -10,7 +10,13 @@ const FALLBACK_PRODUCTS = [
     title: 'Wireless Noise-Canceling Headphones',
     description: 'Premium noise-cancelling wireless headphones with 30-hour battery life, spatial audio, and high-fidelity drivers.',
     price: 199.99,
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60',
+    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800&auto=format&fit=crop&q=80'
+    ],
     category: 'Audio',
     brand: 'Sony',
     stock: 50,
@@ -27,7 +33,13 @@ const FALLBACK_PRODUCTS = [
     title: 'Flagship 5G Ultra Smartphone',
     description: 'Latest model smartphone with OLED display, 5G ultra connectivity, and 108MP triple camera system.',
     price: 899.99,
-    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&auto=format&fit=crop&q=60',
+    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1580910051074-3eb694886505?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=800&auto=format&fit=crop&q=80'
+    ],
     category: 'Electronics',
     brand: 'Samsung',
     stock: 30,
@@ -43,7 +55,13 @@ const FALLBACK_PRODUCTS = [
     title: 'Pro Studio Ultra Laptop 16-inch',
     description: 'High-performance laptop for professionals, creators, and developers with 32GB RAM and 1TB SSD.',
     price: 1299.99,
-    image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500&auto=format&fit=crop&q=60',
+    image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&auto=format&fit=crop&q=80'
+    ],
     category: 'Electronics',
     brand: 'Apple',
     stock: 20,
@@ -58,7 +76,13 @@ const FALLBACK_PRODUCTS = [
     title: 'Fitness Smartwatch Pro Edition',
     description: 'Feature-rich smartwatch with heart rate monitoring, GPS, sleep tracking, and waterproof casing.',
     price: 349.99,
-    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60',
+    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=800&auto=format&fit=crop&q=80'
+    ],
     category: 'Wearables',
     brand: 'Apple',
     stock: 45,
@@ -73,7 +97,13 @@ const FALLBACK_PRODUCTS = [
     title: 'Waterproof Boombox Portable Speaker',
     description: 'Rugged portable speaker with 360-degree bass, IP67 water resistance, and 24-hour battery.',
     price: 79.99,
-    image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&auto=format&fit=crop&q=60',
+    image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=800&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1545454675-3531b543be5d?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1589003077984-894e133dabab?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1543512214-318c7553f230?w=800&auto=format&fit=crop&q=80'
+    ],
     category: 'Audio',
     brand: 'JBL',
     stock: 60,
@@ -88,7 +118,13 @@ const FALLBACK_PRODUCTS = [
     title: 'Braided Fast-Charging USB-C Cable',
     description: 'Durable nylon-braided fast charging cable with reinforced connectors for all modern devices.',
     price: 14.99,
-    image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&auto=format&fit=crop&q=60',
+    image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=800&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1563770660941-20978e870e26?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1585338107529-13afc5f02586?w=800&auto=format&fit=crop&q=80'
+    ],
     category: 'Accessories',
     brand: 'Anker',
     stock: 100,
@@ -103,7 +139,12 @@ const FALLBACK_PRODUCTS = [
     title: '9H Tempered Glass Screen Protector',
     description: 'Ultra-thin scratch resistant 9H tempered glass screen protector with anti-fingerprint coating.',
     price: 9.99,
-    image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=500&auto=format&fit=crop&q=60',
+    image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1585060544812-6b45742d762f?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=800&auto=format&fit=crop&q=80'
+    ],
     category: 'Accessories',
     brand: 'Spigen',
     stock: 150,
@@ -118,7 +159,12 @@ const FALLBACK_PRODUCTS = [
     title: 'Shockproof Matte Armor Phone Case',
     description: 'Drop-tested military-grade shockproof phone case with comfortable non-slip grip.',
     price: 24.99,
-    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&auto=format&fit=crop&q=60',
+    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1586105251261-72a756497a11?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&auto=format&fit=crop&q=80'
+    ],
     category: 'Accessories',
     brand: 'Spigen',
     stock: 80,
@@ -176,7 +222,25 @@ router.get('/', async (req, res) => {
     }
 
     if (products && products.length > 0) {
-      return res.json(products);
+      const enriched = products.map(p => {
+        const obj = p.toObject ? p.toObject() : { ...p };
+        if (!obj.images || obj.images.length === 0) {
+          const t = (obj.title || '').toLowerCase();
+          const c = (obj.category || '').toLowerCase();
+          const match = FALLBACK_PRODUCTS.find(f => {
+            const ft = f.title.toLowerCase();
+            const fc = f.category.toLowerCase();
+            return ft === t || ft.includes(t) || t.includes(ft) || fc === c;
+          });
+          if (match && match.images) {
+            obj.images = match.images;
+          } else if (obj.image) {
+            obj.images = [obj.image];
+          }
+        }
+        return obj;
+      });
+      return res.json(enriched);
     }
 
     // Filter fallback list in-memory if DB has no custom query results
@@ -202,21 +266,21 @@ router.get('/', async (req, res) => {
       filtered = filtered.filter(p => p.price <= Number(maxPrice));
     }
     if (minRating != null && minRating !== '') {
-      filtered = filtered.filter(p => (p.rating || 4.5) >= Number(minRating));
+      filtered = filtered.filter(p => (p.rating || 0) >= Number(minRating));
     }
 
     if (sort === 'price-asc') filtered.sort((a, b) => a.price - b.price);
     else if (sort === 'price-desc') filtered.sort((a, b) => b.price - a.price);
-    else if (sort === 'rating') filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    else if (sort === 'rating') filtered.sort((a, b) => b.rating - a.rating);
 
     res.json(filtered);
   } catch (error) {
-    console.warn('Products query exception:', error.message);
-    res.json(FALLBACK_PRODUCTS);
+    console.error('Get products error:', error);
+    res.status(500).json({ error: 'Failed to fetch products' });
   }
 });
 
-// 2. Get Single Product by ID with Reviews
+// 2. Get Single Product by ID
 router.get('/:id', async (req, res) => {
   try {
     let product = null;
@@ -232,7 +296,23 @@ router.get('/:id', async (req, res) => {
       }
       return res.status(404).json({ error: 'Product not found' });
     }
-    res.json(product);
+
+    const obj = product.toObject ? product.toObject() : { ...product };
+    if (!obj.images || obj.images.length === 0) {
+      const t = (obj.title || '').toLowerCase();
+      const c = (obj.category || '').toLowerCase();
+      const match = FALLBACK_PRODUCTS.find(f => {
+        const ft = f.title.toLowerCase();
+        const fc = f.category.toLowerCase();
+        return ft === t || ft.includes(t) || t.includes(ft) || fc === c;
+      });
+      if (match && match.images) {
+        obj.images = match.images;
+      } else if (obj.image) {
+        obj.images = [obj.image];
+      }
+    }
+    res.json(obj);
   } catch (error) {
     const fallback = FALLBACK_PRODUCTS.find(p => p._id === req.params.id);
     if (fallback) return res.json(fallback);

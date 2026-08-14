@@ -42,6 +42,10 @@ const productSchema = new mongoose.Schema({
     type: String,
     default: 'https://via.placeholder.com/300x250?text=Product'
   },
+  images: {
+    type: [String],
+    default: []
+  },
   category: {
     type: String,
     default: 'General'

@@ -747,96 +747,161 @@ function applyFiltersAndRender() {
 
 // --- PRODUCT DETAILS & REVIEWS MODAL (JUMIA STYLE WITH COLOR VARIANTS & ARROWS) ---
 let selectedReviewRating = 5;
-let currentProductVariants = [];
-let currentColorVariantIdx = 0;
+// --- PRODUCT IMAGE GALLERY, CAROUSEL & INTERACTIVE ZOOM LENS ENGINE ---
+let currentGalleryImages = [];
+let currentGalleryIdx = 0;
 
-function getProductColorVariants(product) {
-    const mainImg = product.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80';
+function getProductImages(product) {
+    if (Array.isArray(product.images) && product.images.length > 0) {
+        return product.images;
+    }
     const cat = (product.category || '').toLowerCase();
+    const title = (product.title || product.name || '').toLowerCase();
+    const mainImg = product.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80';
 
-    if (cat.includes('audio') || cat.includes('headphone')) {
+    if (cat.includes('audio') || title.includes('headphone') || title.includes('sound')) {
         return [
-            { name: 'Midnight Black', img: mainImg, colorCode: '#111827' },
-            { name: 'Platinum Silver', img: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=600&auto=format&fit=crop&q=80', colorCode: '#e5e7eb' },
-            { name: 'Rose Gold', img: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=600&auto=format&fit=crop&q=80', colorCode: '#fb7185' }
+            mainImg,
+            'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800&auto=format&fit=crop&q=80'
         ];
-    } else if (cat.includes('phone') || cat.includes('mobile')) {
+    } else if (cat.includes('phone') || title.includes('phone') || title.includes('smartphone')) {
         return [
-            { name: 'Phantom Black', img: mainImg, colorCode: '#0f172a' },
-            { name: 'Titanium White', img: 'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=600&auto=format&fit=crop&q=80', colorCode: '#f8fafc' },
-            { name: 'Sierra Blue', img: 'https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=600&auto=format&fit=crop&q=80', colorCode: '#3b82f6' }
+            mainImg,
+            'https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=800&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1580910051074-3eb694886505?w=800&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=800&auto=format&fit=crop&q=80'
         ];
-    } else if (cat.includes('laptop') || cat.includes('computing')) {
+    } else if (cat.includes('laptop') || title.includes('laptop') || title.includes('macbook')) {
         return [
-            { name: 'Space Gray', img: mainImg, colorCode: '#475569' },
-            { name: 'Silver Aluminium', img: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&auto=format&fit=crop&q=80', colorCode: '#cbd5e1' },
-            { name: 'Matte Black', img: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=600&auto=format&fit=crop&q=80', colorCode: '#1e293b' }
+            mainImg,
+            'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=800&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&auto=format&fit=crop&q=80'
         ];
-    } else {
+    } else if (cat.includes('wearable') || title.includes('watch')) {
         return [
-            { name: 'Classic Black', img: mainImg, colorCode: '#18181b' },
-            { name: 'Arctic White', img: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=600&auto=format&fit=crop&q=80', colorCode: '#f4f4f5' },
-            { name: 'Champagne Gold', img: 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=600&auto=format&fit=crop&q=80', colorCode: '#fde047' }
+            mainImg,
+            'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=800&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=800&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=800&auto=format&fit=crop&q=80'
+        ];
+    } else if (title.includes('speaker') || title.includes('boombox')) {
+        return [
+            mainImg,
+            'https://images.unsplash.com/photo-1545454675-3531b543be5d?w=800&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1589003077984-894e133dabab?w=800&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1543512214-318c7553f230?w=800&auto=format&fit=crop&q=80'
+        ];
+    } else if (title.includes('cable') || title.includes('charger')) {
+        return [
+            mainImg,
+            'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1563770660941-20978e870e26?w=800&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1585338107529-13afc5f02586?w=800&auto=format&fit=crop&q=80'
+        ];
+    } else if (title.includes('screen') || title.includes('glass')) {
+        return [
+            mainImg,
+            'https://images.unsplash.com/photo-1585060544812-6b45742d762f?w=800&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=800&auto=format&fit=crop&q=80'
+        ];
+    } else if (title.includes('case') || title.includes('cover')) {
+        return [
+            mainImg,
+            'https://images.unsplash.com/photo-1586105251261-72a756497a11?w=800&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&auto=format&fit=crop&q=80'
         ];
     }
+
+    return [mainImg];
 }
 
-function selectProductColor(idx) {
-    if (!currentProductVariants || currentProductVariants.length === 0) return;
-    
-    currentColorVariantIdx = (idx + currentProductVariants.length) % currentProductVariants.length;
-    const variant = currentProductVariants[currentColorVariantIdx];
+function switchProductGalleryImage(idx) {
+    if (!currentGalleryImages || currentGalleryImages.length === 0) return;
+    currentGalleryIdx = (idx + currentGalleryImages.length) % currentGalleryImages.length;
+    const activeUrl = currentGalleryImages[currentGalleryIdx];
 
     const mainImg = document.getElementById('main-product-img');
     if (mainImg) {
-        mainImg.src = variant.img;
+        mainImg.style.opacity = '0.5';
+        setTimeout(() => {
+            mainImg.src = activeUrl;
+            mainImg.style.opacity = '1';
+        }, 60);
     }
 
     const fullImg = document.getElementById('fullscreen-img-element');
     if (fullImg) {
-        fullImg.src = variant.img;
+        fullImg.src = activeUrl;
     }
 
-    const label = document.getElementById('selected-color-label');
-    if (label) {
-        label.textContent = variant.name;
+    const badge = document.getElementById('gallery-photo-badge');
+    if (badge) {
+        badge.textContent = `${currentGalleryIdx + 1} / ${currentGalleryImages.length}`;
     }
 
-    const fullLabel = document.getElementById('fullscreen-img-color-label');
-    if (fullLabel) {
-        fullLabel.textContent = variant.name;
+    const fullBadge = document.getElementById('fullscreen-img-color-label');
+    if (fullBadge) {
+        fullBadge.textContent = `Photo ${currentGalleryIdx + 1} of ${currentGalleryImages.length}`;
     }
 
-    document.querySelectorAll('.color-thumb-btn').forEach((btn, i) => {
-        if (i === currentColorVariantIdx) {
-            btn.className = "color-thumb-btn w-20 h-20 object-cover rounded-xl border-2 border-indigo-600 shadow-md ring-2 ring-indigo-300 cursor-pointer transition transform scale-105";
+    // Update thumbnail highlights
+    document.querySelectorAll('.gallery-thumb-btn').forEach((btn, i) => {
+        if (i === currentGalleryIdx) {
+            btn.className = "gallery-thumb-btn w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-xl border-2 border-indigo-600 shadow-md ring-2 ring-indigo-300 cursor-pointer transition transform scale-105";
         } else {
-            btn.className = "color-thumb-btn w-20 h-20 object-cover rounded-xl border border-gray-200 opacity-60 cursor-pointer hover:opacity-100 transition";
+            btn.className = "gallery-thumb-btn w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-xl border border-gray-200 opacity-60 cursor-pointer hover:opacity-100 hover:border-gray-400 transition";
         }
     });
 }
 
-function prevProductColor() {
-    selectProductColor(currentColorVariantIdx - 1);
+function prevProductGalleryImage() {
+    switchProductGalleryImage(currentGalleryIdx - 1);
 }
 
-function nextProductColor() {
-    selectProductColor(currentColorVariantIdx + 1);
+function nextProductGalleryImage() {
+    switchProductGalleryImage(currentGalleryIdx + 1);
+}
+
+// Interactive Desktop Hover Zoom Lens
+function handleImageZoom(e) {
+    const container = e.currentTarget;
+    const img = document.getElementById('main-product-img');
+    const zoomPill = document.getElementById('zoom-active-pill');
+    if (!img) return;
+
+    const rect = container.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    img.style.transformOrigin = `${x}% ${y}%`;
+    img.style.transform = 'scale(2.2)';
+
+    if (zoomPill) zoomPill.classList.remove('hidden');
+}
+
+function resetImageZoom() {
+    const img = document.getElementById('main-product-img');
+    const zoomPill = document.getElementById('zoom-active-pill');
+    if (!img) return;
+
+    img.style.transformOrigin = 'center center';
+    img.style.transform = 'scale(1)';
+
+    if (zoomPill) zoomPill.classList.add('hidden');
 }
 
 function openFullscreenImg() {
-    if (!currentProductVariants || currentProductVariants.length === 0) return;
-    const variant = currentProductVariants[currentColorVariantIdx];
+    if (!currentGalleryImages || currentGalleryImages.length === 0) return;
+    const activeUrl = currentGalleryImages[currentGalleryIdx];
 
     const fullImg = document.getElementById('fullscreen-img-element');
-    if (fullImg) {
-        fullImg.src = variant.img;
-    }
+    if (fullImg) fullImg.src = activeUrl;
 
     const fullLabel = document.getElementById('fullscreen-img-color-label');
-    if (fullLabel) {
-        fullLabel.textContent = variant.name;
-    }
+    if (fullLabel) fullLabel.textContent = `Photo ${currentGalleryIdx + 1} of ${currentGalleryImages.length}`;
 
     document.getElementById('fullscreen-img-modal').classList.remove('hidden');
 }
@@ -865,10 +930,10 @@ async function openProductModal(productId) {
 
     const modalContent = document.getElementById('modal-content');
     const productName = product.title || product.name;
-    currentProductVariants = getProductColorVariants(product);
-    currentColorVariantIdx = 0;
+    currentGalleryImages = getProductImages(product);
+    currentGalleryIdx = 0;
 
-    const mainImage = currentProductVariants[0].img;
+    const mainImage = currentGalleryImages[0];
     const origPrice = (product.price * 1.25).toFixed(2);
     const avgRating = (Number(product.rating) || 4.8).toFixed(1);
     const reviewList = product.reviews || [];
@@ -884,48 +949,62 @@ async function openProductModal(productId) {
                 <i class="fa-solid fa-arrow-left text-sm"></i>
                 <span>Back to Products</span>
             </button>
-            <span class="text-xs text-gray-400 font-semibold hidden sm:inline">Product Details & Reviews</span>
+            <span class="text-xs text-gray-400 font-semibold hidden sm:inline">Product Gallery & Verified Details</span>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-2">
-            <!-- LEFT COLUMN: Color Image Gallery & Delivery Info (5 cols) -->
+            <!-- LEFT COLUMN: Interactive Gallery & Zoom (5 cols) -->
             <div class="lg:col-span-5 space-y-4">
-                <!-- Main Image Card with Arrows & Full View Button -->
-                <div class="relative bg-gray-50 rounded-2xl overflow-hidden border border-gray-200 group">
-                    <img id="main-product-img" src="${mainImage}" onclick="openFullscreenImg()" class="w-full h-80 object-cover cursor-pointer hover:scale-105 transition duration-300">
-                    
+                <!-- Main Image Card with Zoom Lens, Badges, Full View & Navigation Arrows -->
+                <div class="relative bg-gray-50 rounded-2xl overflow-hidden border border-gray-200 group select-none">
+                    <!-- Zoomable Image Viewport -->
+                    <div id="main-img-zoom-box" onmousemove="handleImageZoom(event)" onmouseleave="resetImageZoom()" onclick="openFullscreenImg()" class="w-full h-80 overflow-hidden cursor-crosshair relative flex items-center justify-center bg-gray-50">
+                        <img id="main-product-img" src="${mainImage}" class="w-full h-full object-cover transition-transform duration-150 ease-out">
+                    </div>
+
                     <!-- SD Express & Discount Badges -->
                     <div class="absolute top-3 left-3 flex flex-col space-y-1 z-10 pointer-events-none">
                         <span class="bg-amber-500 text-white font-extrabold text-[10px] px-2.5 py-1 rounded-md uppercase tracking-wider shadow">SD Express</span>
                         <span class="bg-rose-600 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-md uppercase tracking-wider shadow">-20% OFF</span>
                     </div>
 
-                    <!-- Full View Button -->
-                    <button onclick="event.stopPropagation(); openFullscreenImg()" class="absolute top-3 right-3 bg-black/60 hover:bg-black/80 text-white text-xs font-bold px-3 py-1.5 rounded-xl backdrop-blur-md shadow-md transition flex items-center space-x-1.5 z-10">
-                        <i class="fa-solid fa-expand text-xs"></i>
-                        <span>Full View</span>
-                    </button>
+                    <!-- Floating Zoom Active Indicator Pill -->
+                    <div id="zoom-active-pill" class="hidden absolute top-3 left-1/2 -translate-x-1/2 bg-gray-900/80 text-white text-[10px] font-bold px-3 py-1 rounded-full backdrop-blur-md shadow pointer-events-none z-10 flex items-center space-x-1">
+                        <i class="fa-solid fa-magnifying-glass-plus text-indigo-400"></i>
+                        <span>2.2x Zoom Active</span>
+                    </div>
+
+                    <!-- Full View & Counter Badges -->
+                    <div class="absolute top-3 right-3 flex items-center space-x-2 z-10">
+                        <span id="gallery-photo-badge" class="bg-black/50 text-white text-[10px] font-bold px-2 py-1 rounded-lg backdrop-blur-md shadow-xs pointer-events-none">1 / ${currentGalleryImages.length}</span>
+                        <button onclick="event.stopPropagation(); openFullscreenImg()" class="bg-black/60 hover:bg-black/80 text-white text-xs font-bold px-2.5 py-1 rounded-xl backdrop-blur-md shadow-md transition flex items-center space-x-1" title="Open Fullscreen Lightbox">
+                            <i class="fa-solid fa-expand text-[10px]"></i>
+                            <span>Full View</span>
+                        </button>
+                    </div>
 
                     <!-- Navigation Arrows Overlay -->
-                    <button onclick="event.stopPropagation(); prevProductColor()" class="absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 w-9 h-9 rounded-full shadow-md backdrop-blur-sm flex items-center justify-center transition hover:scale-110 z-10">
-                        <i class="fa-solid fa-chevron-left text-xs"></i>
-                    </button>
-                    <button onclick="event.stopPropagation(); nextProductColor()" class="absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 w-9 h-9 rounded-full shadow-md backdrop-blur-sm flex items-center justify-center transition hover:scale-110 z-10">
-                        <i class="fa-solid fa-chevron-right text-xs"></i>
-                    </button>
+                    ${currentGalleryImages.length > 1 ? `
+                        <button onclick="event.stopPropagation(); prevProductGalleryImage()" class="absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 w-9 h-9 rounded-full shadow-md backdrop-blur-sm flex items-center justify-center transition hover:scale-110 z-10">
+                            <i class="fa-solid fa-chevron-left text-xs"></i>
+                        </button>
+                        <button onclick="event.stopPropagation(); nextProductGalleryImage()" class="absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 w-9 h-9 rounded-full shadow-md backdrop-blur-sm flex items-center justify-center transition hover:scale-110 z-10">
+                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                        </button>
+                    ` : ''}
                 </div>
 
-                <!-- Color Variants Selection Header & Thumbnails -->
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="font-bold text-gray-700">Select Color Variation:</span>
-                        <span id="selected-color-label" class="font-extrabold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full text-[11px]">${currentProductVariants[0].name}</span>
+                <!-- Interactive Thumbnails Strip -->
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                        <span class="font-bold text-gray-700">Product Angles & Views:</span>
+                        <span class="text-[11px] text-gray-400">Hover photo to zoom</span>
                     </div>
-                    <div class="flex items-center space-x-3">
-                        ${currentProductVariants.map((v, idx) => `
-                            <div onclick="selectProductColor(${idx})" title="${v.name}" class="group relative">
-                                <img src="${v.img}" class="color-thumb-btn w-20 h-20 object-cover rounded-xl ${idx === 0 ? 'border-2 border-indigo-600 shadow-md ring-2 ring-indigo-300 scale-105' : 'border border-gray-200 opacity-60 hover:opacity-100'} cursor-pointer transition">
-                                <span class="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border border-white shadow-xs" style="background-color: ${v.colorCode}"></span>
+                    <div class="flex items-center space-x-3 overflow-x-auto py-1 scrollbar-none">
+                        ${currentGalleryImages.map((imgUrl, idx) => `
+                            <div onclick="switchProductGalleryImage(${idx})" onmouseenter="switchProductGalleryImage(${idx})" title="Angle ${idx + 1}" class="group relative flex-shrink-0">
+                                <img src="${imgUrl}" class="gallery-thumb-btn w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-xl ${idx === 0 ? 'border-2 border-indigo-600 shadow-md ring-2 ring-indigo-300 scale-105' : 'border border-gray-200 opacity-60 hover:opacity-100 hover:border-gray-400'} cursor-pointer transition">
+                                <span class="absolute bottom-1 right-1 bg-black/60 text-white text-[8px] font-bold px-1 rounded backdrop-blur-xs">#${idx + 1}</span>
                             </div>
                         `).join('')}
                     </div>
