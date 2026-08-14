@@ -21,14 +21,16 @@ async function sendOTPEmail(email, otp) {
   // Strategy 1: Resend API over HTTPS (Port 443 - Never blocked by cloud providers)
   if (process.env.RESEND_API_KEY) {
     try {
+      const apiKey = process.env.RESEND_API_KEY.trim();
+      const fromEmail = process.env.RESEND_FROM_EMAIL || 'SD Shopping <onboarding@resend.dev>';
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          from: 'SD Shopping <onboarding@resend.dev>',
+          from: fromEmail,
           to: email,
           subject: 'Your SD Shopping Verification OTP Code',
           html: htmlContent
@@ -38,9 +40,13 @@ async function sendOTPEmail(email, otp) {
       if (res.ok) {
         console.log(`✅ [Email Sent via Resend HTTPS API to ${email}]: ID: ${resData.id}`);
         return { success: true, method: 'resend_https' };
+      } else {
+        console.warn('❌ [Resend API Error]:', JSON.stringify(resData));
+        return { success: false, error: resData.message || 'Resend API rejected delivery' };
       }
     } catch (apiErr) {
-      console.warn('Resend HTTPS API notice:', apiErr.message);
+      console.warn('Resend HTTPS API exception:', apiErr.message);
+      return { success: false, error: apiErr.message };
     }
   }
 
