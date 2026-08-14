@@ -41,13 +41,19 @@ router.post('/register', async (req, res) => {
       console.warn('OTP DB save notice (using in-memory fallback):', otpDbErr.message);
     }
 
-    // Attempt to send email via Gmail SMTP
+    // Send email via Gmail SSL transporter
     const emailResult = await sendOTPEmail(normalizedEmail, otp);
 
     console.log(`\n========================================`);
     console.log(`🔑 [OTP Code Generated for ${normalizedEmail}]: ${otp}`);
-    console.log(`✉️ [Email Delivery Status]: ${emailResult.success ? 'Delivered' : 'Notice: ' + emailResult.error}`);
+    console.log(`✉️ [Email Delivery Status]: ${emailResult.success ? 'Delivered successfully' : 'Failed: ' + emailResult.error}`);
     console.log(`========================================\n`);
+
+    if (!emailResult.success) {
+      return res.status(502).json({
+        error: `Failed to deliver OTP to ${normalizedEmail}. Please verify your email address or check spam.`
+      });
+    }
 
     res.json({
       message: 'Verification code sent to your email address',
@@ -153,6 +159,12 @@ router.post('/resend-otp', async (req, res) => {
     console.log(`🔑 [RESENT OTP Code for ${normalizedEmail}]: ${otp}`);
     console.log(`✉️ [Email Delivery Status]: ${emailResult.success ? 'Delivered' : 'Notice: ' + emailResult.error}`);
     console.log(`========================================\n`);
+
+    if (!emailResult.success) {
+      return res.status(502).json({
+        error: `Failed to resend OTP to ${normalizedEmail}. Please check your email or try again.`
+      });
+    }
 
     res.json({
       message: 'Verification code resent to your email address',
