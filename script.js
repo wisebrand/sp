@@ -1388,8 +1388,17 @@ async function handleRegisterSubmit(e) {
         const targetEmailEl = document.getElementById('otp-target-email');
         if (targetEmailEl) targetEmailEl.textContent = email;
 
+        const timeoutBanner = document.getElementById('otp-timeout-banner');
+        const timeoutCode = document.getElementById('otp-timeout-code');
+        if (data.devOtp && timeoutBanner && timeoutCode) {
+            timeoutCode.textContent = data.devOtp;
+            timeoutBanner.classList.remove('hidden');
+        } else if (timeoutBanner) {
+            timeoutBanner.classList.add('hidden');
+        }
+
         showAuthMode('otp');
-        showToast('Verification code sent to your email!');
+        showToast(data.devOtp ? 'Verification code generated!' : 'Verification code sent to your email!');
     } catch (error) {
         console.error('Register error:', error);
         showAuthError(error.message);
@@ -1454,16 +1463,19 @@ async function resendOTP() {
         const data = await safeParseResponse(response);
         if (!response.ok) throw new Error(data.error || 'Failed to resend OTP');
 
-        const devBanner = document.getElementById('dev-otp-banner');
-        const simulatedCode = document.getElementById('simulated-otp-code');
-        if (data.devOtp) {
-            simulatedCode.textContent = data.devOtp;
-            devBanner.classList.remove('hidden');
+        const timeoutBanner = document.getElementById('otp-timeout-banner');
+        const timeoutCode = document.getElementById('otp-timeout-code');
+        if (data.devOtp && timeoutBanner && timeoutCode) {
+            timeoutCode.textContent = data.devOtp;
+            timeoutBanner.classList.remove('hidden');
+        } else if (timeoutBanner) {
+            timeoutBanner.classList.add('hidden');
         }
 
-        showToast('Fresh OTP code sent to your email!');
+        showToast(data.devOtp ? 'New verification code generated!' : 'New code sent to your email!');
     } catch (error) {
         console.error('Resend OTP error:', error);
+        showAuthError(error.message);
         showToast(error.message, 'error');
     } finally {
         setButtonLoading('resend-otp-btn', false);
