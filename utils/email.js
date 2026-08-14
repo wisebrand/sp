@@ -18,39 +18,9 @@ async function sendOTPEmail(email, otp) {
     </div>
   `;
 
-  // Strategy 1: Resend API over HTTPS (Port 443 - Never blocked by cloud providers)
-  if (process.env.RESEND_API_KEY) {
-    try {
-      const apiKey = process.env.RESEND_API_KEY.trim();
-      const fromEmail = process.env.RESEND_FROM_EMAIL || 'SD Shopping <onboarding@resend.dev>';
-      const res = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          from: fromEmail,
-          to: email,
-          subject: 'Your SD Shopping Verification OTP Code',
-          html: htmlContent
-        })
-      });
-      const resData = await res.json();
-      if (res.ok) {
-        console.log(`✅ [Email Sent via Resend HTTPS API to ${email}]: ID: ${resData.id}`);
-        return { success: true, method: 'resend_https' };
-      } else {
-        console.warn('❌ [Resend API Error]:', JSON.stringify(resData));
-        return { success: false, error: resData.message || 'Resend API rejected delivery' };
-      }
-    } catch (apiErr) {
-      console.warn('Resend HTTPS API exception:', apiErr.message);
-      return { success: false, error: apiErr.message };
-    }
-  }
+  let lastError = null;
 
-  // Strategy 2: Brevo REST API over HTTPS (Port 443 - Sends to ANY recipient email without domain lock)
+  // Strategy 1: Brevo REST API over HTTPS (Port 443 - Sends to ANY email recipient without domain lock)
   if (process.env.BREVO_API_KEY) {
     try {
       const brevoKey = process.env.BREVO_API_KEY.trim();
@@ -74,11 +44,43 @@ async function sendOTPEmail(email, otp) {
         return { success: true, method: 'brevo_https' };
       } else {
         console.warn('❌ [Brevo API Error]:', JSON.stringify(brevoData));
-        return { success: false, error: brevoData.message || 'Brevo rejected delivery' };
+        lastError = brevoData.message || 'Brevo delivery failed';
       }
     } catch (brevoErr) {
       console.warn('Brevo HTTPS API exception:', brevoErr.message);
-      return { success: false, error: brevoErr.message };
+      lastError = brevoErr.message;
+    }
+  }
+
+  // Strategy 2: Resend API over HTTPS (Port 443)
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const apiKey = process.env.RESEND_API_KEY.trim();
+      const fromEmail = process.env.RESEND_FROM_EMAIL || 'SD Shopping <onboarding@resend.dev>';
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: fromEmail,
+          to: email,
+          subject: 'Your SD Shopping Verification OTP Code',
+          html: htmlContent
+        })
+      });
+      const resData = await res.json().catch(() => ({}));
+      if (res.ok) {
+        console.log(`✅ [Email Sent via Resend HTTPS API to ${email}]: ID: ${resData.id}`);
+        return { success: true, method: 'resend_https' };
+      } else {
+        console.warn('❌ [Resend API Error]:', JSON.stringify(resData));
+        lastError = resData.message || 'Resend delivery failed';
+      }
+    } catch (apiErr) {
+      console.warn('Resend HTTPS API exception:', apiErr.message);
+      lastError = apiErr.message;
     }
   }
 
