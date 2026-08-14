@@ -187,7 +187,7 @@ router.post('/resend-otp', async (req, res) => {
   }
 });
 
-// 4. Instant Login Route
+// 4. Login with 2FA Email OTP Verification
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -202,29 +202,63 @@ router.post('/login', async (req, res) => {
       user = await User.findOne({ email: normalizedEmail }).maxTimeMS(1500);
     } catch (dbErr) {}
 
+    // Check MongoDB user
     if (user) {
       const isValid = await user.comparePassword(password);
       if (!isValid) {
-        return res.status(401).json({ error: 'Invalid password. Please try again.' });
+        return res.status(401).json({ error: 'Invalid email or password. Please try again.' });
       }
-      const token = generateToken(user);
-      return res.json({ message: 'Login successful', user: { id: user._id, name: user.name, email: user.email }, token });
+    } else {
+      // Check in-memory store
+      const memUser = memoryUsers.get(normalizedEmail);
+      if (memUser && memUser.password === password) {
+        user = memUser;
+      } else {
+        return res.status(401).json({ error: 'No account found with this email. Please check your credentials or sign up.' });
+      }
     }
 
-    // Check memory store
-    const memUser = memoryUsers.get(normalizedEmail);
-    if (memUser) {
-      if (memUser.password !== password) {
-        return res.status(401).json({ error: 'Invalid password. Please try again.' });
-      }
-      const token = generateToken(memUser);
-      return res.json({ message: 'Login successful', user: { id: memUser._id, name: memUser.name, email: memUser.email }, token });
+    // Generate 2FA Login OTP
+    const otp = generateOTP();
+
+    // Store in-memory
+    pendingOtps.set(normalizedEmail, {
+      name: user.name,
+      email: normalizedEmail,
+      password: user.password,
+      otp,
+      isLogin: true,
+      createdAt: new Date()
+    });
+
+    // Store in MongoDB Otp collection if available
+    try {
+      await Otp.deleteMany({ email: normalizedEmail }).maxTimeMS(1500);
+      await Otp.create({ email: normalizedEmail, name: user.name, password: user.password, otp });
+    } catch (e) {}
+
+    // Send 2FA login verification email
+    const emailResult = await sendOTPEmail(normalizedEmail, otp);
+
+    console.log(`\n========================================`);
+    console.log(`🔑 [2FA Login OTP Code for ${normalizedEmail}]: ${otp}`);
+    console.log(`✉️ [Email Delivery Status]: ${emailResult.success ? 'Delivered successfully via ' + emailResult.method : 'Failed: ' + emailResult.error}`);
+    console.log(`========================================\n`);
+
+    if (!emailResult.success) {
+      return res.status(502).json({
+        error: `Could not deliver login verification email to ${normalizedEmail}. ${emailResult.error || 'Please try again.'}`
+      });
     }
 
-    return res.status(401).json({ error: 'No account found with this email. Please sign up.' });
+    res.json({
+      requireOtp: true,
+      message: 'Login verification code sent to your email address',
+      email: normalizedEmail
+    });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
+    res.status(500).json({ error: 'Login verification failed' });
   }
 });
 

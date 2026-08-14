@@ -1332,7 +1332,7 @@ async function handleLoginSubmit(e) {
     const password = document.getElementById('login-password').value;
 
     setButtonLoading('login-submit-btn', true, 'Please wait...');
-    showLoading('Please wait', 'Authenticating your account...');
+    showLoading('Please wait', 'Verifying credentials & sending OTP...');
 
     try {
         const response = await fetch(`${API_BASE}/auth/login`, {
@@ -1343,6 +1343,16 @@ async function handleLoginSubmit(e) {
 
         const data = await safeParseResponse(response);
         if (!response.ok) throw new Error(data.error || 'Login failed');
+
+        if (data.requireOtp) {
+            pendingEmail = email;
+            const targetEmailEl = document.getElementById('otp-target-email');
+            if (targetEmailEl) targetEmailEl.textContent = email;
+
+            showAuthMode('otp');
+            showToast('Verification code sent to your email!');
+            return;
+        }
 
         authToken = data.token;
         currentUser = data.user;
@@ -1426,7 +1436,7 @@ async function handleOtpSubmit(e) {
 
         updateAuthUI();
         closeAuthModal();
-        showToast(`Account created! Welcome ${currentUser.name}`);
+        showToast(data.message || `Welcome, ${currentUser.name}!`);
         await fetchOrders();
     } catch (error) {
         console.error('Verify OTP error:', error);
