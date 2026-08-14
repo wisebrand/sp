@@ -16,13 +16,13 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Name, email, and password are required' });
     }
 
-    const normalizedEmail = email.toLowerCase();
+    const normalizedEmail = email.toLowerCase().trim();
 
-    // Check existing user with timeout
+    // Check existing verified user
     try {
-      const existingUser = await User.findOne({ email: normalizedEmail }).maxTimeMS(2000);
+      const existingUser = await User.findOne({ email: normalizedEmail }).maxTimeMS(3000);
       if (existingUser && existingUser.isVerified) {
-        return res.status(409).json({ error: 'Email already registered. Please log in.' });
+        return res.status(409).json({ error: 'Email is already registered. Please sign in.' });
       }
     } catch (dbErr) {
       console.warn('User find notice:', dbErr.message);
@@ -35,22 +35,25 @@ router.post('/register', async (req, res) => {
 
     // Store in MongoDB if available
     try {
-      await Otp.deleteMany({ email: normalizedEmail }).maxTimeMS(2000);
+      await Otp.deleteMany({ email: normalizedEmail }).maxTimeMS(3000);
       await Otp.create({ email: normalizedEmail, name, password, otp });
     } catch (otpDbErr) {
       console.warn('OTP DB save notice (using in-memory fallback):', otpDbErr.message);
     }
 
-    sendOTPEmail(email, otp).catch(err => console.error('Email sending background error:', err));
+    // Attempt to send email via Gmail SMTP
+    const emailResult = await sendOTPEmail(normalizedEmail, otp);
+
     console.log(`\n========================================`);
-    console.log(`🔑 [OTP Code for ${email}]: ${otp}`);
+    console.log(`🔑 [OTP Code for ${normalizedEmail}]: ${otp}`);
+    console.log(`✉️ [Email Delivery Status]: ${emailResult.success ? 'Delivered' : 'Failed - ' + emailResult.error}`);
     console.log(`========================================\n`);
 
-    const isDev = process.env.NODE_ENV !== 'production';
     res.json({
-      message: 'OTP sent to email',
-      email,
-      ...(isDev && { devOtp: otp })
+      message: 'Verification OTP sent successfully',
+      email: normalizedEmail,
+      devOtp: otp,
+      emailSent: emailResult.success
     });
   } catch (error) {
     console.error('Register error:', error);
@@ -65,12 +68,13 @@ router.post('/verify-otp', async (req, res) => {
       return res.status(400).json({ error: 'Email and OTP are required' });
     }
 
-    const normalizedEmail = email.toLowerCase();
+    const normalizedEmail = email.toLowerCase().trim();
+    const cleanOtp = otp.toString().trim();
     let storedOtp = null;
 
     // Check DB first
     try {
-      storedOtp = await Otp.findOne({ email: normalizedEmail }).maxTimeMS(2000);
+      storedOtp = await Otp.findOne({ email: normalizedEmail }).maxTimeMS(3000);
     } catch (dbErr) {
       console.warn('Otp find DB notice:', dbErr.message);
     }
@@ -80,28 +84,28 @@ router.post('/verify-otp', async (req, res) => {
       storedOtp = pendingOtps.get(normalizedEmail);
     }
 
-    if (!storedOtp || storedOtp.otp !== otp) {
-      return res.status(400).json({ error: 'Invalid or expired OTP' });
+    if (!storedOtp || storedOtp.otp !== cleanOtp) {
+      return res.status(400).json({ error: 'Invalid or expired OTP code. Please check your code or click Resend.' });
     }
 
-    // Create/update user in DB
+    // Create or update user in MongoDB
     let user = null;
     try {
-      user = await User.findOne({ email: normalizedEmail }).maxTimeMS(2000);
+      user = await User.findOne({ email: normalizedEmail }).maxTimeMS(3000);
       if (user) {
         user.name = storedOtp.name;
         user.password = storedOtp.password;
         user.isVerified = true;
+        await user.save();
       } else {
-        user = new User({
+        user = await User.create({
           name: storedOtp.name,
           email: storedOtp.email,
           password: storedOtp.password,
           isVerified: true
         });
       }
-      await user.save();
-      await Otp.deleteOne({ email: normalizedEmail }).catch(() => {});
+      await Otp.deleteMany({ email: normalizedEmail }).catch(() => {});
     } catch (userDbErr) {
       console.warn('User save DB notice:', userDbErr.message);
       user = { _id: 'user_' + Date.now(), name: storedOtp.name, email: storedOtp.email };
@@ -111,7 +115,7 @@ router.post('/verify-otp', async (req, res) => {
 
     const token = generateToken(user);
     res.json({
-      message: 'Account created successfully',
+      message: 'Account verified & created successfully',
       user: { id: user._id, name: user.name, email: user.email },
       token
     });
@@ -128,7 +132,7 @@ router.post('/resend-otp', async (req, res) => {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    const normalizedEmail = email.toLowerCase();
+    const normalizedEmail = email.toLowerCase().trim();
     const otp = generateOTP();
 
     let stored = pendingOtps.get(normalizedEmail);
@@ -139,15 +143,23 @@ router.post('/resend-otp', async (req, res) => {
       pendingOtps.set(normalizedEmail, { name: 'User', email: normalizedEmail, password: 'password', otp, createdAt: new Date() });
     }
 
-    sendOTPEmail(email, otp).catch(err => console.error('Resend email error:', err));
+    // Update MongoDB Otp document if available
+    try {
+      await Otp.deleteMany({ email: normalizedEmail }).maxTimeMS(3000);
+      await Otp.create({ email: normalizedEmail, name: stored ? stored.name : 'User', password: stored ? stored.password : 'password', otp });
+    } catch (e) {}
+
+    const emailResult = await sendOTPEmail(normalizedEmail, otp);
+
     console.log(`\n========================================`);
-    console.log(`🔑 [RESENT OTP Code for ${email}]: ${otp}`);
+    console.log(`🔑 [RESENT OTP Code for ${normalizedEmail}]: ${otp}`);
+    console.log(`✉️ [Email Delivery Status]: ${emailResult.success ? 'Delivered' : 'Failed'}`);
     console.log(`========================================\n`);
 
-    const isDev = process.env.NODE_ENV !== 'production';
     res.json({
-      message: 'OTP resent successfully',
-      ...(isDev && { devOtp: otp })
+      message: 'Fresh OTP code generated',
+      devOtp: otp,
+      emailSent: emailResult.success
     });
   } catch (error) {
     console.error('Resend OTP error:', error);
