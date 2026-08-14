@@ -369,8 +369,262 @@ function filterCategory(category) {
     applyFiltersAndRender();
 }
 
-function handleSearch() {
+// --- AI SMART SEARCH AUTO-SUGGESTIONS ENGINE ---
+const AI_INTENT_MAP = {
+    'music': ['Audio', 'Headphones', 'Speaker', 'Sony', 'JBL'],
+    'sound': ['Audio', 'Headphones', 'Speaker', 'Earbuds'],
+    'audio': ['Audio', 'Headphones', 'Speaker'],
+    'earphone': ['Audio', 'Headphones', 'Sony'],
+    'earbuds': ['Audio', 'Headphones', 'Sony'],
+    'headphone': ['Audio', 'Headphones', 'Sony'],
+    'speaker': ['Audio', 'Bluetooth Speaker', 'JBL'],
+    'phone': ['Electronics', 'Smartphone', 'Accessories', 'Case', 'Screen Protector'],
+    'cell': ['Electronics', 'Smartphone'],
+    'mobile': ['Electronics', 'Smartphone'],
+    'case': ['Accessories', 'Case', 'Cover'],
+    'cover': ['Accessories', 'Case'],
+    'charger': ['Accessories', 'USB-C', 'Cable'],
+    'cable': ['Accessories', 'USB-C', 'Cable'],
+    'cord': ['Accessories', 'Cable'],
+    'watch': ['Wearables', 'Smartwatch', 'Fitness'],
+    'fitness': ['Wearables', 'Smartwatch', 'Tracker'],
+    'gym': ['Wearables', 'Smartwatch', 'Audio'],
+    'laptop': ['Electronics', 'Computer'],
+    'computer': ['Electronics'],
+    'screen': ['Accessories', 'Screen Protector']
+};
+
+function handleSearchWithAI(val) {
+    const desktopInput = document.getElementById('search-input');
+    const mobileInput = document.getElementById('mobile-search-input');
+    if (desktopInput && desktopInput.value !== val) desktopInput.value = val;
+    if (mobileInput && mobileInput.value !== val) mobileInput.value = val;
+
     applyFiltersAndRender();
+    showAISuggestions(val);
+}
+
+function handleSearch() {
+    const desktopVal = document.getElementById('search-input')?.value || '';
+    const mobileVal = document.getElementById('mobile-search-input')?.value || '';
+    handleSearchWithAI(desktopVal || mobileVal);
+}
+
+function showAISuggestions(query = '', isMobile = false) {
+    const dropdown = document.getElementById(isMobile ? 'mobile-ai-suggestions-dropdown' : 'ai-suggestions-dropdown');
+    const otherDropdown = document.getElementById(isMobile ? 'ai-suggestions-dropdown' : 'mobile-ai-suggestions-dropdown');
+    if (otherDropdown) otherDropdown.classList.add('hidden');
+    if (!dropdown) return;
+
+    const trimmed = (query || '').trim().toLowerCase();
+
+    // CASE 1: Empty Query - Show Trending Searches & Popular Categories
+    if (!trimmed) {
+        dropdown.innerHTML = `
+            <div class="p-2 space-y-4">
+                <div>
+                    <div class="flex items-center justify-between text-xs font-bold text-gray-500 mb-2">
+                        <span class="flex items-center space-x-1.5 text-indigo-600">
+                            <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                            <span>AI Trending Searches</span>
+                        </span>
+                        <span class="text-[10px] text-gray-400">Live Suggestions</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button onclick="selectAISuggestion('Sony WH-1000XM5')" class="bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-full transition flex items-center space-x-1">
+                            <i class="fa-solid fa-arrow-trend-up text-[10px] text-indigo-500"></i>
+                            <span>Sony WH-1000XM5</span>
+                        </button>
+                        <button onclick="selectAISuggestion('Wireless Headphones')" class="bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-full transition flex items-center space-x-1">
+                            <i class="fa-solid fa-arrow-trend-up text-[10px] text-indigo-500"></i>
+                            <span>Wireless Headphones</span>
+                        </button>
+                        <button onclick="selectAISuggestion('Smartwatch')" class="bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-full transition flex items-center space-x-1">
+                            <i class="fa-solid fa-arrow-trend-up text-[10px] text-indigo-500"></i>
+                            <span>Smartwatch Tracker</span>
+                        </button>
+                        <button onclick="selectAISuggestion('USB-C Fast Cable')" class="bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-full transition flex items-center space-x-1">
+                            <i class="fa-solid fa-arrow-trend-up text-[10px] text-indigo-500"></i>
+                            <span>USB-C Fast Cable</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-gray-100">
+                    <div class="text-xs font-bold text-gray-500 mb-2 flex items-center space-x-1.5">
+                        <i class="fa-solid fa-layer-group text-xs text-gray-400"></i>
+                        <span>Explore Popular Categories</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="filterCategory('Electronics'); closeAISuggestions();" class="text-left p-2 rounded-xl bg-gray-50 hover:bg-indigo-50 transition flex items-center space-x-2">
+                            <i class="fa-solid fa-laptop text-indigo-600 text-sm"></i>
+                            <span class="text-xs font-bold text-gray-800">Electronics</span>
+                        </button>
+                        <button onclick="filterCategory('Audio'); closeAISuggestions();" class="text-left p-2 rounded-xl bg-gray-50 hover:bg-indigo-50 transition flex items-center space-x-2">
+                            <i class="fa-solid fa-headphones text-indigo-600 text-sm"></i>
+                            <span class="text-xs font-bold text-gray-800">Audio & Sound</span>
+                        </button>
+                        <button onclick="filterCategory('Wearables'); closeAISuggestions();" class="text-left p-2 rounded-xl bg-gray-50 hover:bg-indigo-50 transition flex items-center space-x-2">
+                            <i class="fa-solid fa-clock text-indigo-600 text-sm"></i>
+                            <span class="text-xs font-bold text-gray-800">Smart Wearables</span>
+                        </button>
+                        <button onclick="filterCategory('Accessories'); closeAISuggestions();" class="text-left p-2 rounded-xl bg-gray-50 hover:bg-indigo-50 transition flex items-center space-x-2">
+                            <i class="fa-solid fa-plug text-indigo-600 text-sm"></i>
+                            <span class="text-xs font-bold text-gray-800">Accessories</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        dropdown.classList.remove('hidden');
+        return;
+    }
+
+    // CASE 2: Active Query - Match Intent, Synonyms, Categories, and Products
+    let intentKeywords = [];
+    Object.keys(AI_INTENT_MAP).forEach(key => {
+        if (trimmed.includes(key) || key.includes(trimmed)) {
+            intentKeywords.push(...AI_INTENT_MAP[key]);
+        }
+    });
+
+    const matchingProducts = products.filter(p => {
+        const title = (p.title || p.name || '').toLowerCase();
+        const cat = (p.category || '').toLowerCase();
+        const brand = (p.brand || '').toLowerCase();
+        const desc = (p.description || '').toLowerCase();
+
+        const directMatch = title.includes(trimmed) || cat.includes(trimmed) || brand.includes(trimmed) || desc.includes(trimmed);
+        const intentMatch = intentKeywords.some(kw => title.includes(kw.toLowerCase()) || cat.includes(kw.toLowerCase()) || brand.includes(kw.toLowerCase()));
+        return directMatch || intentMatch;
+    }).slice(0, 4);
+
+    // Matching categories & brands
+    const matchingCategories = [...new Set(matchingProducts.map(p => p.category).filter(Boolean))];
+
+    if (matchingProducts.length === 0) {
+        dropdown.innerHTML = `
+            <div class="p-4 text-center space-y-2">
+                <div class="w-10 h-10 rounded-full bg-amber-50 text-amber-500 mx-auto flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <h4 class="text-xs font-bold text-gray-800">No exact items found for "${query}"</h4>
+                <p class="text-[11px] text-gray-500">AI suggests exploring our best sellers in Audio, Wearables, or Electronics.</p>
+                <div class="pt-2 flex justify-center gap-2">
+                    <button onclick="filterCategory('All'); closeAISuggestions();" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition">
+                        View All Products
+                    </button>
+                </div>
+            </div>
+        `;
+        dropdown.classList.remove('hidden');
+        return;
+    }
+
+    let html = `
+        <div class="p-2 space-y-3 text-xs">
+            <!-- AI Query Auto-Completions -->
+            <div>
+                <div class="text-[11px] font-bold text-indigo-600 mb-1.5 flex items-center space-x-1">
+                    <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
+                    <span>AI Suggested Searches</span>
+                </div>
+                <div class="space-y-1">
+                    <button onclick="selectAISuggestion('${query}')" class="w-full text-left p-1.5 rounded-lg hover:bg-gray-100 flex items-center justify-between text-gray-800 font-semibold group transition">
+                        <span class="flex items-center space-x-2 truncate">
+                            <i class="fa-solid fa-magnifying-glass text-gray-400 text-xs group-hover:text-indigo-600"></i>
+                            <span>${query}</span>
+                        </span>
+                        <span class="text-[10px] text-gray-400">Search</span>
+                    </button>
+                    ${matchingCategories.slice(0, 2).map(cat => `
+                        <button onclick="filterCategory('${cat}'); closeAISuggestions();" class="w-full text-left p-1.5 rounded-lg hover:bg-indigo-50 flex items-center justify-between text-gray-700 font-medium group transition">
+                            <span class="flex items-center space-x-2 truncate">
+                                <i class="fa-solid fa-tag text-indigo-500 text-xs"></i>
+                                <span><b>${query}</b> in <span class="text-indigo-600 font-bold">${cat}</span></span>
+                            </span>
+                            <span class="text-[10px] text-indigo-500 font-bold">Filter</span>
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- Instant Matching Products Preview -->
+            <div class="pt-2 border-t border-gray-100">
+                <div class="text-[11px] font-bold text-gray-500 mb-2 flex items-center justify-between">
+                    <span>Matching Products (${matchingProducts.length})</span>
+                    <span class="text-[10px] text-indigo-600">Instant Preview</span>
+                </div>
+                <div class="space-y-2">
+                    ${matchingProducts.map(p => {
+                        const pId = p._id || p.id;
+                        const pName = p.title || p.name;
+                        const pImg = p.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60';
+                        const pPrice = Number(p.price).toFixed(2);
+                        const pBrand = p.brand ? `<span class="bg-gray-100 text-gray-700 text-[9px] font-extrabold px-1.5 py-0.5 rounded">${p.brand}</span>` : '';
+                        
+                        return `
+                            <div onclick="openProductModal('${pId}'); closeAISuggestions();" class="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-50 cursor-pointer border border-transparent hover:border-gray-200 transition group">
+                                <img src="${pImg}" class="w-11 h-11 object-cover rounded-lg border border-gray-100 flex-shrink-0">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center space-x-1.5">
+                                        <h5 class="text-xs font-bold text-gray-900 group-hover:text-indigo-600 truncate">${pName}</h5>
+                                        ${pBrand}
+                                    </div>
+                                    <div class="flex items-center space-x-2 mt-0.5">
+                                        <span class="text-xs font-extrabold text-indigo-600">$${pPrice}</span>
+                                        <span class="text-[10px] text-amber-500 font-bold"><i class="fa-solid fa-star text-[9px]"></i> ${p.rating || 4.5}</span>
+                                        <span class="text-[10px] text-gray-400 truncate">• ${p.category || 'General'}</span>
+                                    </div>
+                                </div>
+                                <button onclick="event.stopPropagation(); addToCart('${pId}'); closeAISuggestions();" class="bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 w-7 h-7 rounded-lg flex items-center justify-center transition flex-shrink-0 text-xs shadow-xs" title="Add to Cart">
+                                    <i class="fa-solid fa-cart-plus"></i>
+                                </button>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+
+    dropdown.innerHTML = html;
+    dropdown.classList.remove('hidden');
+}
+
+function selectAISuggestion(queryText) {
+    const desktopInput = document.getElementById('search-input');
+    const mobileInput = document.getElementById('mobile-search-input');
+    if (desktopInput) desktopInput.value = queryText;
+    if (mobileInput) mobileInput.value = queryText;
+
+    switchTab('catalog');
+    applyFiltersAndRender();
+    closeAISuggestions();
+}
+
+function closeAISuggestions() {
+    const d1 = document.getElementById('ai-suggestions-dropdown');
+    const d2 = document.getElementById('mobile-ai-suggestions-dropdown');
+    if (d1) d1.classList.add('hidden');
+    if (d2) d2.classList.add('hidden');
+}
+
+// Global click & Escape listener for AI Suggestions
+if (typeof document !== 'undefined') {
+    document.addEventListener('click', (e) => {
+        const isInsideDesktop = e.target.closest('#search-input') || e.target.closest('#ai-suggestions-dropdown');
+        const isInsideMobile = e.target.closest('#mobile-search-input') || e.target.closest('#mobile-ai-suggestions-dropdown');
+        if (!isInsideDesktop && !isInsideMobile) {
+            closeAISuggestions();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeAISuggestions();
+        }
+    });
 }
 
 function resetFilters() {

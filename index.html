@@ -128,13 +128,24 @@
             </div>
 
             <!-- Desktop Search Bar -->
-            <div class="hidden md:flex flex-1 max-w-md mx-8">
+            <div class="hidden md:flex flex-1 max-w-md mx-8 relative">
                 <div class="relative w-full">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </span>
-                    <input type="text" id="search-input" oninput="handleSearch()" placeholder="Search products by name or category..." 
-                        class="w-full pl-10 pr-4 py-2 bg-gray-100 border border-transparent rounded-full text-sm focus:outline-none focus:bg-white focus:border-indigo-500 transition">
+                    <input type="text" id="search-input" oninput="handleSearchWithAI(this.value)" onfocus="showAISuggestions(this.value, false)" placeholder="Search products, brands, or ask AI..." 
+                        class="w-full pl-10 pr-12 py-2 bg-gray-100 border border-transparent rounded-full text-sm focus:outline-none focus:bg-white focus:border-indigo-500 transition">
+                    <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <span class="bg-indigo-50 text-indigo-700 font-extrabold text-[10px] px-1.5 py-0.5 rounded border border-indigo-200/80 flex items-center space-x-1 shadow-xs">
+                            <i class="fa-solid fa-wand-magic-sparkles text-[9px] text-indigo-600 animate-pulse"></i>
+                            <span>AI</span>
+                        </span>
+                    </span>
+                </div>
+
+                <!-- Desktop AI Suggestions Dropdown -->
+                <div id="ai-suggestions-dropdown" class="hidden absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 p-3 z-50 max-h-[80vh] overflow-y-auto">
+                    <!-- Populated dynamically by script.js -->
                 </div>
             </div>
 
@@ -180,13 +191,24 @@
             </div>
         </div>
         <!-- Mobile Search Bar -->
-        <div class="md:hidden px-4 pb-3">
+        <div class="md:hidden px-4 pb-3 relative">
             <div class="relative w-full">
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </span>
-                <input type="text" id="mobile-search-input" oninput="handleSearch()" placeholder="Search products..." 
-                    class="w-full pl-10 pr-4 py-2 bg-gray-100 border border-transparent rounded-full text-sm focus:outline-none focus:bg-white focus:border-indigo-500">
+                <input type="text" id="mobile-search-input" oninput="handleSearchWithAI(this.value)" onfocus="showAISuggestions(this.value, true)" placeholder="Search products, brands, or ask AI..." 
+                    class="w-full pl-10 pr-12 py-2 bg-gray-100 border border-transparent rounded-full text-sm focus:outline-none focus:bg-white focus:border-indigo-500">
+                <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <span class="bg-indigo-50 text-indigo-700 font-extrabold text-[10px] px-1.5 py-0.5 rounded border border-indigo-200/80 flex items-center space-x-1 shadow-xs">
+                        <i class="fa-solid fa-wand-magic-sparkles text-[9px] text-indigo-600 animate-pulse"></i>
+                        <span>AI</span>
+                    </span>
+                </span>
+            </div>
+
+            <!-- Mobile AI Suggestions Dropdown -->
+            <div id="mobile-ai-suggestions-dropdown" class="hidden absolute top-full left-4 right-4 mt-1 bg-white rounded-2xl shadow-2xl border border-gray-100 p-3 z-50 max-h-[75vh] overflow-y-auto">
+                <!-- Populated dynamically by script.js -->
             </div>
         </div>
 
