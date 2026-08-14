@@ -1,6 +1,19 @@
-const API_BASE = (window.location.port === '5000')
-    ? '/api'
-    : 'http://localhost:5000/api';
+// Auto-detect environment: Seamless support for both Local (port 5000 / Live Server) and Online (Render, Vercel, Railway, etc.)
+const API_BASE = (() => {
+    if (typeof window !== 'undefined' && window.location) {
+        // If served over HTTP/HTTPS
+        if (window.location.protocol.startsWith('http')) {
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            // If running on a local dev server (like VSCode Live Server 5500/3000), target Express backend on 5000
+            if (isLocal && window.location.port !== '5000') {
+                return 'http://localhost:5000/api';
+            }
+            // If served directly by Express (port 5000) or online cloud hosting (Render/Railway/Vercel/Heroku)
+            return '/api';
+        }
+    }
+    return 'http://localhost:5000/api';
+})();
 
 // Safe JSON parser to prevent HTML response SyntaxError crashes
 async function safeParseResponse(response) {
@@ -227,11 +240,12 @@ const DEFAULT_PRODUCTS = [
 
 // --- PRODUCTS API & RENDERING ---
 async function fetchProducts() {
-    const endpoints = [
-        `${API_BASE}/products`,
-        'http://localhost:5000/api/products',
-        'http://127.0.0.1:5000/api/products'
-    ];
+    const endpoints = [`${API_BASE}/products`];
+    if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+        if (!endpoints.includes('http://localhost:5000/api/products')) {
+            endpoints.push('http://localhost:5000/api/products');
+        }
+    }
 
     let loaded = false;
     for (const url of endpoints) {
