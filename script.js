@@ -1385,20 +1385,11 @@ async function handleRegisterSubmit(e) {
         if (!response.ok) throw new Error(data.error || 'Registration failed');
 
         pendingEmail = email;
-        document.getElementById('otp-target-email').textContent = email;
-
-        // Show dev OTP if present
-        const devBanner = document.getElementById('dev-otp-banner');
-        const simulatedCode = document.getElementById('simulated-otp-code');
-        if (data.devOtp) {
-            simulatedCode.textContent = data.devOtp;
-            devBanner.classList.remove('hidden');
-        } else {
-            devBanner.classList.add('hidden');
-        }
+        const targetEmailEl = document.getElementById('otp-target-email');
+        if (targetEmailEl) targetEmailEl.textContent = email;
 
         showAuthMode('otp');
-        showToast('OTP sent to your email!');
+        showToast('Verification code sent to your email!');
     } catch (error) {
         console.error('Register error:', error);
         showAuthError(error.message);

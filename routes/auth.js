@@ -45,15 +45,13 @@ router.post('/register', async (req, res) => {
     const emailResult = await sendOTPEmail(normalizedEmail, otp);
 
     console.log(`\n========================================`);
-    console.log(`🔑 [OTP Code for ${normalizedEmail}]: ${otp}`);
-    console.log(`✉️ [Email Delivery Status]: ${emailResult.success ? 'Delivered' : 'Failed - ' + emailResult.error}`);
+    console.log(`🔑 [OTP Code Generated for ${normalizedEmail}]: ${otp}`);
+    console.log(`✉️ [Email Delivery Status]: ${emailResult.success ? 'Delivered' : 'Notice: ' + emailResult.error}`);
     console.log(`========================================\n`);
 
     res.json({
-      message: 'Verification OTP sent successfully',
-      email: normalizedEmail,
-      devOtp: otp,
-      emailSent: emailResult.success
+      message: 'Verification code sent to your email address',
+      email: normalizedEmail
     });
   } catch (error) {
     console.error('Register error:', error);
@@ -85,7 +83,7 @@ router.post('/verify-otp', async (req, res) => {
     }
 
     if (!storedOtp || storedOtp.otp !== cleanOtp) {
-      return res.status(400).json({ error: 'Invalid or expired OTP code. Please check your code or click Resend.' });
+      return res.status(400).json({ error: 'Invalid or expired OTP code. Please check your email or click Resend.' });
     }
 
     // Create or update user in MongoDB
@@ -153,13 +151,12 @@ router.post('/resend-otp', async (req, res) => {
 
     console.log(`\n========================================`);
     console.log(`🔑 [RESENT OTP Code for ${normalizedEmail}]: ${otp}`);
-    console.log(`✉️ [Email Delivery Status]: ${emailResult.success ? 'Delivered' : 'Failed'}`);
+    console.log(`✉️ [Email Delivery Status]: ${emailResult.success ? 'Delivered' : 'Notice: ' + emailResult.error}`);
     console.log(`========================================\n`);
 
     res.json({
-      message: 'Fresh OTP code generated',
-      devOtp: otp,
-      emailSent: emailResult.success
+      message: 'Verification code resent to your email address',
+      email: normalizedEmail
     });
   } catch (error) {
     console.error('Resend OTP error:', error);
