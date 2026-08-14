@@ -163,6 +163,10 @@
                             <p class="text-xs text-gray-400">Signed in as</p>
                             <p id="user-menu-name" class="text-sm font-bold text-gray-800 truncate"></p>
                         </div>
+                        <button onclick="switchTab('profile'); toggleUserMenu();" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2">
+                            <i class="fa-solid fa-user-gear text-indigo-600"></i>
+                            <span>My Profile</span>
+                        </button>
                         <button onclick="switchTab('orders'); toggleUserMenu();" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2">
                             <i class="fa-solid fa-box text-gray-400"></i>
                             <span>My Orders</span>
@@ -448,6 +452,148 @@
             <!-- Orders List Container -->
             <div id="orders-container" class="space-y-4">
                 <!-- Dynamically populated via JS -->
+            </div>
+        </div>
+
+        <!-- TAB 5: USER PROFILE & ACCOUNT SETTINGS -->
+        <div id="tab-profile" class="tab-content hidden space-y-6">
+            <!-- Profile Hero Card -->
+            <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-violet-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="flex items-center space-x-5">
+                    <div class="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-md border-2 border-white/20 flex items-center justify-center text-3xl font-black text-white shadow-inner">
+                        <span id="profile-avatar-initials">U</span>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h2 id="profile-display-name" class="text-2xl font-black">Customer Name</h2>
+                            <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center space-x-1">
+                                <i class="fa-solid fa-shield-check"></i>
+                                <span>Verified Account</span>
+                            </span>
+                        </div>
+                        <p id="profile-display-email" class="text-xs text-indigo-200 mt-0.5">customer@example.com</p>
+                        <div class="flex items-center space-x-4 mt-2 text-[11px] text-indigo-300">
+                            <span><i class="fa-regular fa-calendar mr-1"></i>Member since <b id="profile-display-joined">2026</b></span>
+                            <span>•</span>
+                            <span><i class="fa-solid fa-lock mr-1 text-amber-300"></i>2FA Protected</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Summary Stats Badges -->
+                <div class="grid grid-cols-3 gap-3 w-full md:w-auto">
+                    <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center border border-white/10">
+                        <span class="text-xs text-indigo-200 block">Orders</span>
+                        <span id="profile-stat-orders" class="text-xl font-black">0</span>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center border border-white/10">
+                        <span class="text-xs text-indigo-200 block">Wishlist</span>
+                        <span id="profile-stat-wishlist" class="text-xl font-black">0</span>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center border border-white/10">
+                        <span class="text-xs text-indigo-200 block">Status</span>
+                        <span class="text-xs font-bold text-emerald-300 block mt-1">Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Management Sections Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- LEFT: Personal Details & Shipping Address Form (7 cols) -->
+                <div class="lg:col-span-7 bg-white rounded-2xl border border-gray-200 p-6 sm:p-7 shadow-sm space-y-5">
+                    <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                        <div>
+                            <h3 class="text-base font-extrabold text-gray-900 flex items-center space-x-2">
+                                <i class="fa-solid fa-address-card text-indigo-600"></i>
+                                <span>Personal Information & Shipping Details</span>
+                            </h3>
+                            <p class="text-xs text-gray-400 mt-0.5">Manage your contact details and default delivery address.</p>
+                        </div>
+                    </div>
+
+                    <form onsubmit="handleUpdateProfile(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Full Name</label>
+                                <input type="text" id="profile-input-name" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs font-medium text-gray-900 focus:outline-none focus:bg-white focus:border-indigo-500 transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Email Address</label>
+                                <input type="email" id="profile-input-email" disabled class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs font-medium text-gray-500 cursor-not-allowed">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Phone Number</label>
+                                <input type="tel" id="profile-input-phone" placeholder="e.g. +233 24 123 4567" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs font-medium text-gray-900 focus:outline-none focus:bg-white focus:border-indigo-500 transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">City / Region</label>
+                                <input type="text" id="profile-input-city" placeholder="e.g. Accra / Greater Accra" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs font-medium text-gray-900 focus:outline-none focus:bg-white focus:border-indigo-500 transition">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Default Shipping Address</label>
+                            <textarea id="profile-input-address" rows="3" placeholder="Enter full street address, apartment / landmark for faster checkout delivery..." class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs font-medium text-gray-900 focus:outline-none focus:bg-white focus:border-indigo-500 transition"></textarea>
+                        </div>
+
+                        <div class="pt-2 flex justify-end">
+                            <button type="submit" id="save-profile-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold px-6 py-2.5 rounded-xl shadow-md transition flex items-center space-x-2">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                                <span>Save Profile Changes</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- RIGHT: Security & Password Update (5 cols) -->
+                <div class="lg:col-span-5 space-y-6">
+                    <!-- Password Change Card -->
+                    <div class="bg-white rounded-2xl border border-gray-200 p-6 sm:p-7 shadow-sm space-y-4">
+                        <div class="pb-3 border-b border-gray-100">
+                            <h3 class="text-base font-extrabold text-gray-900 flex items-center space-x-2">
+                                <i class="fa-solid fa-lock text-amber-500"></i>
+                                <span>Security & Password</span>
+                            </h3>
+                            <p class="text-xs text-gray-400 mt-0.5">Ensure your account remains safe with a strong password.</p>
+                        </div>
+
+                        <form onsubmit="handleChangePassword(event)" class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Current Password</label>
+                                <input type="password" id="change-pwd-current" required placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:bg-white focus:border-indigo-500 transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">New Password (min 6 chars)</label>
+                                <input type="password" id="change-pwd-new" required minlength="6" placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:bg-white focus:border-indigo-500 transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Confirm New Password</label>
+                                <input type="password" id="change-pwd-confirm" required minlength="6" placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:bg-white focus:border-indigo-500 transition">
+                            </div>
+
+                            <div class="pt-2">
+                                <button type="submit" id="change-pwd-btn" class="w-full bg-gray-900 hover:bg-gray-800 text-white text-xs font-extrabold py-2.5 rounded-xl transition shadow flex items-center justify-center space-x-2">
+                                    <i class="fa-solid fa-key"></i>
+                                    <span>Update Password</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Account Security Perks -->
+                    <div class="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-4 text-xs space-y-2 text-indigo-900">
+                        <div class="flex items-center space-x-2 font-bold text-indigo-800">
+                            <i class="fa-solid fa-shield-halved text-indigo-600"></i>
+                            <span>Two-Factor Security Active</span>
+                        </div>
+                        <p class="text-indigo-700/80 text-[11px] leading-relaxed">
+                            Your account is protected by live OTP 2-Factor Authentication dispatched directly to your registered email on every login attempt.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 

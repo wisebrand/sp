@@ -4,6 +4,7 @@ const { generateToken, authMiddleware } = require('../utils/jwt');
 const { generateOTP, sendOTPEmail } = require('../utils/email');
 const User = require('../models/User');
 const Otp = require('../models/Otp');
+const Order = require('../models/Order');
 
 // In-memory persistent maps for OTPs and Users when DB is connecting or offline
 const pendingOtps = new Map();
@@ -263,15 +264,190 @@ router.post('/login', async (req, res) => {
 });
 
 // 5. Get User Profile Route
+router.get('/profile', authMiddleware, async (req, res) => {
+  try {
+    let user = null;
+    try {
+      user = await User.findById(req.userId).select('-password').maxTimeMS(2000);
+    } catch (e) {}
+
+    if (!user) {
+      for (const [_, u] of memoryUsers.entries()) {
+        if (u._id === req.userId || u.id === req.userId || u.email === req.userEmail) {
+          user = u;
+          break;
+        }
+      }
+    }
+
+    if (!user) {
+      user = {
+        _id: req.userId,
+        name: req.userName || 'Customer',
+        email: req.userEmail || 'customer@example.com',
+        phone: '',
+        address: '',
+        city: '',
+        isVerified: true,
+        createdAt: new Date()
+      };
+    }
+
+    let orderCount = 0;
+    try {
+      orderCount = await Order.countDocuments({ userId: req.userId }).maxTimeMS(1500);
+    } catch (e) {}
+
+    res.json({
+      user: {
+        id: user._id || user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone || '',
+        address: user.address || '',
+        city: user.city || '',
+        isVerified: user.isVerified !== undefined ? user.isVerified : true,
+        createdAt: user.createdAt || new Date()
+      },
+      orderCount
+    });
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({ error: 'Failed to load user profile' });
+  }
+});
+
+// Alias for /me
 router.get('/me', authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select('name email createdAt').maxTimeMS(1500);
+    const user = await User.findById(req.userId).select('name email phone address city createdAt isVerified').maxTimeMS(1500);
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.json({ id: req.userId, name: req.userName || 'Customer', email: req.userEmail || '' });
     }
     res.json(user);
   } catch (error) {
-    res.json({ id: req.userId, name: 'Active User', email: 'user@example.com' });
+    res.json({ id: req.userId, name: req.userName || 'Customer', email: req.userEmail || '' });
+  }
+});
+
+// 6. Update User Profile Route
+router.put('/profile', authMiddleware, async (req, res) => {
+  try {
+    const { name, phone, address, city } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Name cannot be empty' });
+    }
+
+    let updatedUser = null;
+    try {
+      updatedUser = await User.findByIdAndUpdate(
+        req.userId,
+        {
+          $set: {
+            name: name.trim(),
+            phone: (phone || '').trim(),
+            address: (address || '').trim(),
+            city: (city || '').trim()
+          }
+        },
+        { new: true }
+      ).select('-password').maxTimeMS(2000);
+    } catch (dbErr) {
+      console.warn('Profile update MongoDB notice:', dbErr.message);
+    }
+
+    if (!updatedUser) {
+      for (const [email, u] of memoryUsers.entries()) {
+        if (u._id === req.userId || u.id === req.userId || u.email === req.userEmail) {
+          u.name = name.trim();
+          u.phone = (phone || '').trim();
+          u.address = (address || '').trim();
+          u.city = (city || '').trim();
+          updatedUser = u;
+          break;
+        }
+      }
+    }
+
+    if (!updatedUser) {
+      updatedUser = {
+        _id: req.userId,
+        name: name.trim(),
+        email: req.userEmail || '',
+        phone: phone || '',
+        address: address || '',
+        city: city || '',
+        isVerified: true
+      };
+    }
+
+    const newToken = generateToken(updatedUser);
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: {
+        id: updatedUser._id || updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone || '',
+        address: updatedUser.address || '',
+        city: updatedUser.city || '',
+        isVerified: updatedUser.isVerified !== undefined ? updatedUser.isVerified : true
+      },
+      token: newToken
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// 7. Change Password Route
+router.post('/change-password', authMiddleware, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Both current password and new password are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters long' });
+    }
+
+    let user = null;
+    try {
+      user = await User.findById(req.userId).maxTimeMS(2000);
+    } catch (dbErr) {}
+
+    if (user) {
+      const isMatch = await user.comparePassword(currentPassword);
+      if (!isMatch) {
+        return res.status(400).json({ error: 'Incorrect current password. Please try again.' });
+      }
+      user.password = newPassword;
+      await user.save();
+    } else {
+      let memUser = null;
+      for (const [_, u] of memoryUsers.entries()) {
+        if (u._id === req.userId || u.id === req.userId || u.email === req.userEmail) {
+          memUser = u;
+          break;
+        }
+      }
+      if (memUser) {
+        if (memUser.password !== currentPassword) {
+          return res.status(400).json({ error: 'Incorrect current password' });
+        }
+        memUser.password = newPassword;
+      } else {
+        return res.status(404).json({ error: 'User account not found' });
+      }
+    }
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ error: 'Failed to change password' });
   }
 });
 

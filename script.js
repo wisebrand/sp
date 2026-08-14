@@ -211,6 +211,7 @@ function switchTab(tabId, pushHistory = true) {
     if (tabId === 'cart') renderCart();
     if (tabId === 'wishlist') renderWishlist();
     if (tabId === 'orders') renderOrders();
+    if (tabId === 'profile') loadUserProfile();
 }
 
 function goBack() {
@@ -2039,4 +2040,177 @@ function toggleUserMenu() {
     }
     const dropdown = document.getElementById('user-dropdown');
     if (dropdown) dropdown.classList.toggle('hidden');
+}
+
+// --- USER PROFILE & ACCOUNT MANAGEMENT ---
+async function loadUserProfile() {
+    if (!authToken || !currentUser) {
+        showToast('Please sign in to view your profile', 'error');
+        openAuthModal('login');
+        return;
+    }
+
+    const nameDisplay = document.getElementById('profile-display-name');
+    const emailDisplay = document.getElementById('profile-display-email');
+    const initialsDisplay = document.getElementById('profile-avatar-initials');
+    const joinedDisplay = document.getElementById('profile-display-joined');
+    const ordersStat = document.getElementById('profile-stat-orders');
+    const wishlistStat = document.getElementById('profile-stat-wishlist');
+
+    const nameInput = document.getElementById('profile-input-name');
+    const emailInput = document.getElementById('profile-input-email');
+    const phoneInput = document.getElementById('profile-input-phone');
+    const cityInput = document.getElementById('profile-input-city');
+    const addressInput = document.getElementById('profile-input-address');
+
+    // Populate initial cached values
+    if (nameDisplay) nameDisplay.textContent = currentUser.name || 'Valued Shopper';
+    if (emailDisplay) emailDisplay.textContent = currentUser.email || '';
+    if (initialsDisplay) {
+        const parts = (currentUser.name || 'SD').trim().split(' ');
+        initialsDisplay.textContent = parts.length > 1 ? (parts[0][0] + parts[1][0]).toUpperCase() : (currentUser.name ? currentUser.name.slice(0, 2).toUpperCase() : 'SD');
+    }
+    if (wishlistStat) wishlistStat.textContent = wishlist.length;
+    if (ordersStat) ordersStat.textContent = orders.length;
+
+    if (nameInput) nameInput.value = currentUser.name || '';
+    if (emailInput) emailInput.value = currentUser.email || '';
+    if (phoneInput) phoneInput.value = currentUser.phone || '';
+    if (cityInput) cityInput.value = currentUser.city || '';
+    if (addressInput) addressInput.value = currentUser.address || '';
+
+    // Fetch freshest profile details from server
+    try {
+        const res = await fetch(`${API_BASE}/auth/profile`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        if (res.ok) {
+            const data = await safeParseResponse(res);
+            if (data && data.user) {
+                const u = data.user;
+                currentUser = { ...currentUser, ...u };
+                localStorage.setItem('sd_user', JSON.stringify(currentUser));
+
+                if (nameDisplay) nameDisplay.textContent = u.name;
+                if (emailDisplay) emailDisplay.textContent = u.email;
+                if (joinedDisplay && u.createdAt) {
+                    joinedDisplay.textContent = new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                }
+                if (ordersStat) ordersStat.textContent = data.orderCount !== undefined ? data.orderCount : orders.length;
+
+                if (nameInput) nameInput.value = u.name || '';
+                if (phoneInput) phoneInput.value = u.phone || '';
+                if (cityInput) cityInput.value = u.city || '';
+                if (addressInput) addressInput.value = u.address || '';
+            }
+        }
+    } catch (e) {
+        console.warn('Could not fetch user profile details:', e.message);
+    }
+}
+
+async function handleUpdateProfile(e) {
+    e.preventDefault();
+    if (!authToken || !currentUser) return;
+
+    const name = (document.getElementById('profile-input-name')?.value || '').trim();
+    const phone = (document.getElementById('profile-input-phone')?.value || '').trim();
+    const city = (document.getElementById('profile-input-city')?.value || '').trim();
+    const address = (document.getElementById('profile-input-address')?.value || '').trim();
+
+    if (!name) {
+        showToast('Please enter your full name', 'error');
+        return;
+    }
+
+    setButtonLoading('save-profile-btn', true, 'Saving...');
+    showLoading('Updating Profile', 'Saving your profile details...');
+
+    try {
+        const response = await fetch(`${API_BASE}/auth/profile`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ name, phone, city, address })
+        });
+
+        const data = await safeParseResponse(response);
+        if (!response.ok) throw new Error(data.error || 'Failed to update profile');
+
+        if (data.token) {
+            authToken = data.token;
+            localStorage.setItem('sd_token', authToken);
+        }
+        if (data.user) {
+            currentUser = { ...currentUser, ...data.user };
+            localStorage.setItem('sd_user', JSON.stringify(currentUser));
+        }
+
+        updateAuthUI();
+        await loadUserProfile();
+        showToast('🎉 Profile updated successfully!');
+    } catch (error) {
+        console.error('Update profile error:', error);
+        showToast(error.message, 'error');
+    } finally {
+        setButtonLoading('save-profile-btn', false);
+        hideLoading();
+    }
+}
+
+async function handleChangePassword(e) {
+    e.preventDefault();
+    if (!authToken || !currentUser) return;
+
+    const currentPassword = document.getElementById('change-pwd-current')?.value;
+    const newPassword = document.getElementById('change-pwd-new')?.value;
+    const confirmPassword = document.getElementById('change-pwd-confirm')?.value;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        showToast('Please complete all password fields', 'error');
+        return;
+    }
+
+    if (newPassword.length < 6) {
+        showToast('New password must be at least 6 characters', 'error');
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        showToast('New passwords do not match', 'error');
+        return;
+    }
+
+    setButtonLoading('change-pwd-btn', true, 'Updating...');
+    showLoading('Updating Security', 'Changing your account password...');
+
+    try {
+        const response = await fetch(`${API_BASE}/auth/change-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ currentPassword, newPassword })
+        });
+
+        const data = await safeParseResponse(response);
+        if (!response.ok) throw new Error(data.error || 'Failed to change password');
+
+        if (document.getElementById('change-pwd-current')) document.getElementById('change-pwd-current').value = '';
+        if (document.getElementById('change-pwd-new')) document.getElementById('change-pwd-new').value = '';
+        if (document.getElementById('change-pwd-confirm')) document.getElementById('change-pwd-confirm').value = '';
+
+        showToast('🎉 Password changed successfully!');
+    } catch (error) {
+        console.error('Change password error:', error);
+        showToast(error.message, 'error');
+    } finally {
+        setButtonLoading('change-pwd-btn', false);
+        hideLoading();
+    }
 }
