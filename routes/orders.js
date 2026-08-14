@@ -86,21 +86,22 @@ router.post('/', authMiddleware, async (req, res) => {
     userOrders.unshift(order);
     memoryOrders.set(req.userId, userOrders);
 
-    // Dispatch official email receipt asynchronously
+    // Auto-dispatch official email receipt asynchronously
     (async () => {
       try {
-        let recipientEmail = null;
-        if (req.user && req.user.email) {
-          recipientEmail = req.user.email;
-        } else {
-          const u = await User.findById(req.userId).maxTimeMS(1500).catch(() => null);
-          if (u) recipientEmail = u.email;
+        let recipientEmail = (req.body.userEmail || req.userEmail || (req.user && req.user.email) || '').trim();
+        if (!recipientEmail && req.userId) {
+          const u = await User.findById(req.userId).maxTimeMS(2000).catch(() => null);
+          if (u && u.email) recipientEmail = u.email;
         }
         if (recipientEmail) {
+          console.log(`✉️ [Auto Sending Order Receipt]: Delivering to ${recipientEmail} for Order #${order.trackingNumber}...`);
           await sendOrderReceiptEmail(recipientEmail, order);
+        } else {
+          console.warn('⚠️ [Receipt Notice]: No recipient email found for order:', order._id);
         }
       } catch (err) {
-        console.warn('Receipt dispatch notice:', err.message);
+        console.warn('Receipt auto-dispatch notice:', err.message);
       }
     })();
 

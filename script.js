@@ -1277,7 +1277,8 @@ async function submitPayment(e) {
         })),
         totalAmount: pendingOrderTotal,
         shippingAddress: address,
-        paymentMethod: paymentMethodName
+        paymentMethod: paymentMethodName,
+        userEmail: currentUser ? currentUser.email : ''
     };
 
     try {
@@ -1299,10 +1300,11 @@ async function submitPayment(e) {
         updateBadges();
         await fetchOrders();
 
+        const userEmail = currentUser ? currentUser.email : 'your inbox';
         if (momoNoticeText) {
-            showToast(`📲 ${momoNoticeText}`);
+            showToast(`📲 ${momoNoticeText}. Receipt emailed to ${userEmail}!`);
         } else {
-            showToast('🎉 Payment successful! Order confirmed.');
+            showToast(`🎉 Payment successful! Official receipt sent to ${userEmail}.`);
         }
         switchTab('orders');
     } catch (error) {

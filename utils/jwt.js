@@ -5,7 +5,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'default_jwt_secret_key_change_in_p
 // Generate JWT token
 function generateToken(userOrId) {
   const payload = typeof userOrId === 'object' && userOrId !== null
-    ? { userId: userOrId._id || userOrId.id, name: userOrId.name }
+    ? { userId: userOrId._id || userOrId.id, name: userOrId.name, email: userOrId.email }
     : { userId: userOrId };
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
 }
@@ -34,6 +34,7 @@ function authMiddleware(req, res, next) {
 
     req.userId = decoded.userId;
     req.userName = decoded.name || decoded.userName;
+    req.userEmail = decoded.email;
     next();
   } catch (error) {
     res.status(401).json({ error: 'Authentication failed' });
