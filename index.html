@@ -152,13 +152,18 @@
                 </div>
             </div>
 
-            <!-- Nav Actions (Clean Cart Only) -->
-            <div class="flex items-center space-x-3">
+            <!-- Nav Actions (Cart & Admin Portal) -->
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <button onclick="handleAdminTabClick()" id="nav-admin-btn" class="relative flex items-center space-x-1.5 bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition shadow-xs border border-slate-700">
+                    <i class="fa-solid fa-shield-halved text-amber-400"></i>
+                    <span class="hidden sm:inline">Admin Portal</span>
+                </button>
                 <button onclick="switchTab('cart')" class="relative flex items-center space-x-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold transition shadow-xs">
                     <i class="fa-solid fa-cart-shopping"></i>
                     <span>Cart</span>
                     <span id="cart-badge" class="bg-indigo-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold hidden">0</span>
                 </button>
+
             </div>
         </div>
         <!-- Mobile Search Bar -->
@@ -511,20 +516,28 @@
                     </div>
                 </div>
 
-                <!-- Quick Summary Stats Badges -->
-                <div class="grid grid-cols-3 gap-3 w-full md:w-auto">
-                    <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center border border-white/10">
-                        <span class="text-xs text-indigo-200 block">Orders</span>
-                        <span id="profile-stat-orders" class="text-xl font-black">0</span>
+                <!-- Quick Actions & Stats -->
+                <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                    <!-- Quick Summary Stats Badges -->
+                    <div class="grid grid-cols-3 gap-2 w-full sm:w-auto">
+                        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-2.5 sm:p-3 text-center border border-white/10 min-w-[70px]">
+                            <span class="text-[11px] text-indigo-200 block">Orders</span>
+                            <span id="profile-stat-orders" class="text-lg sm:text-xl font-black">0</span>
+                        </div>
+                        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-2.5 sm:p-3 text-center border border-white/10 min-w-[70px]">
+                            <span class="text-[11px] text-indigo-200 block">Wishlist</span>
+                            <span id="profile-stat-wishlist" class="text-lg sm:text-xl font-black">0</span>
+                        </div>
+                        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-2.5 sm:p-3 text-center border border-white/10 min-w-[70px]">
+                            <span class="text-[11px] text-indigo-200 block">Status</span>
+                            <span class="text-[11px] font-bold text-emerald-300 block mt-1">Active</span>
+                        </div>
                     </div>
-                    <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center border border-white/10">
-                        <span class="text-xs text-indigo-200 block">Wishlist</span>
-                        <span id="profile-stat-wishlist" class="text-xl font-black">0</span>
-                    </div>
-                    <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center border border-white/10">
-                        <span class="text-xs text-indigo-200 block">Status</span>
-                        <span class="text-xs font-bold text-emerald-300 block mt-1">Active</span>
-                    </div>
+                    <!-- Logout Action Button -->
+                    <button onclick="logout()" class="w-full sm:w-auto bg-rose-500/20 hover:bg-rose-600 border border-rose-400/30 text-white text-xs font-extrabold px-4 py-2.5 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-sm" title="Sign out of your account">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        <span>Log Out</span>
+                    </button>
                 </div>
             </div>
 
@@ -612,6 +625,27 @@
                                 View Wishlist &rarr;
                             </span>
                         </div>
+                    </div>
+
+                    <!-- Card 5: Log Out of Account -->
+                    <div onclick="logout()" class="md:col-span-2 bg-gradient-to-r from-rose-50 to-orange-50/50 rounded-2xl border border-rose-200/80 p-5 shadow-sm hover:shadow-md hover:border-rose-300 cursor-pointer transition flex items-center justify-between group">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-11 h-11 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-lg flex-shrink-0 group-hover:scale-110 group-hover:bg-rose-600 group-hover:text-white transition">
+                                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-extrabold text-gray-900 group-hover:text-rose-600 transition">
+                                    Sign Out of Account
+                                </h4>
+                                <p class="text-xs text-gray-500 mt-0.5">
+                                    Securely end your current shopping session on this device.
+                                </p>
+                            </div>
+                        </div>
+                        <button type="button" class="bg-white border border-rose-200 text-rose-600 group-hover:bg-rose-600 group-hover:text-white group-hover:border-rose-600 text-xs font-extrabold px-4 py-2 rounded-xl transition flex items-center space-x-1.5 shadow-2xs">
+                            <span>Log Out</span>
+                            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -730,6 +764,261 @@
                     <p class="text-indigo-700/80 text-xs leading-relaxed">
                         Whenever you log in from a new session or device, SD Shopping automatically dispatches a unique 6-digit OTP code to your registered email address to protect your personal information and orders.
                     </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 6: DEDICATED STORE ADMINISTRATOR PORTAL -->
+        <div id="tab-admin" class="tab-content hidden space-y-6">
+            <!-- Executive Admin Hero Banner -->
+            <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 border border-slate-700/50">
+                <div class="flex items-center space-x-5">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-amber-500/10 border-2 border-amber-400/30 flex items-center justify-center text-3xl font-black text-amber-400 shadow-inner">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h2 class="text-2xl sm:text-3xl font-black tracking-tight">Admin Management Portal</h2>
+                            <span class="bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center space-x-1">
+                                <i class="fa-solid fa-key text-[9px]"></i>
+                                <span>Privileged Access</span>
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-300 mt-1">Logged in as: <span id="admin-user-display" class="font-bold text-white">Store Administrator</span> (<span id="admin-email-display" class="text-amber-300">admin@sdshopping.com</span>)</p>
+                        <div class="flex items-center space-x-3 mt-2 text-[11px] text-slate-400">
+                            <span class="flex items-center space-x-1 text-emerald-400"><i class="fa-solid fa-circle text-[8px] animate-pulse"></i><span>Store Online & Syncing</span></span>
+                            <span>•</span>
+                            <span>Separate Admin Session</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Action Buttons -->
+                <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">
+                    <button onclick="goBack()" class="bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-600 transition flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-store"></i>
+                        <span>Back to Store</span>
+                    </button>
+                    <button onclick="handleAdminLogout()" class="bg-rose-600/90 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center space-x-1.5 shadow-md">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        <span>Logout Admin</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Executive KPI Analytics Metric Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Card 1: Total Revenue -->
+                <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs hover:shadow-md transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Sales Revenue</span>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-cedi-sign"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span id="admin-stat-revenue" class="text-2xl font-black text-gray-900 font-mono">GH₵ 0.00</span>
+                        <p class="text-[11px] text-emerald-600 font-semibold mt-0.5"><i class="fa-solid fa-arrow-trend-up mr-1"></i>Fulfilled & in-transit orders</p>
+                    </div>
+                </div>
+
+                <!-- Card 2: Total Orders -->
+                <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs hover:shadow-md transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Customer Orders</span>
+                        <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="flex items-baseline space-x-2">
+                            <span id="admin-stat-orders" class="text-2xl font-black text-gray-900">0</span>
+                            <span id="admin-stat-pending" class="text-xs font-extrabold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">0 Pending</span>
+                        </div>
+                        <p class="text-[11px] text-gray-500 mt-0.5">Live store transactions</p>
+                    </div>
+                </div>
+
+                <!-- Card 3: Active Products -->
+                <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs hover:shadow-md transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Catalog Inventory</span>
+                        <div class="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span id="admin-stat-products" class="text-2xl font-black text-gray-900">0</span>
+                        <p class="text-[11px] text-gray-500 mt-0.5">Active products in catalog</p>
+                    </div>
+                </div>
+
+                <!-- Card 4: Registered Customers -->
+                <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs hover:shadow-md transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Customer Accounts</span>
+                        <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span id="admin-stat-users" class="text-2xl font-black text-gray-900">0</span>
+                        <p class="text-[11px] text-gray-500 mt-0.5">Registered shoppers</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Sub-Navigation Tabs Bar -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-2 shadow-sm flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center space-x-2 overflow-x-auto scrollbar-none py-1">
+                    <button onclick="switchAdminSubTab('products')" id="admin-subtab-btn-products" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-extrabold transition bg-slate-900 text-white shadow-xs flex items-center space-x-2">
+                        <i class="fa-solid fa-box-archive"></i>
+                        <span>Products Inventory</span>
+                        <span id="admin-nav-products-count" class="bg-slate-700 text-amber-300 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
+                    </button>
+                    <button onclick="switchAdminSubTab('orders')" id="admin-subtab-btn-orders" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-bold transition bg-gray-50 text-gray-700 hover:bg-gray-100 flex items-center space-x-2">
+                        <i class="fa-solid fa-truck-ramp-box"></i>
+                        <span>Customer Orders</span>
+                        <span id="admin-nav-orders-count" class="bg-gray-200 text-gray-700 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
+                    </button>
+                    <button onclick="switchAdminSubTab('users')" id="admin-subtab-btn-users" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-bold transition bg-gray-50 text-gray-700 hover:bg-gray-100 flex items-center space-x-2">
+                        <i class="fa-solid fa-users-gear"></i>
+                        <span>Registered Customers</span>
+                    </button>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button onclick="loadAdminDashboardData()" class="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3.5 py-2 rounded-xl transition inline-flex items-center space-x-1.5" title="Refresh Dashboard Data">
+                        <i class="fa-solid fa-rotate"></i>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SUB-VIEW 1: PRODUCTS INVENTORY MANAGEMENT -->
+            <div id="admin-view-products" class="space-y-4">
+                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-3 flex-1">
+                        <!-- Product Search Input -->
+                        <div class="relative flex-1 min-w-[200px] max-w-md">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-gray-400 text-xs"></i>
+                            <input type="text" id="admin-product-search" oninput="filterAdminProducts()" placeholder="Search products by title, category, or brand..." class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:bg-white focus:border-indigo-500">
+                        </div>
+
+                        <!-- Category Filter -->
+                        <select id="admin-product-category" onchange="filterAdminProducts()" class="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500">
+                            <option value="All">All Categories</option>
+                            <option value="Electronics">Electronics</option>
+                            <option value="Audio">Audio</option>
+                            <option value="Wearables">Wearables</option>
+                            <option value="Accessories">Accessories</option>
+                        </select>
+                    </div>
+
+                    <!-- Add New Product Button -->
+                    <button onclick="openAdminProductModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold px-4 py-2.5 rounded-xl shadow-md transition inline-flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-circle-plus"></i>
+                        <span>Add New Product</span>
+                    </button>
+                </div>
+
+                <!-- Products Table Container -->
+                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase tracking-wider font-extrabold text-[11px]">
+                                <tr>
+                                    <th class="p-3.5 pl-5">Product</th>
+                                    <th class="p-3.5">Category</th>
+                                    <th class="p-3.5">Brand</th>
+                                    <th class="p-3.5">Price (GH₵)</th>
+                                    <th class="p-3.5">Stock Status</th>
+                                    <th class="p-3.5">Rating</th>
+                                    <th class="p-3.5 pr-5 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-products-table-body" class="divide-y divide-gray-100 font-medium">
+                                <!-- Populated dynamically by script.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-VIEW 2: CUSTOMER ORDERS MANAGEMENT -->
+            <div id="admin-view-orders" class="hidden space-y-4">
+                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-3 flex-1">
+                        <!-- Order Search Input -->
+                        <div class="relative flex-1 min-w-[200px] max-w-md">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-gray-400 text-xs"></i>
+                            <input type="text" id="admin-order-search" oninput="filterAdminOrders()" placeholder="Search by tracking #, transaction ID, or city..." class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:bg-white focus:border-indigo-500">
+                        </div>
+
+                        <!-- Status Filter Buttons -->
+                        <div class="flex items-center space-x-1 overflow-x-auto scrollbar-none py-1">
+                            <button onclick="setAdminOrderStatusFilter('all')" class="admin-order-filter-btn px-3 py-1.5 rounded-lg text-xs font-extrabold bg-indigo-600 text-white transition" data-status="all">All</button>
+                            <button onclick="setAdminOrderStatusFilter('pending')" class="admin-order-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-status="pending">Pending</button>
+                            <button onclick="setAdminOrderStatusFilter('processing')" class="admin-order-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-status="processing">Processing</button>
+                            <button onclick="setAdminOrderStatusFilter('shipped')" class="admin-order-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-status="shipped">Shipped</button>
+                            <button onclick="setAdminOrderStatusFilter('delivered')" class="admin-order-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-status="delivered">Delivered</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orders Table Container -->
+                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase tracking-wider font-extrabold text-[11px]">
+                                <tr>
+                                    <th class="p-3.5 pl-5">Tracking #</th>
+                                    <th class="p-3.5">Date Placed</th>
+                                    <th class="p-3.5">Shipping Details</th>
+                                    <th class="p-3.5">Items Summary</th>
+                                    <th class="p-3.5">Total Amount</th>
+                                    <th class="p-3.5">Payment</th>
+                                    <th class="p-3.5">Fulfillment Status</th>
+                                    <th class="p-3.5 pr-5 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-orders-table-body" class="divide-y divide-gray-100 font-medium">
+                                <!-- Populated dynamically by script.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-VIEW 3: REGISTERED CUSTOMERS -->
+            <div id="admin-view-users" class="hidden space-y-4">
+                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="relative flex-1 max-w-md">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-gray-400 text-xs"></i>
+                        <input type="text" id="admin-user-search" oninput="filterAdminUsers()" placeholder="Search customers by name, email, or city..." class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:bg-white focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <!-- Users Table Container -->
+                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase tracking-wider font-extrabold text-[11px]">
+                                <tr>
+                                    <th class="p-3.5 pl-5">Customer</th>
+                                    <th class="p-3.5">Email Address</th>
+                                    <th class="p-3.5">Phone</th>
+                                    <th class="p-3.5">City / Address</th>
+                                    <th class="p-3.5">Status</th>
+                                    <th class="p-3.5">Total Orders</th>
+                                    <th class="p-3.5 pr-5 text-right">Registered Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-table-body" class="divide-y divide-gray-100 font-medium">
+                                <!-- Populated dynamically by script.js -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1069,21 +1358,29 @@
             </div>
             <span id="dock-profile-text">Profile</span>
         </button>
+        <button onclick="handleAdminTabClick()" id="dock-btn-admin" class="dock-nav-item flex items-center space-x-2 text-slate-700 hover:text-amber-500 text-xs font-extrabold transition group">
+            <div class="w-8 h-8 rounded-xl bg-slate-900 group-hover:bg-slate-800 text-amber-400 flex items-center justify-center transition shadow-xs">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <span class="text-slate-900 group-hover:text-amber-600">Admin</span>
+        </button>
     </div>
 
     <!-- Mobile Bottom Sticky App Navigation Bar -->
     <div class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-2xl py-2 px-3 flex items-center justify-around">
         <button onclick="switchTab('catalog')" class="flex flex-col items-center text-gray-600 hover:text-indigo-600 focus:text-indigo-600 text-[10px] font-bold space-y-0.5 transition">
-            <i class="fa-solid fa-house text-lg"></i>
+            <i class="fa-solid fa-house text-base"></i>
             <span>Shop</span>
         </button>
         <button onclick="switchTab('wishlist')" class="relative flex flex-col items-center text-gray-600 hover:text-indigo-600 focus:text-indigo-600 text-[10px] font-bold space-y-0.5 transition">
-            <i class="fa-regular fa-heart text-lg"></i>
+            <i class="fa-regular fa-heart text-base"></i>
+
             <span>Wishlist</span>
             <span id="mobile-wishlist-badge" class="absolute -top-1 right-2 bg-rose-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden">0</span>
         </button>
         <button onclick="switchTab('cart')" class="relative flex flex-col items-center text-gray-600 hover:text-indigo-600 focus:text-indigo-600 text-[10px] font-bold space-y-0.5 transition">
             <i class="fa-solid fa-cart-shopping text-lg"></i>
+
             <span>Cart</span>
             <span id="mobile-cart-badge" class="absolute -top-1 right-2 bg-indigo-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden">0</span>
         </button>
@@ -1095,6 +1392,219 @@
             <i class="fa-regular fa-user text-lg"></i>
             <span>Profile</span>
         </button>
+        <button onclick="handleAdminTabClick()" class="flex flex-col items-center text-slate-800 hover:text-amber-500 focus:text-amber-600 text-[10px] font-extrabold space-y-0.5 transition">
+            <i class="fa-solid fa-shield-halved text-lg text-amber-500"></i>
+            <span>Admin</span>
+        </button>
+    </div>
+
+    <!-- DEDICATED ADMIN LOGIN MODAL (EXECUTIVE THEME) -->
+    <div id="admin-login-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700/80 rounded-3xl max-w-md w-full p-6 sm:p-8 relative shadow-2xl text-white">
+            <!-- Close Button -->
+            <button onclick="closeAdminLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Back to Store Link -->
+            <button onclick="closeAdminLoginModal()" class="inline-flex items-center space-x-1.5 text-xs font-bold text-slate-400 hover:text-amber-400 transition mb-3">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Back to Store</span>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-3 text-2xl text-amber-400 shadow-inner">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h3 class="text-2xl font-black tracking-tight text-white">Store Administrator Portal</h3>
+                <p class="text-slate-400 text-xs mt-1">Sign in with administrator privileges to manage store catalog, customer orders, and analytics.</p>
+            </div>
+
+            <!-- Admin Login Error Box -->
+            <div id="admin-login-error" class="hidden mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold rounded-xl flex items-center space-x-2">
+                <i class="fa-solid fa-circle-exclamation text-rose-400 text-base flex-shrink-0"></i>
+                <span id="admin-login-error-text"></span>
+            </div>
+
+            <!-- Admin Login Form -->
+            <form onsubmit="handleAdminLoginSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Admin Email</label>
+                    <input type="email" id="admin-login-email" required placeholder="admin@sdshopping.com" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Admin Password</label>
+                    <input type="password" id="admin-login-password" required placeholder="••••••••" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition">
+                </div>
+
+                <!-- Quick Helper Button for Ease of Testing -->
+                <div class="pt-1">
+                    <button type="button" onclick="fillDefaultAdminCredentials()" class="w-full text-center text-[11px] font-bold text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 py-2 px-3 rounded-xl transition flex items-center justify-center space-x-1.5">
+                        <i class="fa-solid fa-key text-[10px] text-amber-400"></i>
+                        <span>Auto-Fill Default Admin Credentials</span>
+                    </button>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="admin-login-submit-btn" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black py-3.5 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-xs uppercase tracking-wider">
+                    <i class="fa-solid fa-lock"></i>
+                    <span>Access Admin Dashboard</span>
+                </button>
+            </form>
+
+            <div class="mt-4 pt-4 border-t border-slate-800 text-center text-[11px] text-slate-500">
+                <span>Separate from standard customer login. Your regular shopping session will remain intact.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN ADD / EDIT PRODUCT MODAL -->
+    <div id="admin-product-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 relative shadow-2xl max-h-[92vh] overflow-y-auto">
+            <!-- Close Button -->
+            <button onclick="closeAdminProductModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 text-xl font-bold bg-gray-100 hover:bg-gray-200 w-9 h-9 rounded-full flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="mb-5 pb-3 border-b border-gray-100">
+                <div class="flex items-center space-x-2 text-emerald-600 text-xs font-extrabold uppercase tracking-wider">
+                    <i class="fa-solid fa-boxes-packing"></i>
+                    <span>Catalog Management</span>
+                </div>
+                <h3 id="admin-product-modal-title" class="text-xl font-black text-gray-900 mt-1">Add New Product</h3>
+                <p class="text-xs text-gray-500">Add or modify item details, stock quantity, and pricing in Ghana Cedis (GH₵).</p>
+            </div>
+
+            <!-- Product Form -->
+            <form onsubmit="handleAdminSaveProduct(event)" class="space-y-4">
+                <input type="hidden" id="admin-prod-id" value="">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Product Title <span class="text-rose-500">*</span></label>
+                        <input type="text" id="admin-prod-title" required placeholder="e.g. Wireless Noise-Canceling Headphones" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs font-medium focus:outline-none focus:bg-white focus:border-indigo-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Price in Ghana Cedis (GH₵) <span class="text-rose-500">*</span></label>
+                        <input type="number" step="0.01" min="0.01" id="admin-prod-price" required placeholder="e.g. 199.99" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs font-mono font-bold text-indigo-600 focus:outline-none focus:bg-white focus:border-indigo-500 transition">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Category <span class="text-rose-500">*</span></label>
+                        <select id="admin-prod-category" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-semibold text-gray-800 focus:outline-none focus:border-indigo-500">
+                            <option value="Electronics">Electronics</option>
+                            <option value="Audio">Audio</option>
+                            <option value="Wearables">Wearables</option>
+                            <option value="Accessories">Accessories</option>
+                            <option value="General">General</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Brand Name</label>
+                        <input type="text" id="admin-prod-brand" placeholder="e.g. Sony / Apple / JBL" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs font-medium focus:outline-none focus:bg-white focus:border-indigo-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Stock Quantity</label>
+                        <input type="number" min="0" id="admin-prod-stock" value="50" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-gray-800 focus:outline-none focus:bg-white focus:border-indigo-500 transition">
+                    </div>
+                </div>
+
+                <!-- Product Cover Image Selection: Upload from Device or Paste URL -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold text-gray-700">Product Main Cover Photo <span class="text-rose-500">*</span></label>
+                        <!-- Switch Mode Tabs -->
+                        <div class="flex items-center space-x-1 bg-gray-100 p-1 rounded-xl">
+                            <button type="button" onclick="setAdminCoverImgMode('file')" id="admin-img-mode-file" class="px-2.5 py-1 text-[11px] font-extrabold rounded-lg bg-white text-indigo-700 shadow-2xs transition flex items-center space-x-1">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <span>Phone / Storage</span>
+                            </button>
+                            <button type="button" onclick="setAdminCoverImgMode('url')" id="admin-img-mode-url" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-gray-500 hover:text-gray-800 transition flex items-center space-x-1">
+                                <i class="fa-solid fa-link"></i>
+                                <span>Image URL</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Mode 1: Device / Phone File Picker Box -->
+                    <div id="admin-cover-file-container" class="space-y-2">
+                        <input type="file" id="admin-prod-file-input" accept="image/*" class="hidden" onchange="handleAdminCoverFileSelect(event)">
+                        <div onclick="document.getElementById('admin-prod-file-input').click()" class="border-2 border-dashed border-indigo-200 hover:border-indigo-500 bg-indigo-50/40 hover:bg-indigo-50/70 rounded-2xl p-4 sm:p-5 text-center cursor-pointer transition group">
+                            <div class="flex flex-col items-center justify-center space-y-1.5">
+                                <div class="w-11 h-11 rounded-2xl bg-indigo-100 group-hover:bg-indigo-600 text-indigo-600 group-hover:text-white flex items-center justify-center text-lg transition shadow-xs">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                                <span class="text-xs font-bold text-gray-800 group-hover:text-indigo-600 transition">Tap to choose photo from your Phone or Computer</span>
+                                <span class="text-[10px] text-gray-400">Supports Camera, Gallery, JPG, PNG, WEBP • Auto-compressed</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mode 2: Direct URL Input Box -->
+                    <div id="admin-cover-url-container" class="hidden">
+                        <input type="url" id="admin-prod-image" oninput="previewAdminProductImage(this.value)" placeholder="https://images.unsplash.com/photo-..." class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs font-medium focus:outline-none focus:bg-white focus:border-indigo-500 transition">
+                    </div>
+
+                    <!-- Hidden storage for actual selected cover image data/URL -->
+                    <input type="hidden" id="admin-prod-cover-data" value="">
+
+                    <!-- Live Image Preview Box -->
+                    <div id="admin-prod-img-preview-box" class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <div class="flex items-center space-x-3">
+                            <img id="admin-prod-img-preview" src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=80" class="w-14 h-14 object-cover rounded-xl border border-gray-200 shadow-2xs flex-shrink-0">
+                            <div>
+                                <span class="text-xs font-bold text-gray-800 block" id="admin-prod-preview-label">Cover Image Ready</span>
+                                <span class="text-[11px] text-gray-400" id="admin-prod-preview-sub">Selected from phone storage or online URL</span>
+                            </div>
+                        </div>
+                        <button type="button" onclick="resetAdminCoverImage()" class="text-gray-400 hover:text-rose-600 text-xs font-bold p-1.5 transition" title="Clear image">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Additional Gallery Photos (Multiple Selection from Phone/Device) -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold text-gray-700">Additional Gallery Photos</label>
+                        <button type="button" onclick="document.getElementById('admin-prod-gallery-file-input').click()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[11px] font-extrabold px-3 py-1.5 rounded-lg transition inline-flex items-center space-x-1.5 shadow-2xs">
+                            <i class="fa-solid fa-folder-plus"></i>
+                            <span>+ Pick Photos from Storage</span>
+                        </button>
+                        <input type="file" id="admin-prod-gallery-file-input" accept="image/*" multiple class="hidden" onchange="handleAdminGalleryFilesSelect(event)">
+                    </div>
+
+                    <!-- Gallery Thumbnails Preview Container -->
+                    <div id="admin-gallery-preview-container" class="hidden flex flex-wrap gap-2 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Optional URL fallback textarea -->
+                    <div>
+                        <textarea id="admin-prod-images" rows="2" placeholder="Or paste additional image URLs separated by commas..." class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:bg-white focus:border-indigo-500 font-mono"></textarea>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Product Description</label>
+                    <textarea id="admin-prod-description" rows="3" required placeholder="Write product features, specifications, and warranty details..." class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:bg-white focus:border-indigo-500"></textarea>
+                </div>
+
+                <!-- Actions -->
+                <div class="pt-3 border-t border-gray-100 flex items-center justify-between">
+                    <button type="button" onclick="closeAdminProductModal()" class="text-xs font-bold text-gray-500 hover:text-gray-800 transition">Cancel</button>
+                    <button type="submit" id="admin-prod-save-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold px-6 py-2.5 rounded-xl shadow-md transition flex items-center space-x-2">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Save Product</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
     </div>
 
     <!-- Application Script Logic -->

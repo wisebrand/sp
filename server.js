@@ -8,12 +8,14 @@ const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
 const paymentRoutes = require('./routes/payments');
 const reviewRoutes = require('./routes/reviews');
+const adminRoutes = require('./routes/admin');
 
 dotenv.config();
 
 const app = express();
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] }));
-app.use(express.json());
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ limit: '25mb', extended: true }));
 app.use(express.static(path.join(__dirname)));
 
 app.use('/api/auth', authRoutes);
@@ -21,6 +23,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({ message: 'Server is running' });

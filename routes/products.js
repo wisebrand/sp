@@ -271,7 +271,8 @@ router.get('/', async (req, res) => {
 
     if (sort === 'price-asc') filtered.sort((a, b) => a.price - b.price);
     else if (sort === 'price-desc') filtered.sort((a, b) => b.price - a.price);
-    else if (sort === 'rating') filtered.sort((a, b) => b.rating - a.rating);
+    else if (sort === 'rating') filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+
 
     res.json(filtered);
   } catch (error) {

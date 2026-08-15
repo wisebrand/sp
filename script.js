@@ -217,10 +217,27 @@ function switchTab(tabId, pushHistory = true) {
     if (target) target.classList.remove('hidden');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
+    // Update Floating Dock Active Classes
+    const dockTabs = ['catalog', 'wishlist', 'cart', 'orders', 'profile', 'admin'];
+    dockTabs.forEach(t => {
+        const btn = document.getElementById(`dock-btn-${t}`);
+        if (btn) {
+            if (t === tabId) {
+                btn.classList.add('text-indigo-600', 'font-black');
+                btn.classList.remove('text-gray-600');
+            } else {
+                btn.classList.remove('text-indigo-600', 'font-black');
+                btn.classList.add('text-gray-600');
+            }
+        }
+    });
+
     if (tabId === 'cart') renderCart();
     if (tabId === 'wishlist') renderWishlist();
     if (tabId === 'orders') renderOrders();
     if (tabId === 'profile') loadUserProfile();
+    if (tabId === 'admin') loadAdminDashboardData();
+
 }
 
 function goBack() {
@@ -2463,8 +2480,10 @@ function logout() {
     localStorage.removeItem('sd_user');
     localStorage.removeItem('sd_orders');
 
+    updateBadges();
     updateAuthUI();
-    showToast('Logged out successfully');
+    switchTab('catalog');
+    showToast('You have been logged out successfully.');
 }
 
 function updateAuthUI() {
@@ -2694,3 +2713,889 @@ async function handleChangePassword(e) {
         hideLoading();
     }
 }
+
+// =========================================================================
+// STORE ADMINISTRATOR PORTAL & DEDICATED AUTHENTICATION (SEPARATE FROM USER)
+// =========================================================================
+
+let adminToken = localStorage.getItem('sd_admin_token') || null;
+let adminUser = JSON.parse(localStorage.getItem('sd_admin_user')) || null;
+
+let adminProductsList = [];
+let adminOrdersList = [];
+let adminUsersList = [];
+let currentAdminOrderFilter = 'all';
+
+function isAdminLoggedIn() {
+    return !!adminToken;
+}
+
+function handleAdminTabClick() {
+    if (isAdminLoggedIn()) {
+        switchTab('admin');
+    } else {
+        openAdminLoginModal();
+    }
+}
+
+function openAdminLoginModal() {
+    const modal = document.getElementById('admin-login-modal');
+    if (!modal) return;
+    
+    const errBox = document.getElementById('admin-login-error');
+    if (errBox) errBox.classList.add('hidden');
+
+    modal.classList.remove('hidden');
+}
+
+function closeAdminLoginModal() {
+    const modal = document.getElementById('admin-login-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function fillDefaultAdminCredentials() {
+    const emailInput = document.getElementById('admin-login-email');
+    const pwdInput = document.getElementById('admin-login-password');
+    if (emailInput) emailInput.value = 'admin@sdshopping.com';
+    if (pwdInput) pwdInput.value = 'Admin@123456';
+    showToast('Admin credentials filled!', 'success');
+}
+
+async function handleAdminLoginSubmit(e) {
+    e.preventDefault();
+    const email = (document.getElementById('admin-login-email')?.value || '').trim();
+    const password = document.getElementById('admin-login-password')?.value || '';
+
+    if (!email || !password) {
+        showToast('Please enter both admin email and password', 'error');
+        return;
+    }
+
+    setButtonLoading('admin-login-submit-btn', true, 'Verifying Admin...');
+    showLoading('Administrator Verification', 'Authenticating administrator credentials...');
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await safeParseResponse(response);
+        if (!response.ok) throw new Error(data.error || 'Admin authentication failed');
+
+        adminToken = data.token;
+        adminUser = data.admin;
+
+        localStorage.setItem('sd_admin_token', adminToken);
+        localStorage.setItem('sd_admin_user', JSON.stringify(adminUser));
+
+        closeAdminLoginModal();
+        switchTab('admin');
+        showToast(`👑 Welcome back, ${adminUser.name || 'Administrator'}!`);
+    } catch (error) {
+        console.error('Admin login error:', error);
+        const errBox = document.getElementById('admin-login-error');
+        const errText = document.getElementById('admin-login-error-text');
+        if (errBox && errText) {
+            errText.textContent = error.message;
+            errBox.classList.remove('hidden');
+        }
+        showToast(error.message, 'error');
+    } finally {
+        setButtonLoading('admin-login-submit-btn', false);
+        hideLoading();
+    }
+}
+
+function handleAdminLogout() {
+    adminToken = null;
+    adminUser = null;
+    localStorage.removeItem('sd_admin_token');
+    localStorage.removeItem('sd_admin_user');
+    
+    switchTab('catalog');
+    showToast('Administrator logged out successfully');
+}
+
+// --- ADMIN SUB-TAB SWITCHER ---
+function switchAdminSubTab(subTab) {
+    const tabs = ['products', 'orders', 'users'];
+    tabs.forEach(t => {
+        const btn = document.getElementById(`admin-subtab-btn-${t}`);
+        const view = document.getElementById(`admin-view-${t}`);
+        
+        if (t === subTab) {
+            if (btn) {
+                btn.className = "admin-subtab-btn px-4 py-2 rounded-xl text-xs font-extrabold transition bg-slate-900 text-white shadow-xs flex items-center space-x-2";
+            }
+            if (view) view.classList.remove('hidden');
+        } else {
+            if (btn) {
+                btn.className = "admin-subtab-btn px-4 py-2 rounded-xl text-xs font-bold transition bg-gray-50 text-gray-700 hover:bg-gray-100 flex items-center space-x-2";
+            }
+            if (view) view.classList.add('hidden');
+        }
+    });
+
+    if (subTab === 'products') loadAdminProducts();
+    if (subTab === 'orders') loadAdminOrders();
+    if (subTab === 'users') loadAdminUsers();
+}
+
+// --- ADMIN DASHBOARD DATA LOADER ---
+async function loadAdminDashboardData() {
+    if (!adminToken) {
+        openAdminLoginModal();
+        return;
+    }
+
+    // Update Admin header labels
+    if (adminUser) {
+        const nameDisplay = document.getElementById('admin-user-display');
+        const emailDisplay = document.getElementById('admin-email-display');
+        if (nameDisplay) nameDisplay.textContent = adminUser.name || 'Store Administrator';
+        if (emailDisplay) emailDisplay.textContent = adminUser.email || 'admin@sdshopping.com';
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/stats`, {
+            headers: {
+                'Authorization': `Bearer ${adminToken}`
+            }
+        });
+
+        if (response.status === 401 || response.status === 403) {
+            handleAdminLogout();
+            openAdminLoginModal();
+            return;
+        }
+
+        const data = await safeParseResponse(response);
+        if (response.ok) {
+            const revElem = document.getElementById('admin-stat-revenue');
+            const ordElem = document.getElementById('admin-stat-orders');
+            const pendElem = document.getElementById('admin-stat-pending');
+            const prodElem = document.getElementById('admin-stat-products');
+            const userElem = document.getElementById('admin-stat-users');
+
+            if (revElem) revElem.textContent = formatPrice(data.totalRevenue || 0);
+            if (ordElem) ordElem.textContent = data.totalOrders || 0;
+            if (pendElem) pendElem.textContent = `${data.pendingOrders || 0} Pending`;
+            if (prodElem) prodElem.textContent = data.totalProducts || 0;
+            if (userElem) userElem.textContent = data.totalUsers || 0;
+
+            const navProdCount = document.getElementById('admin-nav-products-count');
+            const navOrdCount = document.getElementById('admin-nav-orders-count');
+            if (navProdCount) navProdCount.textContent = data.totalProducts || 0;
+            if (navOrdCount) navOrdCount.textContent = data.totalOrders || 0;
+        }
+    } catch (e) {
+        console.warn('Admin stats load notice:', e.message);
+    }
+
+    await loadAdminProducts();
+    await loadAdminOrders();
+    await loadAdminUsers();
+}
+
+// --- ADMIN PRODUCT INVENTORY CRUD ---
+async function loadAdminProducts() {
+    if (!adminToken) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/products`, {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const data = await safeParseResponse(response);
+        if (response.ok && Array.isArray(data)) {
+            adminProductsList = data;
+        } else {
+            // Fallback to public catalog
+            adminProductsList = products && products.length > 0 ? products : DEFAULT_PRODUCTS;
+        }
+    } catch (e) {
+        adminProductsList = products && products.length > 0 ? products : DEFAULT_PRODUCTS;
+    }
+
+    filterAdminProducts();
+}
+
+function filterAdminProducts() {
+    const searchInput = document.getElementById('admin-product-search');
+    const categorySelect = document.getElementById('admin-product-category');
+    
+    const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+    const category = categorySelect ? categorySelect.value : 'All';
+
+    let filtered = [...adminProductsList];
+
+    if (category && category !== 'All') {
+        filtered = filtered.filter(p => (p.category || '').toLowerCase() === category.toLowerCase());
+    }
+
+    if (query) {
+        filtered = filtered.filter(p => 
+            (p.title || '').toLowerCase().includes(query) ||
+            (p.category || '').toLowerCase().includes(query) ||
+            (p.brand || '').toLowerCase().includes(query) ||
+            (p.description || '').toLowerCase().includes(query)
+        );
+    }
+
+    renderAdminProductsTable(filtered);
+}
+
+function renderAdminProductsTable(items) {
+    const tbody = document.getElementById('admin-products-table-body');
+    if (!tbody) return;
+
+    if (items.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="p-8 text-center text-gray-400">
+                    <i class="fa-solid fa-box-open text-3xl mb-2 block"></i>
+                    No products found matching your filter criteria.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = items.map(p => {
+        const pId = p._id || p.id;
+        const pImg = p.image || (p.images && p.images[0]) || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60';
+        const stock = Number(p.stock !== undefined ? p.stock : 50);
+        
+        let stockBadge = `<span class="bg-emerald-50 text-emerald-700 font-extrabold px-2.5 py-1 rounded-full text-[10px] border border-emerald-200">In Stock (${stock})</span>`;
+        if (stock === 0) {
+            stockBadge = `<span class="bg-rose-50 text-rose-700 font-extrabold px-2.5 py-1 rounded-full text-[10px] border border-rose-200">Out of Stock</span>`;
+        } else if (stock <= 10) {
+            stockBadge = `<span class="bg-amber-50 text-amber-700 font-extrabold px-2.5 py-1 rounded-full text-[10px] border border-amber-200">Low Stock (${stock})</span>`;
+        }
+
+        return `
+            <tr class="hover:bg-gray-50/80 transition">
+                <td class="p-3.5 pl-5">
+                    <div class="flex items-center space-x-3">
+                        <img src="${pImg}" class="w-11 h-11 object-cover rounded-xl border border-gray-200 flex-shrink-0">
+                        <div class="min-w-0">
+                            <span class="font-bold text-gray-900 block truncate max-w-[220px]">${p.title || 'Untitled Product'}</span>
+                            <span class="text-[11px] text-gray-400 font-mono">ID: ${pId}</span>
+                        </div>
+                    </div>
+                </td>
+                <td class="p-3.5">
+                    <span class="bg-indigo-50 text-indigo-700 font-bold px-2.5 py-0.5 rounded-md text-[11px]">${p.category || 'General'}</span>
+                </td>
+                <td class="p-3.5 text-gray-700 font-medium">${p.brand || 'SD Originals'}</td>
+                <td class="p-3.5 font-bold font-mono text-gray-900 text-sm">${formatPrice(p.price || 0)}</td>
+                <td class="p-3.5">${stockBadge}</td>
+                <td class="p-3.5 text-amber-500 font-bold text-[11px]">
+                    <i class="fa-solid fa-star text-[10px]"></i> ${p.rating || 4.5} <span class="text-gray-400 font-normal">(${p.ratingCount || (p.reviews ? p.reviews.length : 0)})</span>
+                </td>
+                <td class="p-3.5 pr-5 text-right space-x-1 whitespace-nowrap">
+                    <button onclick="openAdminProductModal('${pId}')" class="bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1" title="Edit Product">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        <span>Edit</span>
+                    </button>
+                    <button onclick="handleAdminDeleteProduct('${pId}', '${escapeHtml(p.title || '')}')" class="bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1" title="Delete Product">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// --- ADMIN IMAGE UPLOADER & PROCESSING ---
+let adminSelectedGalleryImages = [];
+
+function compressImageFile(file, maxWidth = 1200, quality = 0.85) {
+    return new Promise((resolve, reject) => {
+        if (!file || !file.type.startsWith('image/')) {
+            return reject(new Error('The selected file is not an image'));
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                resolve(dataUrl);
+            };
+            img.onerror = () => reject(new Error('Could not render image'));
+            img.src = e.target.result;
+        };
+        reader.onerror = () => reject(new Error('Could not read file'));
+        reader.readAsDataURL(file);
+    });
+}
+
+function setAdminCoverImgMode(mode) {
+    const fileContainer = document.getElementById('admin-cover-file-container');
+    const urlContainer = document.getElementById('admin-cover-url-container');
+    const fileBtn = document.getElementById('admin-img-mode-file');
+    const urlBtn = document.getElementById('admin-img-mode-url');
+
+    if (mode === 'file') {
+        if (fileContainer) fileContainer.classList.remove('hidden');
+        if (urlContainer) urlContainer.classList.add('hidden');
+        if (fileBtn) {
+            fileBtn.className = "px-2.5 py-1 text-[11px] font-extrabold rounded-lg bg-white text-indigo-700 shadow-2xs transition flex items-center space-x-1";
+        }
+        if (urlBtn) {
+            urlBtn.className = "px-2.5 py-1 text-[11px] font-bold rounded-lg text-gray-500 hover:text-gray-800 transition flex items-center space-x-1";
+        }
+    } else {
+        if (fileContainer) fileContainer.classList.add('hidden');
+        if (urlContainer) urlContainer.classList.remove('hidden');
+        if (fileBtn) {
+            fileBtn.className = "px-2.5 py-1 text-[11px] font-bold rounded-lg text-gray-500 hover:text-gray-800 transition flex items-center space-x-1";
+        }
+        if (urlBtn) {
+            urlBtn.className = "px-2.5 py-1 text-[11px] font-extrabold rounded-lg bg-white text-indigo-700 shadow-2xs transition flex items-center space-x-1";
+        }
+    }
+}
+
+async function handleAdminCoverFileSelect(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    showLoading('Processing Photo', 'Compressing and optimizing photo from storage...');
+    try {
+        const compressedBase64 = await compressImageFile(file);
+        const coverDataInput = document.getElementById('admin-prod-cover-data');
+        if (coverDataInput) coverDataInput.value = compressedBase64;
+
+        previewAdminProductImage(compressedBase64);
+        
+        const label = document.getElementById('admin-prod-preview-label');
+        const sub = document.getElementById('admin-prod-preview-sub');
+        if (label) label.textContent = `Photo Ready (${file.name})`;
+        if (sub) sub.textContent = `Optimized from storage (${(file.size / 1024).toFixed(0)} KB)`;
+
+        showToast('📷 Cover photo selected from storage!');
+    } catch (err) {
+        console.error('Photo selection error:', err);
+        showToast(err.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function resetAdminCoverImage() {
+    const coverDataInput = document.getElementById('admin-prod-cover-data');
+    const urlInput = document.getElementById('admin-prod-image');
+    const fileInput = document.getElementById('admin-prod-file-input');
+
+    if (coverDataInput) coverDataInput.value = '';
+    if (urlInput) urlInput.value = '';
+    if (fileInput) fileInput.value = '';
+
+    previewAdminProductImage('https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=80');
+
+    const label = document.getElementById('admin-prod-preview-label');
+    const sub = document.getElementById('admin-prod-preview-sub');
+    if (label) label.textContent = 'Default Cover Placeholder';
+    if (sub) sub.textContent = 'Tap box above to choose photo from phone or enter URL';
+}
+
+async function handleAdminGalleryFilesSelect(event) {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    showLoading('Processing Gallery', `Loading ${files.length} photos from storage...`);
+    try {
+        for (const file of files) {
+            const base64 = await compressImageFile(file);
+            adminSelectedGalleryImages.push(base64);
+        }
+        renderAdminGalleryPreview();
+        showToast(`Added ${files.length} photos to gallery!`);
+    } catch (err) {
+        console.error('Gallery photos error:', err);
+        showToast(err.message, 'error');
+    } finally {
+        hideLoading();
+        event.target.value = '';
+    }
+}
+
+function removeAdminGalleryImage(index) {
+    if (index >= 0 && index < adminSelectedGalleryImages.length) {
+        adminSelectedGalleryImages.splice(index, 1);
+        renderAdminGalleryPreview();
+    }
+}
+
+function renderAdminGalleryPreview() {
+    const container = document.getElementById('admin-gallery-preview-container');
+    if (!container) return;
+
+    if (adminSelectedGalleryImages.length === 0) {
+        container.classList.add('hidden');
+        container.innerHTML = '';
+        return;
+    }
+
+    container.classList.remove('hidden');
+    container.innerHTML = adminSelectedGalleryImages.map((imgSrc, idx) => `
+        <div class="relative group/gal w-14 h-14 rounded-xl overflow-hidden border border-gray-200 shadow-2xs">
+            <img src="${imgSrc}" class="w-full h-full object-cover">
+            <button type="button" onclick="removeAdminGalleryImage(${idx})" class="absolute inset-0 bg-black/60 text-white flex items-center justify-center opacity-0 group-hover/gal:opacity-100 transition text-xs font-bold" title="Remove photo">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+            <span class="absolute bottom-0.5 right-1 text-[8px] font-black text-white bg-black/50 px-1 rounded">${idx + 1}</span>
+        </div>
+    `).join('');
+}
+
+function openAdminProductModal(productId = null) {
+    const modal = document.getElementById('admin-product-modal');
+    if (!modal) return;
+
+    const titleElem = document.getElementById('admin-product-modal-title');
+    const idInput = document.getElementById('admin-prod-id');
+    const titleInput = document.getElementById('admin-prod-title');
+    const priceInput = document.getElementById('admin-prod-price');
+    const categorySelect = document.getElementById('admin-prod-category');
+    const brandInput = document.getElementById('admin-prod-brand');
+    const stockInput = document.getElementById('admin-prod-stock');
+    const imageInput = document.getElementById('admin-prod-image');
+    const coverDataInput = document.getElementById('admin-prod-cover-data');
+    const imagesInput = document.getElementById('admin-prod-images');
+    const descInput = document.getElementById('admin-prod-description');
+
+    adminSelectedGalleryImages = [];
+    setAdminCoverImgMode('file');
+
+    if (productId) {
+        const prod = adminProductsList.find(p => (p._id || p.id) == productId);
+        if (prod) {
+            if (titleElem) titleElem.textContent = 'Edit Product Details';
+            if (idInput) idInput.value = productId;
+            if (titleInput) titleInput.value = prod.title || '';
+            if (priceInput) priceInput.value = prod.price || '';
+            if (categorySelect) categorySelect.value = prod.category || 'General';
+            if (brandInput) brandInput.value = prod.brand || '';
+            if (stockInput) stockInput.value = prod.stock !== undefined ? prod.stock : 50;
+            if (imageInput) imageInput.value = prod.image || '';
+            if (coverDataInput) coverDataInput.value = prod.image || '';
+            
+            if (Array.isArray(prod.images)) {
+                adminSelectedGalleryImages = [...prod.images];
+            } else if (imagesInput) {
+                imagesInput.value = '';
+            }
+
+            if (descInput) descInput.value = prod.description || '';
+            previewAdminProductImage(prod.image || '');
+            renderAdminGalleryPreview();
+        }
+    } else {
+        if (titleElem) titleElem.textContent = 'Add New Product';
+        if (idInput) idInput.value = '';
+        if (titleInput) titleInput.value = '';
+        if (priceInput) priceInput.value = '';
+        if (categorySelect) categorySelect.value = 'Electronics';
+        if (brandInput) brandInput.value = '';
+        if (stockInput) stockInput.value = '50';
+        if (imageInput) imageInput.value = '';
+        if (coverDataInput) coverDataInput.value = '';
+        if (imagesInput) imagesInput.value = '';
+        if (descInput) descInput.value = '';
+        previewAdminProductImage('');
+        renderAdminGalleryPreview();
+    }
+
+    modal.classList.remove('hidden');
+}
+
+function closeAdminProductModal() {
+    const modal = document.getElementById('admin-product-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function previewAdminProductImage(url) {
+    const preview = document.getElementById('admin-prod-img-preview');
+    if (preview) {
+        preview.src = url && (url.startsWith('http') || url.startsWith('data:image')) 
+            ? url 
+            : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=80';
+    }
+}
+
+async function handleAdminSaveProduct(e) {
+    e.preventDefault();
+    if (!adminToken) {
+        showToast('Please log in as Administrator', 'error');
+        return;
+    }
+
+    const prodId = document.getElementById('admin-prod-id')?.value;
+    const title = (document.getElementById('admin-prod-title')?.value || '').trim();
+    const price = Number(document.getElementById('admin-prod-price')?.value);
+    const category = (document.getElementById('admin-prod-category')?.value || 'General').trim();
+    const brand = (document.getElementById('admin-prod-brand')?.value || 'SD Originals').trim();
+    const stock = Number(document.getElementById('admin-prod-stock')?.value || 50);
+    const coverData = (document.getElementById('admin-prod-cover-data')?.value || '').trim();
+    const urlImage = (document.getElementById('admin-prod-image')?.value || '').trim();
+    const rawImagesText = (document.getElementById('admin-prod-images')?.value || '').trim();
+    const description = (document.getElementById('admin-prod-description')?.value || '').trim();
+
+    if (!title || !price || !category) {
+        showToast('Please complete all required product fields', 'error');
+        return;
+    }
+
+    const mainCover = coverData || urlImage || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=80';
+
+    let extraGallery = rawImagesText ? rawImagesText.split(',').map(s => s.trim()).filter(Boolean) : [];
+    let completeGallery = [...adminSelectedGalleryImages, ...extraGallery];
+    
+    // Ensure cover is in gallery
+    if (mainCover && !completeGallery.includes(mainCover)) {
+        completeGallery.unshift(mainCover);
+    }
+
+    const payload = {
+        title,
+        price,
+        category,
+        brand,
+        stock,
+        image: mainCover,
+        images: completeGallery,
+        description
+    };
+
+    setButtonLoading('admin-prod-save-btn', true, 'Saving...');
+    showLoading('Saving Product', 'Updating store catalog database...');
+
+    try {
+        const url = prodId ? `${API_BASE}/admin/products/${prodId}` : `${API_BASE}/admin/products`;
+        const method = prodId ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${adminToken}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await safeParseResponse(response);
+        if (!response.ok) throw new Error(data.error || 'Failed to save product');
+
+        closeAdminProductModal();
+        await loadAdminDashboardData();
+        await fetchProducts(); // Refresh store catalog
+        showToast(`🎉 Product "${title}" saved successfully!`);
+    } catch (error) {
+        console.error('Admin save product error:', error);
+        showToast(error.message, 'error');
+    } finally {
+        setButtonLoading('admin-prod-save-btn', false);
+        hideLoading();
+    }
+}
+
+async function handleAdminDeleteProduct(productId, productTitle) {
+    if (!adminToken) return;
+
+    if (!confirm(`Are you sure you want to delete "${productTitle}" from the store catalog?`)) {
+        return;
+    }
+
+    showLoading('Deleting Product', 'Removing product from inventory...');
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/products/${productId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`
+            }
+        });
+
+        const data = await safeParseResponse(response);
+        if (!response.ok) throw new Error(data.error || 'Failed to delete product');
+
+        await loadAdminDashboardData();
+        await fetchProducts();
+        showToast(`🗑️ Product "${productTitle}" deleted successfully`);
+    } catch (error) {
+        console.error('Admin delete product error:', error);
+        showToast(error.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// --- ADMIN ORDERS & FULFILLMENT TRACKER ---
+async function loadAdminOrders() {
+    if (!adminToken) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/orders`, {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const data = await safeParseResponse(response);
+        if (response.ok && Array.isArray(data)) {
+            adminOrdersList = data;
+        } else {
+            adminOrdersList = orders || [];
+        }
+    } catch (e) {
+        adminOrdersList = orders || [];
+    }
+
+    filterAdminOrders();
+}
+
+function setAdminOrderStatusFilter(status) {
+    currentAdminOrderFilter = status;
+    
+    document.querySelectorAll('.admin-order-filter-btn').forEach(btn => {
+        if (btn.dataset.status === status) {
+            btn.className = "admin-order-filter-btn px-3 py-1.5 rounded-lg text-xs font-extrabold bg-indigo-600 text-white transition";
+        } else {
+            btn.className = "admin-order-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition";
+        }
+    });
+
+    filterAdminOrders();
+}
+
+function filterAdminOrders() {
+    const searchInput = document.getElementById('admin-order-search');
+    const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+
+    let filtered = [...adminOrdersList];
+
+    if (currentAdminOrderFilter && currentAdminOrderFilter !== 'all') {
+        filtered = filtered.filter(o => (o.status || 'pending').toLowerCase() === currentAdminOrderFilter.toLowerCase());
+    }
+
+    if (query) {
+        filtered = filtered.filter(o => 
+            (o.trackingNumber || '').toLowerCase().includes(query) ||
+            (o.transactionId || '').toLowerCase().includes(query) ||
+            (o._id || '').toLowerCase().includes(query) ||
+            (typeof o.shippingAddress === 'string' && o.shippingAddress.toLowerCase().includes(query)) ||
+            (o.shippingAddress && o.shippingAddress.address && o.shippingAddress.address.toLowerCase().includes(query))
+        );
+    }
+
+    renderAdminOrdersTable(filtered);
+}
+
+function renderAdminOrdersTable(items) {
+    const tbody = document.getElementById('admin-orders-table-body');
+    if (!tbody) return;
+
+    if (items.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="p-8 text-center text-gray-400">
+                    <i class="fa-solid fa-inbox text-3xl mb-2 block"></i>
+                    No customer orders found.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = items.map(o => {
+        const orderId = o._id || o.id;
+        const tracking = o.trackingNumber || `SD-TRK-${orderId.substring(0, 6)}`;
+        const dateStr = o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recent';
+        const address = typeof o.shippingAddress === 'object' ? (o.shippingAddress.address || o.shippingAddress.city || 'Standard Shipping') : (o.shippingAddress || 'Standard Delivery');
+        const itemsList = Array.isArray(o.items) ? o.items.map(i => `${i.quantity || i.qty || 1}x ${i.title || i.name}`).join(', ') : 'Order Items';
+        const total = Number(o.totalAmount || 0);
+        const status = (o.status || 'pending').toLowerCase();
+
+        return `
+            <tr class="hover:bg-gray-50/80 transition">
+                <td class="p-3.5 pl-5">
+                    <div class="flex items-center space-x-1.5">
+                        <span class="font-mono font-black text-gray-900">${tracking}</span>
+                        <button onclick="copyToClipboard('${tracking}')" class="text-gray-400 hover:text-indigo-600 transition" title="Copy tracking number">
+                            <i class="fa-regular fa-copy text-xs"></i>
+                        </button>
+                    </div>
+                </td>
+                <td class="p-3.5 text-gray-500 text-[11px] whitespace-nowrap">${dateStr}</td>
+                <td class="p-3.5">
+                    <span class="font-medium text-gray-800 line-clamp-1 max-w-[180px]">${address}</span>
+                </td>
+                <td class="p-3.5">
+                    <span class="text-gray-600 line-clamp-1 max-w-[200px]" title="${escapeHtml(itemsList)}">${itemsList}</span>
+                </td>
+                <td class="p-3.5 font-bold font-mono text-gray-900 text-sm whitespace-nowrap">${formatPrice(total)}</td>
+                <td class="p-3.5">
+                    <span class="bg-gray-100 text-gray-700 font-bold px-2 py-0.5 rounded text-[11px] whitespace-nowrap">${o.paymentMethod || 'Card'}</span>
+                </td>
+                <td class="p-3.5">
+                    <select onchange="handleAdminChangeOrderStatus('${orderId}', this.value)" class="bg-white border border-gray-200 text-xs font-bold rounded-lg px-2.5 py-1 text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-xs">
+                        <option value="pending" ${status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
+                        <option value="processing" ${status === 'processing' ? 'selected' : ''}>📦 Processing</option>
+                        <option value="shipped" ${status === 'shipped' ? 'selected' : ''}>🚚 Shipped</option>
+                        <option value="delivered" ${status === 'delivered' ? 'selected' : ''}>✅ Delivered</option>
+                        <option value="cancelled" ${status === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+                    </select>
+                </td>
+                <td class="p-3.5 pr-5 text-right whitespace-nowrap space-x-1">
+                    <button onclick="openInvoiceModalFromData(${escapeJsonForAttr(o)})" class="bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1" title="View & Print Official Invoice">
+                        <i class="fa-solid fa-file-invoice"></i>
+                        <span>Invoice</span>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function handleAdminChangeOrderStatus(orderId, newStatus) {
+    if (!adminToken) return;
+
+    showLoading('Updating Order', `Changing status to ${newStatus}...`);
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/orders/${orderId}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${adminToken}`
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        const data = await safeParseResponse(response);
+        if (!response.ok) throw new Error(data.error || 'Failed to update order status');
+
+        await loadAdminDashboardData();
+        showToast(`📦 Order status updated to "${newStatus.toUpperCase()}"`);
+    } catch (error) {
+        console.error('Admin update order status error:', error);
+        showToast(error.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// Helper to open invoice modal directly from an order object
+function openInvoiceModalFromData(order) {
+    if (!order) return;
+    renderInvoiceModalContent(order);
+    const invoiceModal = document.getElementById('invoice-modal');
+    if (invoiceModal) invoiceModal.classList.remove('hidden');
+}
+
+// --- ADMIN REGISTERED CUSTOMERS ---
+async function loadAdminUsers() {
+    if (!adminToken) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/users`, {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const data = await safeParseResponse(response);
+        if (response.ok && Array.isArray(data)) {
+            adminUsersList = data;
+        } else {
+            adminUsersList = [];
+        }
+    } catch (e) {
+        adminUsersList = [];
+    }
+
+    filterAdminUsers();
+}
+
+function filterAdminUsers() {
+    const searchInput = document.getElementById('admin-user-search');
+    const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+
+    let filtered = [...adminUsersList];
+
+    if (query) {
+        filtered = filtered.filter(u => 
+            (u.name || '').toLowerCase().includes(query) ||
+            (u.email || '').toLowerCase().includes(query) ||
+            (u.phone || '').toLowerCase().includes(query) ||
+            (u.city || '').toLowerCase().includes(query)
+        );
+    }
+
+    renderAdminUsersTable(filtered);
+}
+
+function renderAdminUsersTable(items) {
+    const tbody = document.getElementById('admin-users-table-body');
+    if (!tbody) return;
+
+    if (items.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="p-8 text-center text-gray-400">
+                    <i class="fa-solid fa-users text-3xl mb-2 block"></i>
+                    No customer records found.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = items.map(u => {
+        const dateStr = u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '2026';
+        const isVerified = u.isVerified !== false;
+        
+        return `
+            <tr class="hover:bg-gray-50/80 transition">
+                <td class="p-3.5 pl-5">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-extrabold flex items-center justify-center text-xs">
+                            ${(u.name || 'U').charAt(0).toUpperCase()}
+                        </div>
+                        <span class="font-bold text-gray-900">${u.name || 'Customer'}</span>
+                    </div>
+                </td>
+                <td class="p-3.5 text-gray-700 font-mono text-xs">${u.email || 'N/A'}</td>
+                <td class="p-3.5 text-gray-500">${u.phone || '—'}</td>
+                <td class="p-3.5 text-gray-600">${[u.city, u.address].filter(Boolean).join(', ') || '—'}</td>
+                <td class="p-3.5">
+                    ${isVerified 
+                        ? `<span class="bg-emerald-50 text-emerald-700 font-extrabold px-2.5 py-0.5 rounded-full text-[10px] border border-emerald-200 inline-flex items-center space-x-1"><i class="fa-solid fa-check"></i><span>Verified</span></span>`
+                        : `<span class="bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded-full text-[10px]">Unverified</span>`
+                    }
+                </td>
+                <td class="p-3.5 font-bold text-indigo-600 font-mono">${u.orderCount || 0}</td>
+                <td class="p-3.5 pr-5 text-right text-gray-400 text-[11px]">${dateStr}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Safe attribute JSON encoder
+function escapeJsonForAttr(obj) {
+    try {
+        return JSON.stringify(obj).replace(/"/g, '&quot;');
+    } catch (e) {
+        return '{}';
+    }
+}
+
+

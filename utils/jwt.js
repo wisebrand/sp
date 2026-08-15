@@ -19,6 +19,19 @@ function verifyToken(token) {
   }
 }
 
+// Generate Admin JWT token
+function generateAdminToken(adminObj) {
+  const payload = {
+    adminId: adminObj._id || adminObj.id || 'admin_root',
+    name: adminObj.name || 'Store Administrator',
+    email: adminObj.email || 'admin@sdshopping.com',
+    role: 'admin',
+    isAdmin: true
+  };
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+}
+
+
 // Middleware to authenticate requests
 function authMiddleware(req, res, next) {
   try {
@@ -29,7 +42,8 @@ function authMiddleware(req, res, next) {
 
     const decoded = verifyToken(token);
     if (!decoded) {
-      return res.status(401).json({ error: 'Invalid token' });
+      return res.status(401).json({ error: 'Invalid or expired token' });
+
     }
 
     req.userId = decoded.userId;
@@ -41,8 +55,34 @@ function authMiddleware(req, res, next) {
   }
 }
 
+// Middleware to authenticate Administrator requests
+function adminAuthMiddleware(req, res, next) {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'Administrator authentication required. Please log in as Admin.' });
+    }
+
+    const decoded = verifyToken(token);
+    if (!decoded || (!decoded.isAdmin && decoded.role !== 'admin')) {
+      return res.status(403).json({ error: 'Access denied: Requires administrator privileges.' });
+    }
+
+    req.adminId = decoded.adminId || decoded.userId;
+    req.adminName = decoded.name;
+    req.adminEmail = decoded.email;
+    req.isAdmin = true;
+    next();
+  } catch (error) {
+    res.status(401).json({ error: 'Admin authentication failed' });
+  }
+}
+
 module.exports = {
   generateToken,
+  generateAdminToken,
   verifyToken,
-  authMiddleware
+  authMiddleware,
+  adminAuthMiddleware
 };
+
