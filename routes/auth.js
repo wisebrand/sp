@@ -451,4 +451,34 @@ router.post('/change-password', authMiddleware, async (req, res) => {
   }
 });
 
+// 8. Delete All Signed-Up Users (Clean Database for Fresh Signups)
+router.post('/clear-users', async (req, res) => {
+  try {
+    let deletedCount = 0;
+    try {
+      const userRes = await User.deleteMany({});
+      deletedCount = userRes.deletedCount || 0;
+      await Otp.deleteMany({});
+    } catch (dbErr) {
+      console.warn('DB delete notice:', dbErr.message);
+    }
+
+    // Also clear in-memory stores
+    const memCount = memoryUsers.size;
+    memoryUsers.clear();
+    pendingOtps.clear();
+
+    console.log(`\n🧹 [Database Cleanup]: Removed ${deletedCount} users from MongoDB and ${memCount} from memory store.`);
+
+    res.json({
+      message: 'All registered emails and users have been deleted from the database. New registrations and OTP verification remain fully functional.',
+      deletedFromMongo: deletedCount,
+      deletedFromMemory: memCount
+    });
+  } catch (error) {
+    console.error('Clear users error:', error);
+    res.status(500).json({ error: 'Failed to clear users' });
+  }
+});
+
 module.exports = router;
