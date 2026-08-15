@@ -172,7 +172,7 @@
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
                         <i class="fa-solid fa-magnifying-glass text-sm"></i>
                     </div>
-                    <input type="text" id="search-input" oninput="handleSearchWithAI(this.value)" onfocus="showAISuggestions(this.value, false)" placeholder="Search products, brands, models, or categories across SD..." 
+                    <input type="text" id="search-input" oninput="handleSearchWithAI(this.value)" onfocus="showAISuggestions(this.value, false)" placeholder="Search handbags, sneakers, heels, boots, backpacks or ask AI..." 
                         class="w-full pl-10 pr-24 py-2.5 bg-white text-xs font-semibold text-gray-800 placeholder-gray-400 focus:outline-none transition">
                     
                     <button id="search-clear-btn" onclick="clearSearch()" type="button" class="hidden absolute inset-y-0 right-24 flex items-center pr-2 text-gray-400 hover:text-gray-600 transition" title="Clear search">
@@ -265,7 +265,7 @@
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
                     <i class="fa-solid fa-magnifying-glass text-xs"></i>
                 </span>
-                <input type="text" id="mobile-search-input" oninput="handleSearchWithAI(this.value)" onfocus="showAISuggestions(this.value, true)" placeholder="Search products, brands or ask AI..." 
+                <input type="text" id="mobile-search-input" oninput="handleSearchWithAI(this.value)" onfocus="showAISuggestions(this.value, true)" placeholder="Search bags, shoes, heels, sneakers..." 
                     class="w-full pl-9 pr-20 py-2.5 bg-white text-xs font-medium text-gray-800 focus:outline-none">
                 
                 <button id="mobile-search-clear-btn" onclick="clearSearch()" type="button" class="hidden absolute inset-y-0 right-20 flex items-center pr-2 text-gray-400 hover:text-gray-600 transition" title="Clear search">
@@ -295,63 +295,63 @@
                 <!-- Left Column: Jumia Category Navigation Sidebar -->
                 <div class="hidden lg:block lg:col-span-3 bg-white rounded-2xl border border-gray-200 shadow-sm p-3 space-y-1">
                     <div class="pb-2 px-3 border-b border-gray-100 text-xs font-black text-gray-400 uppercase tracking-widest flex items-center justify-between">
-                        <span>All Categories</span>
-                        <i class="fa-solid fa-list-ul text-indigo-600"></i>
+                        <span>Bags & Shoes</span>
+                        <i class="fa-solid fa-bag-shopping text-indigo-600"></i>
                     </div>
                     <div class="space-y-0.5 pt-1 text-xs font-bold text-gray-700">
-                        <button onclick="filterCategory('Phones & Tablets')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
+                        <button onclick="filterCategory('Handbags & Totes')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
                             <span class="flex items-center space-x-2.5">
-                                <i class="fa-solid fa-mobile-screen-button text-indigo-500 w-4"></i>
-                                <span>Phones & Tablets</span>
+                                <i class="fa-solid fa-bag-shopping text-indigo-500 w-4"></i>
+                                <span>Handbags & Totes</span>
                             </span>
                             <i class="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-indigo-600 transition"></i>
                         </button>
-                        <button onclick="filterCategory('Audio')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
+                        <button onclick="filterCategory('Sneakers & Trainers')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
                             <span class="flex items-center space-x-2.5">
-                                <i class="fa-solid fa-headphones text-indigo-500 w-4"></i>
-                                <span>Audio & Sound</span>
+                                <i class="fa-solid fa-shoe-prints text-indigo-500 w-4"></i>
+                                <span>Sneakers & Trainers</span>
                             </span>
                             <i class="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-indigo-600 transition"></i>
                         </button>
-                        <button onclick="filterCategory('Wearables')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
+                        <button onclick="filterCategory('Heels & Pumps')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
                             <span class="flex items-center space-x-2.5">
-                                <i class="fa-solid fa-stopwatch text-indigo-500 w-4"></i>
-                                <span>Smart Wearables</span>
+                                <i class="fa-solid fa-socks text-indigo-500 w-4"></i>
+                                <span>Heels & Stilettos</span>
                             </span>
                             <i class="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-indigo-600 transition"></i>
                         </button>
-                        <button onclick="filterCategory('Electronics')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
+                        <button onclick="filterCategory('Backpacks & Travel')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
                             <span class="flex items-center space-x-2.5">
-                                <i class="fa-solid fa-tv text-indigo-500 w-4"></i>
-                                <span>Electronics & TV</span>
+                                <i class="fa-solid fa-vest text-indigo-500 w-4"></i>
+                                <span>Backpacks & Travel</span>
                             </span>
                             <i class="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-indigo-600 transition"></i>
                         </button>
-                        <button onclick="filterCategory('Accessories')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
+                        <button onclick="filterCategory('Loafers & Dress Shoes')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
                             <span class="flex items-center space-x-2.5">
-                                <i class="fa-solid fa-plug text-indigo-500 w-4"></i>
-                                <span>Gadget Accessories</span>
+                                <i class="fa-solid fa-boot text-indigo-500 w-4"></i>
+                                <span>Loafers & Dress Shoes</span>
                             </span>
                             <i class="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-indigo-600 transition"></i>
                         </button>
-                        <button onclick="filterCategory('All')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
+                        <button onclick="filterCategory('Crossbody & Clutches')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
                             <span class="flex items-center space-x-2.5">
-                                <i class="fa-solid fa-shirt text-indigo-500 w-4"></i>
-                                <span>SD Fashion & Apparel</span>
+                                <i class="fa-solid fa-wallet text-indigo-500 w-4"></i>
+                                <span>Crossbody & Clutches</span>
                             </span>
                             <i class="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-indigo-600 transition"></i>
                         </button>
-                        <button onclick="filterCategory('All')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
+                        <button onclick="filterCategory('Boots & Ankle Boots')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
                             <span class="flex items-center space-x-2.5">
-                                <i class="fa-solid fa-wand-magic-sparkles text-indigo-500 w-4"></i>
-                                <span>Health & Beauty</span>
+                                <i class="fa-solid fa-person-walking text-indigo-500 w-4"></i>
+                                <span>Boots & Ankle Boots</span>
                             </span>
                             <i class="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-indigo-600 transition"></i>
                         </button>
-                        <button onclick="filterCategory('All')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
+                        <button onclick="filterCategory('Sandals & Slides')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
                             <span class="flex items-center space-x-2.5">
-                                <i class="fa-solid fa-house-laptop text-indigo-500 w-4"></i>
-                                <span>Home & Office</span>
+                                <i class="fa-solid fa-umbrella-beach text-indigo-500 w-4"></i>
+                                <span>Sandals & Slides</span>
                             </span>
                             <i class="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-indigo-600 transition"></i>
                         </button>
@@ -362,30 +362,30 @@
                 <div class="lg:col-span-6 relative rounded-2xl overflow-hidden shadow-md bg-slate-900 min-h-[300px] flex flex-col justify-between">
                     <!-- Carousel Slides Container -->
                     <div id="hero-carousel" class="relative w-full h-full flex-1">
-                        <!-- Slide 1: Mega Deals -->
+                        <!-- Slide 1: Bags & Shoes Mega Deals -->
                         <div class="hero-slide absolute inset-0 transition-opacity duration-700 flex flex-col justify-between p-6 sm:p-8 text-white bg-gradient-to-r from-indigo-950 via-indigo-900 to-violet-950">
                             <div>
                                 <div class="inline-flex items-center space-x-2 bg-amber-400 text-slate-950 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-xs">
                                     <i class="fa-solid fa-bolt"></i>
-                                    <span>SD Mega Shopping Fest</span>
+                                    <span>SD Bags & Shoes Festival</span>
                                 </div>
                                 <h1 class="text-2xl sm:text-4xl font-black tracking-tight mt-3 leading-tight">
-                                    Up to 50% Off<br><span class="text-amber-300">Top Tech & Lifestyle</span>
+                                    Up to 50% Off<br><span class="text-amber-300">Designer Bags & Footwear</span>
                                 </h1>
                                 <p class="text-xs sm:text-sm text-indigo-200 mt-2 max-w-sm">
-                                    Fast doorstep delivery across Ghana. Authentic warranty guaranteed on all items.
+                                    Fast doorstep delivery across Ghana. 100% authentic leather, sneakers & luxury handbags.
                                 </p>
                             </div>
                             <div class="pt-4 flex items-center space-x-3">
                                 <button onclick="scrollToCatalog()" class="bg-white hover:bg-indigo-50 text-indigo-900 text-xs font-black px-6 py-3 rounded-xl shadow-lg transition flex items-center space-x-2 uppercase tracking-wide">
-                                    <span>Shop Deals Now</span>
+                                    <span>Shop Bags & Shoes Now</span>
                                     <i class="fa-solid fa-arrow-right text-[10px]"></i>
                                 </button>
                                 <span class="text-xs text-indigo-300 font-bold hidden sm:inline">Use code <b>SAVE10</b></span>
                             </div>
                         </div>
 
-                        <!-- Slide 2: SD Express -->
+                        <!-- Slide 2: SD Express Footwear -->
                         <div class="hero-slide absolute inset-0 transition-opacity duration-700 opacity-0 pointer-events-none flex flex-col justify-between p-6 sm:p-8 text-white bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900">
                             <div>
                                 <div class="inline-flex items-center space-x-2 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-xs">
@@ -393,7 +393,7 @@
                                     <span>SD Express Guarantee</span>
                                 </div>
                                 <h2 class="text-2xl sm:text-4xl font-black tracking-tight mt-3 leading-tight">
-                                    Same-Day & 24hr<br><span class="text-emerald-400">Express Delivery</span>
+                                    Same-Day & 24hr<br><span class="text-emerald-400">Footwear & Bag Delivery</span>
                                 </h2>
                                 <p class="text-xs sm:text-sm text-gray-300 mt-2 max-w-sm">
                                     Direct to your door in Greater Accra, Kumasi, Takoradi and all regional capitals.
@@ -401,29 +401,29 @@
                             </div>
                             <div class="pt-4">
                                 <button onclick="scrollToCatalog()" class="bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-black px-6 py-3 rounded-xl shadow-lg transition flex items-center space-x-2 uppercase tracking-wide">
-                                    <span>Explore Express Items</span>
+                                    <span>Explore Express Styles</span>
                                     <i class="fa-solid fa-arrow-right text-[10px]"></i>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Slide 3: Official Brand Stores -->
+                        <!-- Slide 3: Genuine Leather & Designer Brands -->
                         <div class="hero-slide absolute inset-0 transition-opacity duration-700 opacity-0 pointer-events-none flex flex-col justify-between p-6 sm:p-8 text-white bg-gradient-to-r from-violet-950 via-indigo-900 to-fuchsia-950">
                             <div>
                                 <div class="inline-flex items-center space-x-2 bg-violet-400 text-slate-950 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-xs">
                                     <i class="fa-solid fa-certificate"></i>
-                                    <span>100% Genuine Brands</span>
+                                    <span>100% Genuine Leather & Brands</span>
                                 </div>
                                 <h2 class="text-2xl sm:text-4xl font-black tracking-tight mt-3 leading-tight">
-                                    Official Brand Stores<br><span class="text-violet-300">Apple, Sony & JBL</span>
+                                    Official Designer Stores<br><span class="text-violet-300">Gucci, Nike, Zara & Aldo</span>
                                 </h2>
                                 <p class="text-xs sm:text-sm text-indigo-200 mt-2 max-w-sm">
-                                    Brand new sealed boxes with manufacturer warranty and hassle-free returns.
+                                    Authentic crafted leather bags, sneakers, heels & loafers with buyer guarantee.
                                 </p>
                             </div>
                             <div class="pt-4">
                                 <button onclick="scrollToCatalog()" class="bg-white hover:bg-gray-100 text-violet-950 text-xs font-black px-6 py-3 rounded-xl shadow-lg transition flex items-center space-x-2 uppercase tracking-wide">
-                                    <span>View Official Brands</span>
+                                    <span>View Official Stores</span>
                                     <i class="fa-solid fa-arrow-right text-[10px]"></i>
                                 </button>
                             </div>
@@ -461,7 +461,7 @@
                             </div>
                         </div>
                         <p class="text-[11px] text-slate-900/80 font-medium mt-3">
-                            Place instant orders with our sales agents over the phone.
+                            Place instant shoe & bag orders with our fashion specialists over the phone.
                         </p>
                     </div>
 
@@ -473,8 +473,8 @@
                             </div>
                             <div>
                                 <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 block">Fast Fulfillment</span>
-                                <h3 class="text-sm font-black text-gray-900">SD Express Store</h3>
-                                <span class="text-[11px] text-gray-500 block">Quality Tested & Packed</span>
+                                <h3 class="text-sm font-black text-gray-900">SD Express Footwear</h3>
+                                <span class="text-[11px] text-gray-500 block">Size Checked & Dispatched</span>
                             </div>
                         </div>
                         <div class="pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-indigo-600">
@@ -491,7 +491,7 @@
                     <div class="w-12 h-12 rounded-2xl bg-amber-50 group-hover:bg-amber-500 text-amber-500 group-hover:text-white flex items-center justify-center text-xl transition shadow-xs">
                         <i class="fa-solid fa-bolt"></i>
                     </div>
-                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Flash Sales</span>
+                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Flash Deals</span>
                 </button>
 
                 <button onclick="filterCategory('All')" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
@@ -501,46 +501,46 @@
                     <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">SD Express</span>
                 </button>
 
-                <button onclick="filterCategory('Phones & Tablets')" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
+                <button onclick="filterCategory('Handbags & Totes')" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
                     <div class="w-12 h-12 rounded-2xl bg-indigo-50 group-hover:bg-indigo-600 text-indigo-600 group-hover:text-white flex items-center justify-center text-xl transition shadow-xs">
-                        <i class="fa-solid fa-mobile-screen"></i>
+                        <i class="fa-solid fa-bag-shopping"></i>
                     </div>
-                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Phones</span>
+                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Handbags</span>
                 </button>
 
-                <button onclick="filterCategory('Audio')" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
+                <button onclick="filterCategory('Sneakers & Trainers')" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
                     <div class="w-12 h-12 rounded-2xl bg-violet-50 group-hover:bg-violet-600 text-violet-600 group-hover:text-white flex items-center justify-center text-xl transition shadow-xs">
-                        <i class="fa-solid fa-headphones"></i>
+                        <i class="fa-solid fa-shoe-prints"></i>
                     </div>
-                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Audio</span>
+                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Sneakers</span>
                 </button>
 
-                <button onclick="filterCategory('Electronics')" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
-                    <div class="w-12 h-12 rounded-2xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center text-xl transition shadow-xs">
-                        <i class="fa-solid fa-laptop"></i>
+                <button onclick="filterCategory('Heels & Pumps')" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
+                    <div class="w-12 h-12 rounded-2xl bg-pink-50 group-hover:bg-pink-600 text-pink-600 group-hover:text-white flex items-center justify-center text-xl transition shadow-xs">
+                        <i class="fa-solid fa-socks"></i>
                     </div>
-                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Computing</span>
+                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Heels</span>
                 </button>
 
-                <button onclick="filterCategory('Wearables')" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
+                <button onclick="filterCategory('Backpacks & Travel')" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
                     <div class="w-12 h-12 rounded-2xl bg-fuchsia-50 group-hover:bg-fuchsia-600 text-fuchsia-600 group-hover:text-white flex items-center justify-center text-xl transition shadow-xs">
-                        <i class="fa-solid fa-stopwatch"></i>
+                        <i class="fa-solid fa-vest"></i>
                     </div>
-                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Wearables</span>
+                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Backpacks</span>
                 </button>
 
-                <button onclick="scrollToCatalog()" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
+                <button onclick="filterCategory('Loafers & Dress Shoes')" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center text-xl transition shadow-xs">
+                        <i class="fa-solid fa-boot"></i>
+                    </div>
+                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Loafers</span>
+                </button>
+
+                <button onclick="openVoucherModal()" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
                     <div class="w-12 h-12 rounded-2xl bg-rose-50 group-hover:bg-rose-600 text-rose-600 group-hover:text-white flex items-center justify-center text-xl transition shadow-xs">
                         <i class="fa-solid fa-tags"></i>
                     </div>
                     <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Clearance</span>
-                </button>
-
-                <button onclick="openVoucherModal()" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
-                    <div class="w-12 h-12 rounded-2xl bg-cyan-50 group-hover:bg-cyan-600 text-cyan-600 group-hover:text-white flex items-center justify-center text-xl transition shadow-xs">
-                        <i class="fa-solid fa-gift"></i>
-                    </div>
-                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Vouchers</span>
                 </button>
             </div>
 
@@ -557,7 +557,7 @@
                                 <span>FLASH SALES</span>
                                 <span class="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Today's Deals</span>
                             </h2>
-                            <span class="text-[11px] text-rose-100">Limited quantities at slashed promotional prices</span>
+                            <span class="text-[11px] text-rose-100">Limited quantities on designer bags and shoes at slashed prices</span>
                         </div>
                     </div>
 
@@ -593,29 +593,29 @@
                     <span class="text-xs font-bold text-indigo-600 hover:underline cursor-pointer" onclick="scrollToCatalog()">View All Brands &rarr;</span>
                 </div>
                 <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
-                    <button onclick="filterBrand('Apple')" class="p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-200 rounded-xl flex flex-col items-center justify-center space-y-1 transition group">
-                        <i class="fa-brands fa-apple text-2xl text-gray-800 group-hover:text-indigo-600"></i>
-                        <span class="text-xs font-black text-gray-800">Apple Store</span>
+                    <button onclick="filterBrand('Nike')" class="p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-200 rounded-xl flex flex-col items-center justify-center space-y-1 transition group">
+                        <i class="fa-solid fa-shoe-prints text-xl text-gray-800 group-hover:text-indigo-600"></i>
+                        <span class="text-xs font-black text-gray-800">Nike</span>
                     </button>
-                    <button onclick="filterBrand('Sony')" class="p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-200 rounded-xl flex flex-col items-center justify-center space-y-1 transition group">
-                        <i class="fa-solid fa-play text-xl text-gray-800 group-hover:text-indigo-600"></i>
-                        <span class="text-xs font-black text-gray-800">Sony Audio</span>
+                    <button onclick="filterBrand('Gucci')" class="p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-200 rounded-xl flex flex-col items-center justify-center space-y-1 transition group">
+                        <i class="fa-solid fa-gem text-xl text-gray-800 group-hover:text-indigo-600"></i>
+                        <span class="text-xs font-black text-gray-800">Gucci</span>
                     </button>
-                    <button onclick="filterBrand('Samsung')" class="p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-200 rounded-xl flex flex-col items-center justify-center space-y-1 transition group">
-                        <i class="fa-solid fa-mobile-button text-xl text-gray-800 group-hover:text-indigo-600"></i>
-                        <span class="text-xs font-black text-gray-800">Samsung</span>
+                    <button onclick="filterBrand('Zara')" class="p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-200 rounded-xl flex flex-col items-center justify-center space-y-1 transition group">
+                        <i class="fa-solid fa-bag-shopping text-xl text-gray-800 group-hover:text-indigo-600"></i>
+                        <span class="text-xs font-black text-gray-800">Zara</span>
                     </button>
-                    <button onclick="filterBrand('JBL')" class="p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-200 rounded-xl flex flex-col items-center justify-center space-y-1 transition group">
-                        <i class="fa-solid fa-volume-high text-xl text-gray-800 group-hover:text-indigo-600"></i>
-                        <span class="text-xs font-black text-gray-800">JBL Sound</span>
+                    <button onclick="filterBrand('Adidas')" class="p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-200 rounded-xl flex flex-col items-center justify-center space-y-1 transition group">
+                        <i class="fa-solid fa-person-running text-xl text-gray-800 group-hover:text-indigo-600"></i>
+                        <span class="text-xs font-black text-gray-800">Adidas</span>
                     </button>
-                    <button onclick="filterBrand('Anker')" class="p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-200 rounded-xl flex flex-col items-center justify-center space-y-1 transition group">
-                        <i class="fa-solid fa-bolt text-xl text-gray-800 group-hover:text-indigo-600"></i>
-                        <span class="text-xs font-black text-gray-800">Anker Power</span>
+                    <button onclick="filterBrand('Clarks')" class="p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-200 rounded-xl flex flex-col items-center justify-center space-y-1 transition group">
+                        <i class="fa-solid fa-boot text-xl text-gray-800 group-hover:text-indigo-600"></i>
+                        <span class="text-xs font-black text-gray-800">Clarks</span>
                     </button>
-                    <button onclick="filterBrand('Spigen')" class="p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-200 rounded-xl flex flex-col items-center justify-center space-y-1 transition group">
-                        <i class="fa-solid fa-shield text-xl text-gray-800 group-hover:text-indigo-600"></i>
-                        <span class="text-xs font-black text-gray-800">Spigen Armor</span>
+                    <button onclick="filterBrand('Aldo')" class="p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-200 rounded-xl flex flex-col items-center justify-center space-y-1 transition group">
+                        <i class="fa-solid fa-socks text-xl text-gray-800 group-hover:text-indigo-600"></i>
+                        <span class="text-xs font-black text-gray-800">Aldo</span>
                     </button>
                 </div>
             </div>
@@ -625,12 +625,12 @@
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <!-- Categories Filter Navigation Pills -->
                     <div id="category-filters" class="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none">
-                        <button onclick="filterCategory('All')" class="category-btn px-4 py-2 rounded-full text-xs font-black whitespace-nowrap bg-indigo-600 text-white shadow-sm transition">All Products</button>
-                        <button onclick="filterCategory('Phones & Tablets')" class="category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition">Phones & Tablets</button>
-                        <button onclick="filterCategory('Electronics')" class="category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition">Electronics</button>
-                        <button onclick="filterCategory('Audio')" class="category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition">Audio</button>
-                        <button onclick="filterCategory('Wearables')" class="category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition">Wearables</button>
-                        <button onclick="filterCategory('Accessories')" class="category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition">Accessories</button>
+                        <button onclick="filterCategory('All')" class="category-btn px-4 py-2 rounded-full text-xs font-black whitespace-nowrap bg-indigo-600 text-white shadow-sm transition">All Bags & Shoes</button>
+                        <button onclick="filterCategory('Handbags & Totes')" class="category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition">Handbags & Totes</button>
+                        <button onclick="filterCategory('Sneakers & Trainers')" class="category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition">Sneakers & Trainers</button>
+                        <button onclick="filterCategory('Heels & Pumps')" class="category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition">Heels & Stilettos</button>
+                        <button onclick="filterCategory('Backpacks & Travel')" class="category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition">Backpacks & Travel</button>
+                        <button onclick="filterCategory('Loafers & Dress Shoes')" class="category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition">Loafers & Dress Shoes</button>
                     </div>
 
                     <!-- Sort By Selector -->
@@ -654,12 +654,14 @@
                             <span class="text-xs font-bold text-gray-500"><i class="fa-solid fa-tag text-indigo-500 mr-1"></i>Brand:</span>
                             <select id="brand-filter" onchange="applyFiltersAndRender()" class="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                                 <option value="All">All Brands</option>
-                                <option value="Apple">Apple</option>
-                                <option value="Sony">Sony</option>
-                                <option value="Samsung">Samsung</option>
-                                <option value="JBL">JBL</option>
-                                <option value="Anker">Anker</option>
-                                <option value="Spigen">Spigen</option>
+                                <option value="Nike">Nike</option>
+                                <option value="Gucci">Gucci</option>
+                                <option value="Zara">Zara</option>
+                                <option value="Adidas">Adidas</option>
+                                <option value="Clarks">Clarks</option>
+                                <option value="Aldo">Aldo</option>
+                                <option value="Michael Kors">Michael Kors</option>
+                                <option value="Prada">Prada</option>
                             </select>
                         </div>
 
@@ -1865,33 +1867,31 @@
     </div>
 
     <!-- Mobile Bottom Sticky App Navigation Bar -->
-    <div class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-2xl py-2 px-3 flex items-center justify-around">
+    <div class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-2xl py-2 px-2 flex items-center justify-around">
         <button onclick="switchTab('catalog')" class="flex flex-col items-center text-gray-600 hover:text-indigo-600 focus:text-indigo-600 text-[10px] font-bold space-y-0.5 transition">
             <i class="fa-solid fa-house text-base"></i>
             <span>Shop</span>
         </button>
         <button onclick="switchTab('wishlist')" class="relative flex flex-col items-center text-gray-600 hover:text-indigo-600 focus:text-indigo-600 text-[10px] font-bold space-y-0.5 transition">
             <i class="fa-regular fa-heart text-base"></i>
-
             <span>Wishlist</span>
             <span id="mobile-wishlist-badge" class="absolute -top-1 right-2 bg-rose-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden">0</span>
         </button>
         <button onclick="switchTab('cart')" class="relative flex flex-col items-center text-gray-600 hover:text-indigo-600 focus:text-indigo-600 text-[10px] font-bold space-y-0.5 transition">
-            <i class="fa-solid fa-cart-shopping text-lg"></i>
-
+            <i class="fa-solid fa-cart-shopping text-base"></i>
             <span>Cart</span>
             <span id="mobile-cart-badge" class="absolute -top-1 right-2 bg-indigo-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden">0</span>
         </button>
         <button onclick="switchTab('orders')" class="flex flex-col items-center text-gray-600 hover:text-indigo-600 focus:text-indigo-600 text-[10px] font-bold space-y-0.5 transition">
-            <i class="fa-solid fa-box text-lg"></i>
+            <i class="fa-solid fa-box text-base"></i>
             <span>Orders</span>
         </button>
         <button onclick="switchTab('profile')" class="flex flex-col items-center text-gray-600 hover:text-indigo-600 focus:text-indigo-600 text-[10px] font-bold space-y-0.5 transition">
-            <i class="fa-regular fa-user text-lg"></i>
+            <i class="fa-regular fa-user text-base"></i>
             <span>Profile</span>
         </button>
         <button onclick="handleAdminTabClick()" class="flex flex-col items-center text-slate-800 hover:text-amber-500 focus:text-amber-600 text-[10px] font-extrabold space-y-0.5 transition">
-            <i class="fa-solid fa-shield-halved text-lg text-amber-500"></i>
+            <i class="fa-solid fa-shield-halved text-base text-amber-500"></i>
             <span>Admin</span>
         </button>
     </div>
@@ -1994,11 +1994,14 @@
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1">Category <span class="text-rose-500">*</span></label>
                         <select id="admin-prod-category" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-semibold text-gray-800 focus:outline-none focus:border-indigo-500">
-                            <option value="Electronics">Electronics</option>
-                            <option value="Audio">Audio</option>
-                            <option value="Wearables">Wearables</option>
-                            <option value="Accessories">Accessories</option>
-                            <option value="General">General</option>
+                            <option value="Handbags & Totes">Handbags & Totes</option>
+                            <option value="Sneakers & Trainers">Sneakers & Trainers</option>
+                            <option value="Heels & Pumps">Heels & Pumps</option>
+                            <option value="Backpacks & Travel">Backpacks & Travel</option>
+                            <option value="Loafers & Dress Shoes">Loafers & Dress Shoes</option>
+                            <option value="Crossbody & Clutches">Crossbody & Clutches</option>
+                            <option value="Boots & Ankle Boots">Boots & Ankle Boots</option>
+                            <option value="Sandals & Slides">Sandals & Slides</option>
                         </select>
                     </div>
                     <div>
@@ -2102,7 +2105,6 @@
                 </div>
             </form>
         </div>
-
     </div>
 
     <!-- Application Script Logic -->

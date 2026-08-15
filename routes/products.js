@@ -7,171 +7,171 @@ const { authMiddleware } = require('../utils/jwt');
 const FALLBACK_PRODUCTS = [
   {
     _id: '1',
-    title: 'Wireless Noise-Canceling Headphones',
-    description: 'Premium noise-cancelling wireless headphones with 30-hour battery life, spatial audio, and high-fidelity drivers.',
-    price: 199.99,
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80',
+    title: 'Italian Saffiano Leather Tote Bag',
+    description: 'Structured designer leather tote bag with gold-tone hardware, top zip closure, and spacious multi-compartment interior.',
+    price: 1250.00,
+    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80',
     images: [
-      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800&auto=format&fit=crop&q=80'
+      'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1591561954557-26941169b49e?w=800&auto=format&fit=crop&q=80'
     ],
-    category: 'Audio',
-    brand: 'Sony',
-    stock: 50,
-    rating: 4.8,
-    ratingCount: 34,
+    category: 'Handbags & Totes',
+    brand: 'Prada',
+    stock: 25,
+    rating: 4.9,
+    ratingCount: 42,
     reviews: [
-      { userName: 'Michael G.', rating: 5, comment: 'Incredible sound clarity and battery life lasts for days!', createdAt: new Date(Date.now() - 86400000 * 2) },
-      { userName: 'Sarah K.', rating: 5, comment: 'Best noise cancellation for work and flights.', createdAt: new Date(Date.now() - 86400000 * 5) },
-      { userName: 'David L.', rating: 4, comment: 'Very comfortable cushions, slightly heavy but totally worth it.', createdAt: new Date(Date.now() - 86400000 * 10) }
+      { userName: 'Abena M.', rating: 5, comment: 'The leather quality is top-notch! Genuine Italian craft.', createdAt: new Date(Date.now() - 86400000 * 2) },
+      { userName: 'Efua K.', rating: 5, comment: 'Fits my 13-inch laptop and daily makeup essentials perfectly.', createdAt: new Date(Date.now() - 86400000 * 5) }
     ]
   },
   {
     _id: '2',
-    title: 'Flagship 5G Ultra Smartphone',
-    description: 'Latest model smartphone with OLED display, 5G ultra connectivity, and 108MP triple camera system.',
-    price: 899.99,
-    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&auto=format&fit=crop&q=80',
+    title: 'Air Max Urban Running Sneakers',
+    description: 'Lightweight responsive athletic sneakers with breathable mesh upper, cushioned air sole, and high-traction tread.',
+    price: 680.00,
+    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&auto=format&fit=crop&q=80',
     images: [
-      'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1580910051074-3eb694886505?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=800&auto=format&fit=crop&q=80'
+      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1607522370275-f14206abe5d3?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1552346154-21d32810aba3?w=800&auto=format&fit=crop&q=80'
     ],
-    category: 'Electronics',
-    brand: 'Samsung',
-    stock: 30,
-    rating: 4.9,
-    ratingCount: 52,
+    category: 'Sneakers & Trainers',
+    brand: 'Nike',
+    stock: 40,
+    rating: 4.8,
+    ratingCount: 65,
     reviews: [
-      { userName: 'Alex R.', rating: 5, comment: 'The camera takes studio-quality photos. Blazing fast CPU.', createdAt: new Date(Date.now() - 86400000 * 3) },
-      { userName: 'Emmanuel T.', rating: 5, comment: 'Battery easily lasts all day. Highly recommended.', createdAt: new Date(Date.now() - 86400000 * 7) }
+      { userName: 'Kofi A.', rating: 5, comment: 'Super comfy for running and daily street casual wear. 100% authentic Nike.', createdAt: new Date(Date.now() - 86400000 * 3) }
     ]
   },
   {
     _id: '3',
-    title: 'Pro Studio Ultra Laptop 16-inch',
-    description: 'High-performance laptop for professionals, creators, and developers with 32GB RAM and 1TB SSD.',
-    price: 1299.99,
-    image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800&auto=format&fit=crop&q=80',
+    title: 'Classic Pointed Stiletto Pumps',
+    description: 'Elegant 4-inch stiletto heels crafted with premium gloss finish, padded comfort insole, and sleek silhouette.',
+    price: 420.00,
+    image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&auto=format&fit=crop&q=80',
     images: [
-      'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&auto=format&fit=crop&q=80'
+      'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1535043934128-cf0b28d52f95?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1596704017254-9b121068fb31?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1515347619252-60a4bf4fff4f?w=800&auto=format&fit=crop&q=80'
     ],
-    category: 'Electronics',
-    brand: 'Apple',
-    stock: 20,
+    category: 'Heels & Pumps',
+    brand: 'Zara',
+    stock: 30,
     rating: 4.7,
-    ratingCount: 28,
+    ratingCount: 38,
     reviews: [
-      { userName: 'Kwame J.', rating: 5, comment: 'Handles video rendering and coding with zero stutter.', createdAt: new Date(Date.now() - 86400000 * 4) }
+      { userName: 'Akosua B.', rating: 5, comment: 'Wore these for a wedding in Accra and received so many compliments!', createdAt: new Date(Date.now() - 86400000 * 4) }
     ]
   },
   {
     _id: '4',
-    title: 'Fitness Smartwatch Pro Edition',
-    description: 'Feature-rich smartwatch with heart rate monitoring, GPS, sleep tracking, and waterproof casing.',
-    price: 349.99,
-    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=80',
+    title: 'Waterproof Travel Laptop Backpack',
+    description: 'Durable weather-resistant commuter backpack with 16-inch padded laptop sleeve, anti-theft pocket, and USB pass-through.',
+    price: 320.00,
+    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80',
     images: [
-      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=800&auto=format&fit=crop&q=80'
+      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1577733966973-d680bffd2e80?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1581605405669-fcdf81165afa?w=800&auto=format&fit=crop&q=80'
     ],
-    category: 'Wearables',
-    brand: 'Apple',
-    stock: 45,
-    rating: 4.6,
-    ratingCount: 41,
+    category: 'Backpacks & Travel',
+    brand: 'SD Originals',
+    stock: 50,
+    rating: 4.9,
+    ratingCount: 54,
     reviews: [
-      { userName: 'Jessica B.', rating: 5, comment: 'Tracks all my morning runs accurately. Beautiful screen.', createdAt: new Date(Date.now() - 86400000 * 1) }
+      { userName: 'Emmanuel S.', rating: 5, comment: 'Solid zippers and water-resistant fabric. Great travel bag.', createdAt: new Date(Date.now() - 86400000 * 1) }
     ]
   },
   {
     _id: '5',
-    title: 'Waterproof Boombox Portable Speaker',
-    description: 'Rugged portable speaker with 360-degree bass, IP67 water resistance, and 24-hour battery.',
-    price: 79.99,
-    image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=800&auto=format&fit=crop&q=80',
+    title: 'Handcrafted Penny Leather Loafers',
+    description: 'Timeless slip-on dress shoes made with genuine burnished calfskin leather, leather lining, and non-slip rubber soles.',
+    price: 590.00,
+    image: 'https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=800&auto=format&fit=crop&q=80',
     images: [
-      'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1545454675-3531b543be5d?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1589003077984-894e133dabab?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1543512214-318c7553f230?w=800&auto=format&fit=crop&q=80'
+      'https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1614252369475-531eba835eb1?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?w=800&auto=format&fit=crop&q=80'
     ],
-    category: 'Audio',
-    brand: 'JBL',
-    stock: 60,
-    rating: 4.5,
-    ratingCount: 19,
+    category: 'Loafers & Dress Shoes',
+    brand: 'Clarks',
+    stock: 35,
+    rating: 4.8,
+    ratingCount: 29,
     reviews: [
-      { userName: 'Daniel O.', rating: 4, comment: 'Loud punchy bass. Great for outdoor barbecues.', createdAt: new Date(Date.now() - 86400000 * 6) }
+      { userName: 'Kwesi O.', rating: 5, comment: 'Super comfortable right out of the box. Excellent formal shoe.', createdAt: new Date(Date.now() - 86400000 * 7) }
     ]
   },
   {
     _id: '6',
-    title: 'Braided Fast-Charging USB-C Cable',
-    description: 'Durable nylon-braided fast charging cable with reinforced connectors for all modern devices.',
-    price: 14.99,
-    image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=800&auto=format&fit=crop&q=80',
+    title: 'Quilted Chain Crossbody Bag',
+    description: 'Chic diamond-quilted shoulder bag featuring an adjustable gold-link chain strap and magnetic snap flap.',
+    price: 780.00,
+    image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&auto=format&fit=crop&q=80',
     images: [
-      'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1563770660941-20978e870e26?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1585338107529-13afc5f02586?w=800&auto=format&fit=crop&q=80'
+      'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80'
     ],
-    category: 'Accessories',
-    brand: 'Anker',
-    stock: 100,
+    category: 'Crossbody & Clutches',
+    brand: 'Michael Kors',
+    stock: 20,
     rating: 4.9,
-    ratingCount: 88,
+    ratingCount: 31,
     reviews: [
-      { userName: 'Prince A.', rating: 5, comment: 'Very sturdy cable. Doesn\'t break at the ends.', createdAt: new Date(Date.now() - 86400000 * 8) }
+      { userName: 'Nana Yaa P.', rating: 5, comment: 'The gold chain detailing is beautiful. Very chic!', createdAt: new Date(Date.now() - 86400000 * 3) }
     ]
   },
   {
     _id: '7',
-    title: '9H Tempered Glass Screen Protector',
-    description: 'Ultra-thin scratch resistant 9H tempered glass screen protector with anti-fingerprint coating.',
-    price: 9.99,
-    image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&auto=format&fit=crop&q=80',
+    title: 'Premium Suede Chelsea Ankle Boots',
+    description: 'Classic British ankle boots with elasticated side gussets, pull tabs, and Goodyear welted sole construction.',
+    price: 650.00,
+    image: 'https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=800&auto=format&fit=crop&q=80',
     images: [
-      'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1585060544812-6b45742d762f?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=800&auto=format&fit=crop&q=80'
+      'https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1607522370275-f14206abe5d3?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1520639888713-7851133b1ed0?w=800&auto=format&fit=crop&q=80'
     ],
-    category: 'Accessories',
-    brand: 'Spigen',
-    stock: 150,
-    rating: 4.4,
-    ratingCount: 30,
+    category: 'Boots & Ankle Boots',
+    brand: 'Aldo',
+    stock: 28,
+    rating: 4.6,
+    ratingCount: 22,
     reviews: [
-      { userName: 'Collins M.', rating: 4, comment: 'Easy bubble-free application. Good protection.', createdAt: new Date(Date.now() - 86400000 * 9) }
+      { userName: 'Samuel D.', rating: 5, comment: 'Rich suede texture and looks amazing with jeans and chinos.', createdAt: new Date(Date.now() - 86400000 * 6) }
     ]
   },
   {
     _id: '8',
-    title: 'Shockproof Matte Armor Phone Case',
-    description: 'Drop-tested military-grade shockproof phone case with comfortable non-slip grip.',
-    price: 24.99,
-    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80',
+    title: 'Ultraboost Streetwear Sport Sneakers',
+    description: 'High-energy return sports running shoes with flexible Primeknit upper and Continental rubber outsole.',
+    price: 720.00,
+    image: 'https://images.unsplash.com/photo-1587563871167-1ee9c731aefb?w=800&auto=format&fit=crop&q=80',
     images: [
-      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1586105251261-72a756497a11?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&auto=format&fit=crop&q=80'
+      'https://images.unsplash.com/photo-1587563871167-1ee9c731aefb?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1579338559194-a162d19bf842?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=800&auto=format&fit=crop&q=80'
     ],
-    category: 'Accessories',
-    brand: 'Spigen',
-    stock: 80,
-    rating: 4.7,
-    ratingCount: 45,
+    category: 'Sneakers & Trainers',
+    brand: 'Adidas',
+    stock: 45,
+    rating: 4.8,
+    ratingCount: 47,
     reviews: [
-      { userName: 'Grace N.', rating: 5, comment: 'Saved my phone from several drops already. Looks sleek!', createdAt: new Date(Date.now() - 86400000 * 2) }
+      { userName: 'Richmond K.', rating: 5, comment: 'Cushioning is like walking on clouds. Top tier sneakers.', createdAt: new Date(Date.now() - 86400000 * 4) }
     ]
   }
 ];
@@ -272,7 +272,6 @@ router.get('/', async (req, res) => {
     if (sort === 'price-asc') filtered.sort((a, b) => a.price - b.price);
     else if (sort === 'price-desc') filtered.sort((a, b) => b.price - a.price);
     else if (sort === 'rating') filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-
 
     res.json(filtered);
   } catch (error) {
@@ -396,6 +395,23 @@ router.post('/', async (req, res) => {
   } catch (error) {
     console.error('Create product error:', error);
     res.status(500).json({ error: 'Failed to create product' });
+  }
+});
+
+// 5. Seed / Reset Catalog Route (Populates fresh Bags & Shoes inventory)
+router.post('/reset-seed', async (req, res) => {
+  try {
+    await Product.deleteMany({});
+    const created = await Product.insertMany(
+      FALLBACK_PRODUCTS.map(p => {
+        const { _id, ...rest } = p;
+        return rest;
+      })
+    );
+    res.status(200).json({ message: 'Catalog seeded successfully with Bags and Shoes', count: created.length, products: created });
+  } catch (error) {
+    console.error('Seed catalog error:', error);
+    res.status(500).json({ error: 'Failed to seed catalog' });
   }
 });
 

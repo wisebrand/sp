@@ -237,7 +237,6 @@ function switchTab(tabId, pushHistory = true) {
     if (tabId === 'orders') renderOrders();
     if (tabId === 'profile') loadUserProfile();
     if (tabId === 'admin') loadAdminDashboardData();
-
 }
 
 function goBack() {
@@ -255,14 +254,16 @@ function scrollToCatalog() {
 }
 
 const DEFAULT_PRODUCTS = [
-    { _id: '1', title: 'Wireless Headphones', description: 'Premium noise-cancelling wireless headphones with 30-hour battery life', price: 199.99, image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60', category: 'Electronics', stock: 50 },
-    { _id: '2', title: 'Smartphone', description: 'Latest model smartphone with 5G connectivity and advanced camera system', price: 899.99, image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60', category: 'Electronics', stock: 30 },
-    { _id: '3', title: 'Laptop', description: 'High-performance laptop for professionals and students', price: 1299.99, image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500&auto=format&fit=crop&q=60', category: 'Electronics', stock: 20 },
-    { _id: '4', title: 'Smartwatch', description: 'Feature-rich smartwatch with health monitoring and fitness tracking', price: 349.99, image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60', category: 'Wearables', stock: 45 },
-    { _id: '5', title: 'Portable Speaker', description: 'Waterproof portable speaker with exceptional sound quality', price: 79.99, image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&auto=format&fit=crop&q=60', category: 'Audio', stock: 60 },
-    { _id: '6', title: 'USB-C Cable', description: 'Durable and fast-charging USB-C cable for all devices', price: 14.99, image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&auto=format&fit=crop&q=60', category: 'Accessories', stock: 100 },
-    { _id: '7', title: 'Screen Protector', description: 'Tempered glass screen protector for smartphones', price: 9.99, image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=500&auto=format&fit=crop&q=60', category: 'Accessories', stock: 150 },
-    { _id: '8', title: 'Phone Case', description: 'Protective and stylish phone case with premium materials', price: 24.99, image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&auto=format&fit=crop&q=60', category: 'Accessories', stock: 80 }
+    { _id: '1', title: 'Italian Saffiano Leather Tote Bag', description: 'Structured designer leather tote bag with gold-tone hardware and spacious multi-compartment interior.', price: 1250.00, image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80', category: 'Handbags & Totes', brand: 'Prada', stock: 25 },
+    { _id: '2', title: 'Air Max Urban Running Sneakers', description: 'Lightweight responsive athletic sneakers with breathable mesh upper and cushioned air sole.', price: 680.00, image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&auto=format&fit=crop&q=80', category: 'Sneakers & Trainers', brand: 'Nike', stock: 40 },
+    { _id: '3', title: 'Classic Pointed Stiletto Pumps', description: 'Elegant 4-inch stiletto heels crafted with premium gloss finish and padded comfort insole.', price: 420.00, image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&auto=format&fit=crop&q=80', category: 'Heels & Pumps', brand: 'Zara', stock: 30 },
+    { _id: '4', title: 'Waterproof Travel Laptop Backpack', description: 'Durable weather-resistant commuter backpack with 16-inch padded laptop sleeve and USB pass-through.', price: 320.00, image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80', category: 'Backpacks & Travel', brand: 'SD Originals', stock: 50 },
+    { _id: '5', title: 'Handcrafted Penny Leather Loafers', description: 'Timeless slip-on dress shoes made with genuine burnished calfskin leather and non-slip rubber soles.', price: 590.00, image: 'https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=800&auto=format&fit=crop&q=80', category: 'Loafers & Dress Shoes', brand: 'Clarks', stock: 35 },
+    { _id: '6', title: 'Quilted Chain Crossbody Bag', description: 'Chic diamond-quilted shoulder bag featuring an adjustable gold-link chain strap and magnetic snap flap.', price: 780.00, image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&auto=format&fit=crop&q=80', category: 'Crossbody & Clutches', brand: 'Michael Kors', stock: 20 },
+    { _id: '7', title: 'Premium Suede Chelsea Ankle Boots', description: 'Classic British ankle boots with elasticated side gussets and Goodyear welted sole construction.', price: 650.00, image: 'https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=800&auto=format&fit=crop&q=80', category: 'Boots & Ankle Boots', brand: 'Aldo', stock: 28 },
+    { _id: '8', title: 'Ultraboost Streetwear Sport Sneakers', description: 'High-energy return sports running shoes with flexible knit upper and Continental rubber outsole.', price: 720.00, image: 'https://images.unsplash.com/photo-1587563871167-1ee9c731aefb?w=800&auto=format&fit=crop&q=80', category: 'Sneakers & Trainers', brand: 'Adidas', stock: 45 },
+    { _id: '9', title: 'Monogram Canvas Luxury Handbag', description: 'Iconic patterned top-handle satchel with detachable shoulder strap and padlock detail.', price: 1850.00, image: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&auto=format&fit=crop&q=80', category: 'Handbags & Totes', brand: 'Gucci', stock: 15 },
+    { _id: '10', title: 'Comfort Leather Slide Sandals', description: 'Casual slip-on slides with contoured footbed, dual buckle straps, and soft leather lining.', price: 210.00, image: 'https://images.unsplash.com/photo-1603808033192-082d6919d3e1?w=800&auto=format&fit=crop&q=80', category: 'Sandals & Slides', brand: 'Zara', stock: 60 }
 ];
 
 // --- PRODUCTS API & RENDERING ---
@@ -583,27 +584,27 @@ function filterCategory(category) {
 
 // --- AI SMART SEARCH AUTO-SUGGESTIONS ENGINE ---
 const AI_INTENT_MAP = {
-    'music': ['Audio', 'Headphones', 'Speaker', 'Sony', 'JBL'],
-    'sound': ['Audio', 'Headphones', 'Speaker', 'Earbuds'],
-    'audio': ['Audio', 'Headphones', 'Speaker'],
-    'earphone': ['Audio', 'Headphones', 'Sony'],
-    'earbuds': ['Audio', 'Headphones', 'Sony'],
-    'headphone': ['Audio', 'Headphones', 'Sony'],
-    'speaker': ['Audio', 'Bluetooth Speaker', 'JBL'],
-    'phone': ['Electronics', 'Smartphone', 'Accessories', 'Case', 'Screen Protector'],
-    'cell': ['Electronics', 'Smartphone'],
-    'mobile': ['Electronics', 'Smartphone'],
-    'case': ['Accessories', 'Case', 'Cover'],
-    'cover': ['Accessories', 'Case'],
-    'charger': ['Accessories', 'USB-C', 'Cable'],
-    'cable': ['Accessories', 'USB-C', 'Cable'],
-    'cord': ['Accessories', 'Cable'],
-    'watch': ['Wearables', 'Smartwatch', 'Fitness'],
-    'fitness': ['Wearables', 'Smartwatch', 'Tracker'],
-    'gym': ['Wearables', 'Smartwatch', 'Audio'],
-    'laptop': ['Electronics', 'Computer'],
-    'computer': ['Electronics'],
-    'screen': ['Accessories', 'Screen Protector']
+    'bag': ['Handbags & Totes', 'Crossbody & Clutches', 'Backpacks & Travel', 'Prada', 'Gucci', 'Michael Kors'],
+    'handbag': ['Handbags & Totes', 'Crossbody & Clutches', 'Prada', 'Gucci', 'Michael Kors'],
+    'tote': ['Handbags & Totes', 'Prada', 'Gucci'],
+    'purse': ['Handbags & Totes', 'Crossbody & Clutches'],
+    'clutch': ['Crossbody & Clutches'],
+    'backpack': ['Backpacks & Travel', 'SD Originals'],
+    'travel': ['Backpacks & Travel'],
+    'shoe': ['Sneakers & Trainers', 'Heels & Pumps', 'Loafers & Dress Shoes', 'Boots & Ankle Boots', 'Sandals & Slides', 'Nike', 'Adidas', 'Clarks', 'Zara', 'Aldo'],
+    'sneaker': ['Sneakers & Trainers', 'Nike', 'Adidas'],
+    'trainer': ['Sneakers & Trainers', 'Nike', 'Adidas'],
+    'running': ['Sneakers & Trainers', 'Nike', 'Adidas'],
+    'heel': ['Heels & Pumps', 'Zara', 'Aldo'],
+    'pump': ['Heels & Pumps', 'Zara'],
+    'stiletto': ['Heels & Pumps', 'Zara'],
+    'loafer': ['Loafers & Dress Shoes', 'Clarks'],
+    'dress': ['Loafers & Dress Shoes', 'Heels & Pumps'],
+    'boot': ['Boots & Ankle Boots', 'Aldo'],
+    'ankle': ['Boots & Ankle Boots', 'Aldo'],
+    'sandal': ['Sandals & Slides', 'Zara'],
+    'slide': ['Sandals & Slides', 'Zara'],
+    'leather': ['Handbags & Totes', 'Loafers & Dress Shoes', 'Boots & Ankle Boots', 'Prada', 'Clarks']
 };
 
 function handleSearchWithAI(val) {
@@ -669,21 +670,21 @@ function showAISuggestions(query = '', isMobile = false) {
                         <span class="text-[10px] text-gray-400">Live Suggestions</span>
                     </div>
                     <div class="flex flex-wrap gap-1.5">
-                        <button onclick="selectAISuggestion('Sony WH-1000XM5')" class="bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-full transition flex items-center space-x-1">
+                        <button onclick="selectAISuggestion('Leather Tote Bag')" class="bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-full transition flex items-center space-x-1">
                             <i class="fa-solid fa-arrow-trend-up text-[10px] text-indigo-500"></i>
-                            <span>Sony WH-1000XM5</span>
+                            <span>Leather Tote Bag</span>
                         </button>
-                        <button onclick="selectAISuggestion('Wireless Headphones')" class="bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-full transition flex items-center space-x-1">
+                        <button onclick="selectAISuggestion('Air Max Sneakers')" class="bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-full transition flex items-center space-x-1">
                             <i class="fa-solid fa-arrow-trend-up text-[10px] text-indigo-500"></i>
-                            <span>Wireless Headphones</span>
+                            <span>Nike Air Max</span>
                         </button>
-                        <button onclick="selectAISuggestion('Smartwatch')" class="bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-full transition flex items-center space-x-1">
+                        <button onclick="selectAISuggestion('Stiletto Pumps')" class="bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-full transition flex items-center space-x-1">
                             <i class="fa-solid fa-arrow-trend-up text-[10px] text-indigo-500"></i>
-                            <span>Smartwatch Tracker</span>
+                            <span>Stiletto High Heels</span>
                         </button>
-                        <button onclick="selectAISuggestion('USB-C Fast Cable')" class="bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-full transition flex items-center space-x-1">
+                        <button onclick="selectAISuggestion('Penny Loafers')" class="bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-full transition flex items-center space-x-1">
                             <i class="fa-solid fa-arrow-trend-up text-[10px] text-indigo-500"></i>
-                            <span>USB-C Fast Cable</span>
+                            <span>Penny Loafers</span>
                         </button>
                     </div>
                 </div>
@@ -694,21 +695,21 @@ function showAISuggestions(query = '', isMobile = false) {
                         <span>Explore Popular Categories</span>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="filterCategory('Electronics'); closeAISuggestions();" class="text-left p-2 rounded-xl bg-gray-50 hover:bg-indigo-50 transition flex items-center space-x-2">
-                            <i class="fa-solid fa-laptop text-indigo-600 text-sm"></i>
-                            <span class="text-xs font-bold text-gray-800">Electronics</span>
+                        <button onclick="filterCategory('Handbags & Totes'); closeAISuggestions();" class="text-left p-2 rounded-xl bg-gray-50 hover:bg-indigo-50 transition flex items-center space-x-2">
+                            <i class="fa-solid fa-bag-shopping text-indigo-600 text-sm"></i>
+                            <span class="text-xs font-bold text-gray-800">Handbags & Totes</span>
                         </button>
-                        <button onclick="filterCategory('Audio'); closeAISuggestions();" class="text-left p-2 rounded-xl bg-gray-50 hover:bg-indigo-50 transition flex items-center space-x-2">
-                            <i class="fa-solid fa-headphones text-indigo-600 text-sm"></i>
-                            <span class="text-xs font-bold text-gray-800">Audio & Sound</span>
+                        <button onclick="filterCategory('Sneakers & Trainers'); closeAISuggestions();" class="text-left p-2 rounded-xl bg-gray-50 hover:bg-indigo-50 transition flex items-center space-x-2">
+                            <i class="fa-solid fa-shoe-prints text-indigo-600 text-sm"></i>
+                            <span class="text-xs font-bold text-gray-800">Sneakers & Trainers</span>
                         </button>
-                        <button onclick="filterCategory('Wearables'); closeAISuggestions();" class="text-left p-2 rounded-xl bg-gray-50 hover:bg-indigo-50 transition flex items-center space-x-2">
-                            <i class="fa-solid fa-clock text-indigo-600 text-sm"></i>
-                            <span class="text-xs font-bold text-gray-800">Smart Wearables</span>
+                        <button onclick="filterCategory('Heels & Pumps'); closeAISuggestions();" class="text-left p-2 rounded-xl bg-gray-50 hover:bg-indigo-50 transition flex items-center space-x-2">
+                            <i class="fa-solid fa-socks text-indigo-600 text-sm"></i>
+                            <span class="text-xs font-bold text-gray-800">Heels & Stilettos</span>
                         </button>
-                        <button onclick="filterCategory('Accessories'); closeAISuggestions();" class="text-left p-2 rounded-xl bg-gray-50 hover:bg-indigo-50 transition flex items-center space-x-2">
-                            <i class="fa-solid fa-plug text-indigo-600 text-sm"></i>
-                            <span class="text-xs font-bold text-gray-800">Accessories</span>
+                        <button onclick="filterCategory('Loafers & Dress Shoes'); closeAISuggestions();" class="text-left p-2 rounded-xl bg-gray-50 hover:bg-indigo-50 transition flex items-center space-x-2">
+                            <i class="fa-solid fa-boot text-indigo-600 text-sm"></i>
+                            <span class="text-xs font-bold text-gray-800">Loafers & Shoes</span>
                         </button>
                     </div>
                 </div>
@@ -747,10 +748,10 @@ function showAISuggestions(query = '', isMobile = false) {
                     <i class="fa-solid fa-brain"></i>
                 </div>
                 <h4 class="text-xs font-bold text-gray-800">No exact items found for "${query}"</h4>
-                <p class="text-[11px] text-gray-500">AI suggests exploring our best sellers in Audio, Wearables, or Electronics.</p>
+                <p class="text-[11px] text-gray-500">AI suggests exploring our best sellers in Handbags, Sneakers, or Heels.</p>
                 <div class="pt-2 flex justify-center gap-2">
                     <button onclick="filterCategory('All'); closeAISuggestions();" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition">
-                        View All Products
+                        View All Bags & Shoes
                     </button>
                 </div>
             </div>
@@ -3395,7 +3396,7 @@ function openAdminProductModal(productId = null) {
         if (idInput) idInput.value = '';
         if (titleInput) titleInput.value = '';
         if (priceInput) priceInput.value = '';
-        if (categorySelect) categorySelect.value = 'Electronics';
+        if (categorySelect) categorySelect.value = 'Handbags & Totes';
         if (brandInput) brandInput.value = '';
         if (stockInput) stockInput.value = '50';
         if (imageInput) imageInput.value = '';
@@ -3783,5 +3784,4 @@ function escapeJsonForAttr(obj) {
         return '{}';
     }
 }
-
 

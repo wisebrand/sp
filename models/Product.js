@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const reviewSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.Mixed,
-    required: true
+    required: false
   },
   userName: {
     type: String,
