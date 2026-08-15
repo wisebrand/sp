@@ -305,6 +305,155 @@ async function fetchProducts() {
     }
 
     renderProducts();
+    renderFlashSales();
+    initFlashSalesTimer();
+    initHeroSlider();
+}
+
+// --- JUMIA-STYLE HERO BANNER CAROUSEL ENGINE ---
+let currentHeroSlide = 0;
+let heroSliderInterval = null;
+
+function setHeroSlide(idx) {
+    const slides = document.querySelectorAll('.hero-slide');
+    const dots = document.querySelectorAll('.hero-dot');
+    if (slides.length === 0) return;
+
+    currentHeroSlide = (idx + slides.length) % slides.length;
+
+    slides.forEach((slide, i) => {
+        if (i === currentHeroSlide) {
+            slide.classList.remove('opacity-0', 'pointer-events-none');
+            slide.classList.add('opacity-100');
+        } else {
+            slide.classList.remove('opacity-100');
+            slide.classList.add('opacity-0', 'pointer-events-none');
+        }
+    });
+
+    dots.forEach((dot, i) => {
+        if (i === currentHeroSlide) {
+            dot.className = "hero-dot w-2.5 h-2.5 rounded-full bg-white cursor-pointer transition";
+        } else {
+            dot.className = "hero-dot w-2.5 h-2.5 rounded-full bg-white/40 cursor-pointer transition";
+        }
+    });
+}
+
+function nextHeroSlide() {
+    setHeroSlide(currentHeroSlide + 1);
+}
+
+function prevHeroSlide() {
+    setHeroSlide(currentHeroSlide - 1);
+}
+
+function initHeroSlider() {
+    if (heroSliderInterval) clearInterval(heroSliderInterval);
+    setHeroSlide(0);
+    heroSliderInterval = setInterval(() => {
+        nextHeroSlide();
+    }, 5000);
+}
+
+// --- ⚡ JUMIA-STYLE FLASH SALES ENGINE & COUNTDOWN ---
+let flashCountdownSeconds = 4 * 3600 + 28 * 60 + 45; // 4h 28m 45s
+let flashTimerInterval = null;
+
+function initFlashSalesTimer() {
+    if (flashTimerInterval) clearInterval(flashTimerInterval);
+
+    flashTimerInterval = setInterval(() => {
+        if (flashCountdownSeconds > 0) {
+            flashCountdownSeconds--;
+        } else {
+            flashCountdownSeconds = 4 * 3600; // Reset to 4 hours
+        }
+
+        const h = Math.floor(flashCountdownSeconds / 3600);
+        const m = Math.floor((flashCountdownSeconds % 3600) / 60);
+        const s = flashCountdownSeconds % 60;
+
+        const hElem = document.getElementById('flash-timer-h');
+        const mElem = document.getElementById('flash-timer-m');
+        const sElem = document.getElementById('flash-timer-s');
+
+        if (hElem) hElem.textContent = String(h).padStart(2, '0') + 'h';
+        if (mElem) mElem.textContent = String(m).padStart(2, '0') + 'm';
+        if (sElem) sElem.textContent = String(s).padStart(2, '0') + 's';
+    }, 1000);
+}
+
+function renderFlashSales() {
+    const grid = document.getElementById('flash-sales-grid');
+    if (!grid) return;
+
+    const flashItems = products.slice(0, 6);
+    if (flashItems.length === 0) return;
+
+    grid.innerHTML = flashItems.map((p, idx) => {
+        const pId = p._id || p.id;
+        const pTitle = p.title || p.name;
+        const pImg = p.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60';
+        const salePrice = Number(p.price || 99);
+        const origPrice = (salePrice * 1.35).toFixed(2);
+        const discountPct = 25 + (idx * 5) % 30; // 25% - 50%
+        const soldQty = 12 + idx * 3;
+        const leftQty = 4 + idx * 2;
+        const progressPct = Math.min(90, Math.round((soldQty / (soldQty + leftQty)) * 100));
+
+        return `
+            <div class="bg-white rounded-xl border border-gray-100 hover:border-indigo-300 hover:shadow-md transition p-3 flex flex-col justify-between group cursor-pointer" onclick="openProductModal('${pId}')">
+                <div class="relative bg-gray-50 h-32 sm:h-36 rounded-lg overflow-hidden mb-2">
+                    <img src="${pImg}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                    <span class="absolute top-1.5 left-1.5 bg-rose-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow-xs">
+                        -${discountPct}%
+                    </span>
+                    <span class="absolute top-1.5 right-1.5 bg-slate-900/80 text-amber-300 text-[8px] font-extrabold px-1.5 py-0.5 rounded backdrop-blur-xs">
+                        ⚡ FLASH
+                    </span>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition">${pTitle}</h4>
+                    <div class="mt-1 flex items-baseline space-x-1.5">
+                        <span class="text-xs sm:text-sm font-black text-gray-900 font-mono">${formatPrice(salePrice)}</span>
+                        <span class="text-[10px] text-gray-400 line-through font-mono">${formatPrice(origPrice)}</span>
+                    </div>
+                    <!-- Stock Sold Progress Bar -->
+                    <div class="mt-2 space-y-0.5">
+                        <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                            <div class="bg-gradient-to-r from-rose-500 to-amber-500 h-1.5 rounded-full" style="width: ${progressPct}%"></div>
+                        </div>
+                        <span class="text-[9px] font-bold text-gray-500 block">${leftQty} items left</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function scrollToFlashSales() {
+    switchTab('catalog');
+    const el = document.getElementById('flash-sales-section');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function scrollToCatalog() {
+    switchTab('catalog');
+    const el = document.getElementById('catalog-browse-anchor');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function filterBrand(brandName) {
+    switchTab('catalog');
+    const brandSelect = document.getElementById('brand-filter');
+    if (brandSelect) brandSelect.value = brandName;
+    applyFiltersAndRender();
+    scrollToCatalog();
+}
+
+function openVoucherModal() {
+    showToast('🎁 Coupon SAVE10 applied! You get 10% off at checkout.');
 }
 
 function renderProducts(filteredList = null) {
@@ -326,46 +475,83 @@ function renderProducts(filteredList = null) {
         return;
     }
 
-    grid.innerHTML = listToRender.map(product => {
+    grid.innerHTML = listToRender.map((product, idx) => {
         const productId = product._id || product.id;
         const productName = product.title || product.name;
         const isWishlisted = wishlist.some(item => (item._id || item.id) === productId);
         const rating = (Number(product.rating) || 4.8).toFixed(1);
         const ratingCount = product.ratingCount || (product.reviews ? product.reviews.length : 24);
-        const brand = product.brand || 'SD Premium';
+        const brand = product.brand || 'SD Originals';
         const image = product.image || 'https://via.placeholder.com/300x250?text=Product';
+        const origPrice = (Number(product.price) * 1.25).toFixed(2);
+        const discountTag = 15 + (idx * 5) % 25; // 15% - 35%
 
         return `
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col overflow-hidden group">
-                <div class="relative bg-gray-50 h-52 overflow-hidden cursor-pointer" onclick="openProductModal('${productId}')">
-                    <img src="${image}" alt="${productName}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                    <button onclick="event.stopPropagation(); toggleWishlist('${productId}')" class="absolute top-3 right-3 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow hover:bg-white transition text-gray-600">
-                        <i class="${isWishlisted ? 'fa-solid text-rose-500' : 'fa-regular text-gray-600'} fa-heart"></i>
-                    </button>
-                    <span class="absolute bottom-2.5 left-2.5 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
-                        ${brand}
-                    </span>
-                </div>
-                <div class="p-5 flex-1 flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between text-xs text-gray-400 mb-1">
-                            <span class="font-bold text-indigo-600 uppercase text-[10px] tracking-wider">${product.category || 'General'}</span>
-                            <div class="flex items-center text-amber-500 text-xs font-bold">
-                                <i class="fa-solid fa-star text-[10px] mr-1 text-amber-400"></i>
-                                <span class="text-gray-800">${rating}</span>
-                                <span class="text-gray-400 text-[10px] ml-0.5 font-normal">(${ratingCount})</span>
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg hover:border-indigo-300 transition-all duration-200 flex flex-col justify-between overflow-hidden group">
+                <div>
+                    <!-- Product Card Image Box with Jumia Badges -->
+                    <div class="relative bg-gray-50 h-48 sm:h-52 overflow-hidden cursor-pointer" onclick="openProductModal('${productId}')">
+                        <img src="${image}" alt="${productName}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                        
+                        <!-- Top Left Discount Badge -->
+                        <span class="absolute top-2.5 left-2.5 bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-sm">
+                            -${discountTag}%
+                        </span>
+
+                        <!-- Top Right Wishlist Toggle -->
+                        <button onclick="event.stopPropagation(); toggleWishlist('${productId}')" class="absolute top-2.5 right-2.5 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-sm hover:bg-white transition text-gray-600">
+                            <i class="${isWishlisted ? 'fa-solid text-rose-500' : 'fa-regular text-gray-500'} fa-heart text-xs"></i>
+                        </button>
+
+                        <!-- Bottom SD Express Badge -->
+                        <div class="absolute bottom-2 left-2 flex items-center space-x-1 bg-emerald-600/90 backdrop-blur-xs text-white text-[9px] font-black px-2 py-0.5 rounded shadow-xs">
+                            <i class="fa-solid fa-truck-fast"></i>
+                            <span>SD EXPRESS</span>
+                        </div>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="p-4 space-y-2">
+                        <div class="flex items-center justify-between text-[11px] text-gray-400">
+                            <span class="font-extrabold text-indigo-600 uppercase text-[9px] tracking-wider truncate max-w-[120px]">${product.category || 'General'}</span>
+                            <span class="font-semibold text-gray-500 truncate max-w-[80px]">${brand}</span>
+                        </div>
+                        
+                        <h3 class="font-extrabold text-xs sm:text-sm text-gray-900 line-clamp-2 cursor-pointer hover:text-indigo-600 transition leading-snug" onclick="openProductModal('${productId}')">
+                            ${productName}
+                        </h3>
+
+                        <!-- Rating Stars -->
+                        <div class="flex items-center space-x-1.5 text-xs">
+                            <div class="flex text-amber-400 text-[10px]">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star-half-stroke"></i>
+                            </div>
+                            <span class="text-[11px] font-bold text-gray-700">${rating}</span>
+                            <span class="text-[10px] text-gray-400">(${ratingCount})</span>
+                        </div>
+
+                        <!-- Price Section (Current + Slashed Original) -->
+                        <div class="pt-1">
+                            <div class="text-sm sm:text-base font-black text-gray-900 font-mono">
+                                ${formatPrice(product.price)}
+                            </div>
+                            <div class="text-[11px] text-gray-400 line-through font-mono">
+                                ${formatPrice(origPrice)}
                             </div>
                         </div>
-                        <h3 class="font-bold text-gray-900 line-clamp-1 cursor-pointer hover:text-indigo-600 transition" onclick="openProductModal('${productId}')">${productName}</h3>
-                        <p class="text-xs text-gray-500 line-clamp-2 mt-1">${product.description || ''}</p>
                     </div>
-                    <div class="mt-4 flex items-center justify-between">
-                        <span class="text-lg font-black text-gray-900">${formatPrice(product.price)}</span>
-                        <button onclick="addToCart('${productId}')" class="bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white px-3.5 py-2 rounded-xl transition text-xs font-bold flex items-center space-x-1 shadow-xs">
-                            <i class="fa-solid fa-cart-plus"></i>
-                            <span>Add</span>
-                        </button>
-                    </div>
+                </div>
+
+                <!-- Card Footer: Jumia Action Button -->
+                <div class="p-4 pt-0">
+                    <button onclick="addToCart('${productId}')" class="w-full bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white py-2 rounded-xl text-xs font-black transition flex items-center justify-center space-x-1.5 shadow-2xs group-hover:bg-indigo-600 group-hover:text-white uppercase tracking-wider">
+                        <i class="fa-solid fa-cart-shopping text-xs"></i>
+                        <span>ADD TO CART</span>
+                    </button>
                 </div>
             </div>
         `;
@@ -373,7 +559,7 @@ function renderProducts(filteredList = null) {
 }
 
 // Advanced Search & Filter Controller
-let currentMaxPrice = 2000;
+let currentMaxPrice = 4000;
 
 function handlePriceSlider(val) {
     currentMaxPrice = Number(val);
@@ -386,7 +572,7 @@ function filterCategory(category) {
     activeCategory = category;
     document.querySelectorAll('.category-btn').forEach(btn => {
         if (btn.textContent.toLowerCase().includes(category.toLowerCase()) || (category === 'All' && btn.textContent.includes('All'))) {
-            btn.className = "category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-indigo-600 text-white shadow-sm transition";
+            btn.className = "category-btn px-4 py-2 rounded-full text-xs font-black whitespace-nowrap bg-indigo-600 text-white shadow-sm transition";
         } else {
             btn.className = "category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition";
         }

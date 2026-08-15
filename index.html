@@ -113,37 +113,76 @@
     <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-[9999] flex flex-col space-y-2"></div>
 
-    <!-- Top Announcement Bar -->
-    <div class="bg-indigo-600 text-white text-xs py-2 px-4 text-center font-medium">
-        🎉 Free Express Shipping on orders over GH₵ 500! Use coupon code <span class="underline font-bold">SAVE10</span> for 10% off.
+    <!-- Jumia Top Super-Header / Announcement Bar -->
+    <div class="bg-indigo-900 text-white text-[11px] py-1.5 px-4 border-b border-indigo-800/60 hidden sm:block">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <span class="flex items-center space-x-1.5 text-amber-300 font-bold">
+                    <span>🇬🇭</span>
+                    <span>Deliver to Ghana: Accra, Kumasi, Takoradi, Tema & Nationwide</span>
+                </span>
+                <span class="text-indigo-400">|</span>
+                <span class="text-indigo-200">🎉 Free Express Shipping on orders over GH₵ 500 with code <b class="text-white underline">SAVE10</b></span>
+            </div>
+            <div class="flex items-center space-x-5 text-indigo-200 font-medium">
+                <a href="javascript:void(0)" onclick="switchTab('catalog')" class="hover:text-white transition flex items-center space-x-1">
+                    <i class="fa-solid fa-store text-[10px] text-amber-400"></i>
+                    <span>Sell on SD</span>
+                </a>
+                <span class="text-indigo-700">|</span>
+                <a href="javascript:void(0)" onclick="switchTab('catalog')" class="hover:text-white transition flex items-center space-x-1">
+                    <i class="fa-solid fa-truck-fast text-[10px] text-emerald-400"></i>
+                    <span>SD Express</span>
+                </a>
+                <span class="text-indigo-700">|</span>
+                <a href="javascript:void(0)" onclick="switchTab('catalog')" class="hover:text-white transition flex items-center space-x-1">
+                    <i class="fa-solid fa-credit-card text-[10px] text-indigo-300"></i>
+                    <span>SD Pay</span>
+                </a>
+                <span class="text-indigo-700">|</span>
+                <span class="text-amber-300 font-bold flex items-center space-x-1">
+                    <i class="fa-solid fa-phone text-[10px]"></i>
+                    <span>Hotline: +233 24 123 4567</span>
+                </span>
+            </div>
+        </div>
     </div>
 
-    <!-- Navigation Bar -->
-    <header class="sticky top-0 z-40 bg-white shadow-sm border-b border-gray-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <!-- Brand Logo -->
-            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('catalog')">
-                <div class="bg-indigo-600 text-white p-2 rounded-lg font-bold text-lg tracking-wider shadow-sm">SD</div>
-                <span class="text-xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">SD Shopping</span>
+    <!-- Main Jumia-Style Header Navigation Bar -->
+    <header class="sticky top-0 z-40 bg-white shadow-md border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 py-2.5 flex items-center justify-between gap-4">
+            <!-- Brand Logo (SD Shopping) -->
+            <div class="flex items-center space-x-2.5 cursor-pointer flex-shrink-0" onclick="switchTab('catalog')">
+                <div class="bg-gradient-to-tr from-indigo-700 to-indigo-600 text-white w-10 h-10 rounded-xl font-black text-xl flex items-center justify-center tracking-tight shadow-md shadow-indigo-500/20">
+                    SD
+                </div>
+                <div>
+                    <div class="flex items-center space-x-1">
+                        <span class="text-xl font-black tracking-tight text-gray-900">SD</span>
+                        <span class="text-xl font-black bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">SHOPPING</span>
+                        <i class="fa-solid fa-star text-amber-400 text-xs animate-pulse"></i>
+                    </div>
+                    <span class="text-[9px] font-extrabold uppercase tracking-widest text-indigo-600 block -mt-1">Online Superstore</span>
+                </div>
             </div>
 
-            <!-- Desktop Search Bar -->
-            <div class="hidden md:flex flex-1 max-w-md mx-8 relative">
-                <div class="relative w-full">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </span>
-                    <input type="text" id="search-input" oninput="handleSearchWithAI(this.value)" onfocus="showAISuggestions(this.value, false)" placeholder="Search products, brands, or ask AI..." 
-                        class="w-full pl-10 pr-16 py-2 bg-gray-100 border border-transparent rounded-full text-sm focus:outline-none focus:bg-white focus:border-indigo-500 transition">
-                    <button id="search-clear-btn" onclick="clearSearch()" type="button" class="hidden absolute inset-y-0 right-12 flex items-center text-gray-400 hover:text-gray-600 transition" title="Clear search">
+            <!-- Central Jumia-Style Search Engine Bar -->
+            <div class="hidden md:flex flex-1 max-w-2xl relative">
+                <div class="relative w-full flex items-center shadow-xs rounded-xl overflow-hidden border-2 border-indigo-600 focus-within:border-indigo-700 transition">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                    </div>
+                    <input type="text" id="search-input" oninput="handleSearchWithAI(this.value)" onfocus="showAISuggestions(this.value, false)" placeholder="Search products, brands, models, or categories across SD..." 
+                        class="w-full pl-10 pr-24 py-2.5 bg-white text-xs font-semibold text-gray-800 placeholder-gray-400 focus:outline-none transition">
+                    
+                    <button id="search-clear-btn" onclick="clearSearch()" type="button" class="hidden absolute inset-y-0 right-24 flex items-center pr-2 text-gray-400 hover:text-gray-600 transition" title="Clear search">
                         <i class="fa-solid fa-circle-xmark text-xs"></i>
                     </button>
-                    <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <span class="bg-indigo-50 text-indigo-700 font-extrabold text-[10px] px-1.5 py-0.5 rounded border border-indigo-200/80 flex items-center space-x-1 shadow-xs">
-                            <i class="fa-solid fa-wand-magic-sparkles text-[9px] text-indigo-600 animate-pulse"></i>
-                            <span>AI</span>
-                        </span>
-                    </span>
+
+                    <!-- Jumia Primary SEARCH Action Button -->
+                    <button onclick="handleSearch()" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black px-6 py-3 transition flex items-center space-x-1.5 flex-shrink-0 uppercase tracking-wider">
+                        <span>SEARCH</span>
+                    </button>
                 </div>
 
                 <!-- Desktop AI Suggestions Dropdown -->
@@ -152,37 +191,90 @@
                 </div>
             </div>
 
-            <!-- Nav Actions (Cart & Admin Portal) -->
-            <div class="flex items-center space-x-2 sm:space-x-3">
-                <button onclick="handleAdminTabClick()" id="nav-admin-btn" class="relative flex items-center space-x-1.5 bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition shadow-xs border border-slate-700">
-                    <i class="fa-solid fa-shield-halved text-amber-400"></i>
-                    <span class="hidden sm:inline">Admin Portal</span>
-                </button>
-                <button onclick="switchTab('cart')" class="relative flex items-center space-x-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold transition shadow-xs">
-                    <i class="fa-solid fa-cart-shopping"></i>
-                    <span>Cart</span>
-                    <span id="cart-badge" class="bg-indigo-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold hidden">0</span>
+            <!-- Header Action Items: Account, Help, Cart, Admin -->
+            <div class="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+                <!-- User Account Dropdown -->
+                <div class="relative group" id="header-user-menu-wrapper">
+                    <button onclick="toggleUserMenu()" id="auth-btn-header" class="flex items-center space-x-2 px-3 py-2 rounded-xl text-xs font-bold text-gray-700 hover:text-indigo-600 hover:bg-gray-50 transition">
+                        <div class="w-7 h-7 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-xs">
+                            <i class="fa-regular fa-user"></i>
+                        </div>
+                        <div class="text-left hidden lg:block leading-tight">
+                            <span class="text-[10px] text-gray-400 block font-normal">Welcome</span>
+                            <span id="auth-btn-text" class="font-extrabold text-gray-900 truncate max-w-[90px] block">Sign In</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 group-hover:rotate-180 transition duration-200"></i>
+                    </button>
+
+                    <!-- Account Quick Flyout Menu -->
+                    <div id="user-dropdown-menu" class="hidden absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 p-2 z-50 space-y-1">
+                        <div class="p-2 border-b border-gray-100 text-xs">
+                            <span class="text-gray-400 text-[10px] block">Signed in as</span>
+                            <span id="user-menu-name" class="font-bold text-gray-900 truncate block">Guest Shopper</span>
+                        </div>
+                        <button onclick="switchTab('profile')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 flex items-center space-x-2 transition">
+                            <i class="fa-solid fa-user-gear text-indigo-500"></i>
+                            <span>My Account Profile</span>
+                        </button>
+                        <button onclick="switchTab('orders')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 flex items-center space-x-2 transition">
+                            <i class="fa-solid fa-box-open text-blue-500"></i>
+                            <span>Orders & Tracking</span>
+                        </button>
+                        <button onclick="switchTab('wishlist')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 flex items-center space-x-2 transition">
+                            <i class="fa-solid fa-heart text-rose-500"></i>
+                            <span>Saved Items</span>
+                        </button>
+                        <div class="pt-1 border-t border-gray-100">
+                            <button onclick="logout()" class="w-full text-left px-3 py-2 rounded-xl text-xs font-extrabold text-rose-600 hover:bg-rose-50 flex items-center space-x-2 transition">
+                                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                                <span>Sign Out</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help Dropdown Button -->
+                <div class="relative group hidden sm:block">
+                    <button class="flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold text-gray-700 hover:text-indigo-600 hover:bg-gray-50 transition">
+                        <i class="fa-regular fa-circle-question text-base text-indigo-600"></i>
+                        <span class="hidden lg:inline">Help</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-gray-400"></i>
+                    </button>
+                </div>
+
+                <!-- Jumia Shopping Cart Action -->
+                <button onclick="switchTab('cart')" class="relative flex items-center space-x-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl text-xs font-extrabold transition shadow-xs">
+                    <div class="relative">
+                        <i class="fa-solid fa-cart-shopping text-base"></i>
+                        <span id="cart-badge" class="absolute -top-2 -right-2 bg-rose-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-black hidden shadow-xs">0</span>
+                    </div>
+                    <span class="hidden sm:inline">Cart</span>
                 </button>
 
+                <!-- Dedicated Admin Portal Button -->
+                <button onclick="handleAdminTabClick()" id="nav-admin-btn" class="relative flex items-center space-x-1.5 bg-slate-950 hover:bg-slate-900 text-white px-3.5 py-2.5 rounded-xl text-xs font-extrabold transition shadow-sm border border-slate-800">
+                    <i class="fa-solid fa-shield-halved text-amber-400"></i>
+                    <span class="hidden xl:inline">Admin</span>
+                </button>
             </div>
         </div>
-        <!-- Mobile Search Bar -->
+
+        <!-- Mobile Search Bar (Jumia Full Width) -->
         <div class="md:hidden px-4 pb-3 relative">
-            <div class="relative w-full">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                    <i class="fa-solid fa-magnifying-glass"></i>
+            <div class="relative w-full flex items-center shadow-xs rounded-xl overflow-hidden border-2 border-indigo-600">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
+                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
                 </span>
-                <input type="text" id="mobile-search-input" oninput="handleSearchWithAI(this.value)" onfocus="showAISuggestions(this.value, true)" placeholder="Search products, brands, or ask AI..." 
-                    class="w-full pl-10 pr-16 py-2 bg-gray-100 border border-transparent rounded-full text-sm focus:outline-none focus:bg-white focus:border-indigo-500">
-                <button id="mobile-search-clear-btn" onclick="clearSearch()" type="button" class="hidden absolute inset-y-0 right-12 flex items-center text-gray-400 hover:text-gray-600 transition" title="Clear search">
+                <input type="text" id="mobile-search-input" oninput="handleSearchWithAI(this.value)" onfocus="showAISuggestions(this.value, true)" placeholder="Search products, brands or ask AI..." 
+                    class="w-full pl-9 pr-20 py-2.5 bg-white text-xs font-medium text-gray-800 focus:outline-none">
+                
+                <button id="mobile-search-clear-btn" onclick="clearSearch()" type="button" class="hidden absolute inset-y-0 right-20 flex items-center pr-2 text-gray-400 hover:text-gray-600 transition" title="Clear search">
                     <i class="fa-solid fa-circle-xmark text-xs"></i>
                 </button>
-                <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <span class="bg-indigo-50 text-indigo-700 font-extrabold text-[10px] px-1.5 py-0.5 rounded border border-indigo-200/80 flex items-center space-x-1 shadow-xs">
-                        <i class="fa-solid fa-wand-magic-sparkles text-[9px] text-indigo-600 animate-pulse"></i>
-                        <span>AI</span>
-                    </span>
-                </span>
+                
+                <button onclick="handleSearch()" type="button" class="bg-indigo-600 text-white text-[11px] font-black px-4 py-2.5 flex-shrink-0 uppercase">
+                    SEARCH
+                </button>
             </div>
 
             <!-- Mobile AI Suggestions Dropdown -->
@@ -190,67 +282,351 @@
                 <!-- Populated dynamically by script.js -->
             </div>
         </div>
-
-        <!-- Secondary Category Navigation Bar -->
-        <nav class="bg-gray-900 text-white text-xs border-t border-gray-800 hidden sm:block">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-10">
-                <!-- Left Quick Category Buttons -->
-                <div class="flex items-center space-x-6 overflow-x-auto scrollbar-none py-1 text-[11px] font-medium">
-                    <button onclick="switchTab('catalog'); filterCategory('All');" class="flex items-center space-x-1.5 font-extrabold text-indigo-400 hover:text-white transition whitespace-nowrap">
-                        <i class="fa-solid fa-bars"></i>
-                        <span>All Categories</span>
-                    </button>
-                    <button onclick="switchTab('catalog'); filterCategory('Electronics');" class="hover:text-indigo-400 transition whitespace-nowrap text-gray-300">Electronics</button>
-                    <button onclick="switchTab('catalog'); filterCategory('Audio');" class="hover:text-indigo-400 transition whitespace-nowrap text-gray-300">Audio & Sound</button>
-                    <button onclick="switchTab('catalog'); filterCategory('Wearables');" class="hover:text-indigo-400 transition whitespace-nowrap text-gray-300">Smart Wearables</button>
-                    <button onclick="switchTab('catalog'); filterCategory('Accessories');" class="hover:text-indigo-400 transition whitespace-nowrap text-gray-300">Gadget Accessories</button>
-                    <span class="text-gray-700">|</span>
-                    <button onclick="switchTab('catalog');" class="text-amber-400 font-extrabold hover:text-amber-300 transition flex items-center space-x-1 whitespace-nowrap">
-                        <i class="fa-solid fa-bolt"></i>
-                        <span>Flash Deals</span>
-                    </button>
-                </div>
-
-                <!-- Right Quick Info -->
-                <div class="hidden lg:flex items-center space-x-5 text-gray-300 text-[11px]">
-                    <span class="text-gray-400 flex items-center space-x-1 text-[11px]">
-                        <i class="fa-solid fa-truck-fast text-indigo-400"></i>
-                        <span>Express Delivery</span>
-                    </span>
-                    <span class="text-gray-700">|</span>
-                    <span class="text-gray-400 flex items-center space-x-1 text-[11px]">
-                        <i class="fa-solid fa-shield-check text-emerald-400"></i>
-                        <span>Buyer Protection Guarantee</span>
-                    </span>
-                </div>
-            </div>
-        </nav>
     </header>
 
     <!-- Main Content Area -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-        <!-- TAB 1: PRODUCT CATALOG -->
-        <div id="tab-catalog" class="tab-content">
-            <!-- Hero banner -->
-            <div class="bg-gradient-to-r from-indigo-900 to-violet-800 rounded-2xl text-white p-8 md:p-12 mb-8 flex flex-col md:flex-row items-center justify-between shadow-lg">
-                <div class="max-w-lg mb-6 md:mb-0">
-                    <span class="bg-indigo-500/30 text-indigo-200 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">New Season</span>
-                    <h1 class="text-3xl md:text-5xl font-extrabold mt-3 tracking-tight">Discover Quality Products</h1>
-                    <p class="text-indigo-200 mt-2 text-sm md:text-base">Explore our curated catalog featuring top-tier gadgets, fashion, and lifestyle essentials with live MongoDB integration.</p>
-                    <button onclick="scrollToCatalog()" class="mt-6 bg-white text-indigo-900 font-semibold px-6 py-3 rounded-xl shadow hover:bg-indigo-50 transition">Shop Now</button>
+        <!-- TAB 1: PRODUCT CATALOG & JUMIA PORTAL -->
+        <div id="tab-catalog" class="tab-content space-y-6">
+            
+            <!-- SECTION 1: AUTHENTIC JUMIA 3-COLUMN HERO SECTION -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+                <!-- Left Column: Jumia Category Navigation Sidebar -->
+                <div class="hidden lg:block lg:col-span-3 bg-white rounded-2xl border border-gray-200 shadow-sm p-3 space-y-1">
+                    <div class="pb-2 px-3 border-b border-gray-100 text-xs font-black text-gray-400 uppercase tracking-widest flex items-center justify-between">
+                        <span>All Categories</span>
+                        <i class="fa-solid fa-list-ul text-indigo-600"></i>
+                    </div>
+                    <div class="space-y-0.5 pt-1 text-xs font-bold text-gray-700">
+                        <button onclick="filterCategory('Phones & Tablets')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
+                            <span class="flex items-center space-x-2.5">
+                                <i class="fa-solid fa-mobile-screen-button text-indigo-500 w-4"></i>
+                                <span>Phones & Tablets</span>
+                            </span>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-indigo-600 transition"></i>
+                        </button>
+                        <button onclick="filterCategory('Audio')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
+                            <span class="flex items-center space-x-2.5">
+                                <i class="fa-solid fa-headphones text-indigo-500 w-4"></i>
+                                <span>Audio & Sound</span>
+                            </span>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-indigo-600 transition"></i>
+                        </button>
+                        <button onclick="filterCategory('Wearables')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
+                            <span class="flex items-center space-x-2.5">
+                                <i class="fa-solid fa-stopwatch text-indigo-500 w-4"></i>
+                                <span>Smart Wearables</span>
+                            </span>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-indigo-600 transition"></i>
+                        </button>
+                        <button onclick="filterCategory('Electronics')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
+                            <span class="flex items-center space-x-2.5">
+                                <i class="fa-solid fa-tv text-indigo-500 w-4"></i>
+                                <span>Electronics & TV</span>
+                            </span>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-indigo-600 transition"></i>
+                        </button>
+                        <button onclick="filterCategory('Accessories')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
+                            <span class="flex items-center space-x-2.5">
+                                <i class="fa-solid fa-plug text-indigo-500 w-4"></i>
+                                <span>Gadget Accessories</span>
+                            </span>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-indigo-600 transition"></i>
+                        </button>
+                        <button onclick="filterCategory('All')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
+                            <span class="flex items-center space-x-2.5">
+                                <i class="fa-solid fa-shirt text-indigo-500 w-4"></i>
+                                <span>SD Fashion & Apparel</span>
+                            </span>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-indigo-600 transition"></i>
+                        </button>
+                        <button onclick="filterCategory('All')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
+                            <span class="flex items-center space-x-2.5">
+                                <i class="fa-solid fa-wand-magic-sparkles text-indigo-500 w-4"></i>
+                                <span>Health & Beauty</span>
+                            </span>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-indigo-600 transition"></i>
+                        </button>
+                        <button onclick="filterCategory('All')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center justify-between group">
+                            <span class="flex items-center space-x-2.5">
+                                <i class="fa-solid fa-house-laptop text-indigo-500 w-4"></i>
+                                <span>Home & Office</span>
+                            </span>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-indigo-600 transition"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="hidden lg:block">
-                    <i class="fa-solid fa-bag-shopping text-9xl text-indigo-700 opacity-40"></i>
+
+                <!-- Center Column: Dynamic Promotional Banner Carousel Slider -->
+                <div class="lg:col-span-6 relative rounded-2xl overflow-hidden shadow-md bg-slate-900 min-h-[300px] flex flex-col justify-between">
+                    <!-- Carousel Slides Container -->
+                    <div id="hero-carousel" class="relative w-full h-full flex-1">
+                        <!-- Slide 1: Mega Deals -->
+                        <div class="hero-slide absolute inset-0 transition-opacity duration-700 flex flex-col justify-between p-6 sm:p-8 text-white bg-gradient-to-r from-indigo-950 via-indigo-900 to-violet-950">
+                            <div>
+                                <div class="inline-flex items-center space-x-2 bg-amber-400 text-slate-950 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-xs">
+                                    <i class="fa-solid fa-bolt"></i>
+                                    <span>SD Mega Shopping Fest</span>
+                                </div>
+                                <h1 class="text-2xl sm:text-4xl font-black tracking-tight mt-3 leading-tight">
+                                    Up to 50% Off<br><span class="text-amber-300">Top Tech & Lifestyle</span>
+                                </h1>
+                                <p class="text-xs sm:text-sm text-indigo-200 mt-2 max-w-sm">
+                                    Fast doorstep delivery across Ghana. Authentic warranty guaranteed on all items.
+                                </p>
+                            </div>
+                            <div class="pt-4 flex items-center space-x-3">
+                                <button onclick="scrollToCatalog()" class="bg-white hover:bg-indigo-50 text-indigo-900 text-xs font-black px-6 py-3 rounded-xl shadow-lg transition flex items-center space-x-2 uppercase tracking-wide">
+                                    <span>Shop Deals Now</span>
+                                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                </button>
+                                <span class="text-xs text-indigo-300 font-bold hidden sm:inline">Use code <b>SAVE10</b></span>
+                            </div>
+                        </div>
+
+                        <!-- Slide 2: SD Express -->
+                        <div class="hero-slide absolute inset-0 transition-opacity duration-700 opacity-0 pointer-events-none flex flex-col justify-between p-6 sm:p-8 text-white bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900">
+                            <div>
+                                <div class="inline-flex items-center space-x-2 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-xs">
+                                    <i class="fa-solid fa-truck-fast"></i>
+                                    <span>SD Express Guarantee</span>
+                                </div>
+                                <h2 class="text-2xl sm:text-4xl font-black tracking-tight mt-3 leading-tight">
+                                    Same-Day & 24hr<br><span class="text-emerald-400">Express Delivery</span>
+                                </h2>
+                                <p class="text-xs sm:text-sm text-gray-300 mt-2 max-w-sm">
+                                    Direct to your door in Greater Accra, Kumasi, Takoradi and all regional capitals.
+                                </p>
+                            </div>
+                            <div class="pt-4">
+                                <button onclick="scrollToCatalog()" class="bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-black px-6 py-3 rounded-xl shadow-lg transition flex items-center space-x-2 uppercase tracking-wide">
+                                    <span>Explore Express Items</span>
+                                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Slide 3: Official Brand Stores -->
+                        <div class="hero-slide absolute inset-0 transition-opacity duration-700 opacity-0 pointer-events-none flex flex-col justify-between p-6 sm:p-8 text-white bg-gradient-to-r from-violet-950 via-indigo-900 to-fuchsia-950">
+                            <div>
+                                <div class="inline-flex items-center space-x-2 bg-violet-400 text-slate-950 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-xs">
+                                    <i class="fa-solid fa-certificate"></i>
+                                    <span>100% Genuine Brands</span>
+                                </div>
+                                <h2 class="text-2xl sm:text-4xl font-black tracking-tight mt-3 leading-tight">
+                                    Official Brand Stores<br><span class="text-violet-300">Apple, Sony & JBL</span>
+                                </h2>
+                                <p class="text-xs sm:text-sm text-indigo-200 mt-2 max-w-sm">
+                                    Brand new sealed boxes with manufacturer warranty and hassle-free returns.
+                                </p>
+                            </div>
+                            <div class="pt-4">
+                                <button onclick="scrollToCatalog()" class="bg-white hover:bg-gray-100 text-violet-950 text-xs font-black px-6 py-3 rounded-xl shadow-lg transition flex items-center space-x-2 uppercase tracking-wide">
+                                    <span>View Official Brands</span>
+                                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Carousel Controls & Indicators -->
+                    <div class="absolute bottom-4 right-4 z-20 flex items-center space-x-2">
+                        <button onclick="prevHeroSlide()" class="w-7 h-7 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center text-xs backdrop-blur-sm transition">
+                            <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                        </button>
+                        <div class="flex space-x-1.5">
+                            <span class="hero-dot w-2 h-2 rounded-full bg-white cursor-pointer transition" onclick="setHeroSlide(0)"></span>
+                            <span class="hero-dot w-2 h-2 rounded-full bg-white/40 cursor-pointer transition" onclick="setHeroSlide(1)"></span>
+                            <span class="hero-dot w-2 h-2 rounded-full bg-white/40 cursor-pointer transition" onclick="setHeroSlide(2)"></span>
+                        </div>
+                        <button onclick="nextHeroSlide()" class="w-7 h-7 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center text-xs backdrop-blur-sm transition">
+                            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Column: Jumia 2-Card Promo Sidecar -->
+                <div class="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                    <!-- Top Card: CALL TO ORDER (Jumia Phone Ordering) -->
+                    <div class="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-5 text-slate-950 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-slate-950 text-amber-400 flex items-center justify-center text-lg flex-shrink-0 shadow-md">
+                                <i class="fa-solid fa-phone-volume"></i>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-black uppercase tracking-wider text-slate-900/80 block">Direct Order Line</span>
+                                <h3 class="text-sm font-black text-slate-950">CALL TO ORDER</h3>
+                                <span class="text-xs font-black font-mono mt-0.5 block text-slate-950">+233 24 123 4567</span>
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-900/80 font-medium mt-3">
+                            Place instant orders with our sales agents over the phone.
+                        </p>
+                    </div>
+
+                    <!-- Bottom Card: SELL ON SD / SD EXPRESS GUARANTEE -->
+                    <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg flex-shrink-0">
+                                <i class="fa-solid fa-truck-ramp-box"></i>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 block">Fast Fulfillment</span>
+                                <h3 class="text-sm font-black text-gray-900">SD Express Store</h3>
+                                <span class="text-[11px] text-gray-500 block">Quality Tested & Packed</span>
+                            </div>
+                        </div>
+                        <div class="pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-indigo-600">
+                            <span>Shop Express</span>
+                            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Categories Filter & Search/Filter Header -->
-            <div class="space-y-4 mb-6">
+            <!-- SECTION 2: JUMIA FAST ACCESS QUICK SERVICE ICON PILLS -->
+            <div class="grid grid-cols-4 sm:grid-cols-8 gap-3 bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
+                <button onclick="scrollToFlashSales()" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-50 group-hover:bg-amber-500 text-amber-500 group-hover:text-white flex items-center justify-center text-xl transition shadow-xs">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Flash Sales</span>
+                </button>
+
+                <button onclick="filterCategory('All')" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 group-hover:bg-emerald-600 text-emerald-600 group-hover:text-white flex items-center justify-center text-xl transition shadow-xs">
+                        <i class="fa-solid fa-truck-fast"></i>
+                    </div>
+                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">SD Express</span>
+                </button>
+
+                <button onclick="filterCategory('Phones & Tablets')" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 group-hover:bg-indigo-600 text-indigo-600 group-hover:text-white flex items-center justify-center text-xl transition shadow-xs">
+                        <i class="fa-solid fa-mobile-screen"></i>
+                    </div>
+                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Phones</span>
+                </button>
+
+                <button onclick="filterCategory('Audio')" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
+                    <div class="w-12 h-12 rounded-2xl bg-violet-50 group-hover:bg-violet-600 text-violet-600 group-hover:text-white flex items-center justify-center text-xl transition shadow-xs">
+                        <i class="fa-solid fa-headphones"></i>
+                    </div>
+                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Audio</span>
+                </button>
+
+                <button onclick="filterCategory('Electronics')" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center text-xl transition shadow-xs">
+                        <i class="fa-solid fa-laptop"></i>
+                    </div>
+                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Computing</span>
+                </button>
+
+                <button onclick="filterCategory('Wearables')" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
+                    <div class="w-12 h-12 rounded-2xl bg-fuchsia-50 group-hover:bg-fuchsia-600 text-fuchsia-600 group-hover:text-white flex items-center justify-center text-xl transition shadow-xs">
+                        <i class="fa-solid fa-stopwatch"></i>
+                    </div>
+                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Wearables</span>
+                </button>
+
+                <button onclick="scrollToCatalog()" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
+                    <div class="w-12 h-12 rounded-2xl bg-rose-50 group-hover:bg-rose-600 text-rose-600 group-hover:text-white flex items-center justify-center text-xl transition shadow-xs">
+                        <i class="fa-solid fa-tags"></i>
+                    </div>
+                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Clearance</span>
+                </button>
+
+                <button onclick="openVoucherModal()" class="flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-indigo-50/60 transition group">
+                    <div class="w-12 h-12 rounded-2xl bg-cyan-50 group-hover:bg-cyan-600 text-cyan-600 group-hover:text-white flex items-center justify-center text-xl transition shadow-xs">
+                        <i class="fa-solid fa-gift"></i>
+                    </div>
+                    <span class="text-[11px] font-extrabold text-gray-800 group-hover:text-indigo-600 transition">Vouchers</span>
+                </button>
+            </div>
+
+            <!-- SECTION 3: ⚡ FLASH SALES LIVE TICKER SECTION (SIGNATURE JUMIA FEATURE) -->
+            <div id="flash-sales-section" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden space-y-4 p-4 sm:p-5">
+                <!-- Flash Sales Header Banner with Live Clock -->
+                <div class="bg-gradient-to-r from-rose-600 via-rose-500 to-indigo-700 text-white rounded-xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-inner">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-lg text-amber-300 animate-bounce">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base sm:text-lg font-black tracking-tight flex items-center space-x-2">
+                                <span>FLASH SALES</span>
+                                <span class="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Today's Deals</span>
+                            </h2>
+                            <span class="text-[11px] text-rose-100">Limited quantities at slashed promotional prices</span>
+                        </div>
+                    </div>
+
+                    <!-- Live Real-Time Countdown Ticker -->
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-bold text-rose-100 uppercase tracking-wider">Time Left:</span>
+                        <div id="flash-timer-box" class="flex items-center space-x-1 font-mono font-black text-xs">
+                            <span id="flash-timer-h" class="bg-black/40 px-2 py-1 rounded-lg">04h</span>
+                            <span>:</span>
+                            <span id="flash-timer-m" class="bg-black/40 px-2 py-1 rounded-lg">28m</span>
+                            <span>:</span>
+                            <span id="flash-timer-s" class="bg-black/40 px-2 py-1 rounded-lg text-amber-300">45s</span>
+                        </div>
+                        <button onclick="scrollToCatalog()" class="text-xs font-extrabold text-white hover:text-amber-200 underline ml-2 hidden md:inline">
+                            SEE ALL &rarr;
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Flash Sales Products Grid -->
+                <div id="flash-sales-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-1">
+                    <!-- Populated dynamically via script.js -->
+                </div>
+            </div>
+
+            <!-- SECTION 4: OFFICIAL STORES & TOP BRAND CAROUSEL STRIP -->
+            <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm space-y-3">
+                <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+                    <h3 class="text-sm font-black text-gray-900 flex items-center space-x-2">
+                        <i class="fa-solid fa-shield-check text-indigo-600"></i>
+                        <span>Official Brand Stores</span>
+                    </h3>
+                    <span class="text-xs font-bold text-indigo-600 hover:underline cursor-pointer" onclick="scrollToCatalog()">View All Brands &rarr;</span>
+                </div>
+                <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                    <button onclick="filterBrand('Apple')" class="p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-200 rounded-xl flex flex-col items-center justify-center space-y-1 transition group">
+                        <i class="fa-brands fa-apple text-2xl text-gray-800 group-hover:text-indigo-600"></i>
+                        <span class="text-xs font-black text-gray-800">Apple Store</span>
+                    </button>
+                    <button onclick="filterBrand('Sony')" class="p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-200 rounded-xl flex flex-col items-center justify-center space-y-1 transition group">
+                        <i class="fa-solid fa-play text-xl text-gray-800 group-hover:text-indigo-600"></i>
+                        <span class="text-xs font-black text-gray-800">Sony Audio</span>
+                    </button>
+                    <button onclick="filterBrand('Samsung')" class="p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-200 rounded-xl flex flex-col items-center justify-center space-y-1 transition group">
+                        <i class="fa-solid fa-mobile-button text-xl text-gray-800 group-hover:text-indigo-600"></i>
+                        <span class="text-xs font-black text-gray-800">Samsung</span>
+                    </button>
+                    <button onclick="filterBrand('JBL')" class="p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-200 rounded-xl flex flex-col items-center justify-center space-y-1 transition group">
+                        <i class="fa-solid fa-volume-high text-xl text-gray-800 group-hover:text-indigo-600"></i>
+                        <span class="text-xs font-black text-gray-800">JBL Sound</span>
+                    </button>
+                    <button onclick="filterBrand('Anker')" class="p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-200 rounded-xl flex flex-col items-center justify-center space-y-1 transition group">
+                        <i class="fa-solid fa-bolt text-xl text-gray-800 group-hover:text-indigo-600"></i>
+                        <span class="text-xs font-black text-gray-800">Anker Power</span>
+                    </button>
+                    <button onclick="filterBrand('Spigen')" class="p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-100 hover:border-indigo-200 rounded-xl flex flex-col items-center justify-center space-y-1 transition group">
+                        <i class="fa-solid fa-shield text-xl text-gray-800 group-hover:text-indigo-600"></i>
+                        <span class="text-xs font-black text-gray-800">Spigen Armor</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SECTION 5: MAIN STORE CATALOG WITH ADVANCED FILTER CONTROLS -->
+            <div class="space-y-4 pt-2" id="catalog-browse-anchor">
                 <div class="flex flex-wrap items-center justify-between gap-3">
-                    <!-- Categories Filter -->
+                    <!-- Categories Filter Navigation Pills -->
                     <div id="category-filters" class="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none">
-                        <button onclick="filterCategory('All')" class="category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-indigo-600 text-white shadow-sm transition">All Products</button>
+                        <button onclick="filterCategory('All')" class="category-btn px-4 py-2 rounded-full text-xs font-black whitespace-nowrap bg-indigo-600 text-white shadow-sm transition">All Products</button>
+                        <button onclick="filterCategory('Phones & Tablets')" class="category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition">Phones & Tablets</button>
                         <button onclick="filterCategory('Electronics')" class="category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition">Electronics</button>
                         <button onclick="filterCategory('Audio')" class="category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition">Audio</button>
                         <button onclick="filterCategory('Wearables')" class="category-btn px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition">Wearables</button>
@@ -259,9 +635,9 @@
 
                     <!-- Sort By Selector -->
                     <div class="flex items-center space-x-2 self-end sm:self-auto">
-                        <label for="sort-select" class="text-xs font-bold text-gray-400 uppercase tracking-wider hidden sm:inline">Sort By:</label>
+                        <label for="sort-select" class="text-xs font-black text-gray-400 uppercase tracking-wider hidden sm:inline">Sort By:</label>
                         <select id="sort-select" onchange="applyFiltersAndRender()" class="bg-white border border-gray-200 text-xs font-bold text-gray-700 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
-                            <option value="featured">✨ Featured</option>
+                            <option value="featured">✨ Featured Deals</option>
                             <option value="price-asc">💵 Price: Low to High</option>
                             <option value="price-desc">💎 Price: High to Low</option>
                             <option value="rating">⭐ Customer Rating</option>
@@ -301,8 +677,8 @@
                         <!-- Max Price Slider -->
                         <div class="flex items-center space-x-2">
                             <span class="text-xs font-bold text-gray-500">Max Price:</span>
-                            <input type="range" id="price-slider" min="10" max="2000" step="20" value="2000" oninput="handlePriceSlider(this.value)" class="w-24 sm:w-32 accent-indigo-600">
-                            <span id="price-slider-display" class="text-xs font-black font-mono text-indigo-600">GH₵ 2000</span>
+                            <input type="range" id="price-slider" min="10" max="4000" step="20" value="4000" oninput="handlePriceSlider(this.value)" class="w-24 sm:w-32 accent-indigo-600">
+                            <span id="price-slider-display" class="text-xs font-black font-mono text-indigo-600">GH₵ 4000</span>
                         </div>
                     </div>
 
@@ -317,9 +693,53 @@
             </div>
 
             <!-- Product Grid -->
-            <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div id="product-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                 <!-- Dynamically populated via JS -->
             </div>
+
+            <!-- SECTION 6: JUMIA 4-PILLAR BUYER PROTECTION & SERVICE PROMISE STRIP -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
+                <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl flex-shrink-0">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-black text-gray-900">100% Genuine Products</h4>
+                        <p class="text-[11px] text-gray-500 mt-0.5">Authenticity guaranteed from verified distributors.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl flex-shrink-0">
+                        <i class="fa-solid fa-truck-fast"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-black text-gray-900">Fast Nationwide Delivery</h4>
+                        <p class="text-[11px] text-gray-500 mt-0.5">24hr express shipping to all regions in Ghana.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl flex-shrink-0">
+                        <i class="fa-solid fa-credit-card"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-black text-gray-900">Secure Mobile Money & Card</h4>
+                        <p class="text-[11px] text-gray-500 mt-0.5">MTN MoMo, Telecel, Card or Pay on Delivery.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl flex-shrink-0">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-black text-gray-900">7-Day Free Easy Returns</h4>
+                        <p class="text-[11px] text-gray-500 mt-0.5">Full refund if unsatisfied with any purchase.</p>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- TAB 2: SHOPPING CART & CHECKOUT (JUMIA STYLE) -->
@@ -1053,9 +1473,87 @@
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-100 mt-12 py-8 text-center text-xs text-gray-400">
-        <p>&copy; 2026 SD Shopping Platform. Built with complete responsive architecture & MongoDB backend integration.</p>
+    <!-- JUMIA-STYLE RICH E-COMMERCE FOOTER -->
+    <footer class="bg-gray-900 text-gray-300 mt-16 border-t border-gray-800 text-xs">
+        <!-- Newsletter Subscription Banner -->
+        <div class="bg-indigo-950/80 border-b border-indigo-900/60 py-8 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-600/30 text-indigo-400 flex items-center justify-center text-2xl">
+                        <i class="fa-regular fa-envelope"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-black text-white uppercase tracking-wider">NEW TO SD SHOPPING?</h4>
+                        <p class="text-xs text-indigo-200 mt-0.5">Subscribe to our newsletter to get latest deals, flash sale alerts and a GH₵ 20 discount voucher.</p>
+                    </div>
+                </div>
+                <div class="flex w-full md:w-auto max-w-md">
+                    <input type="email" placeholder="Enter your email address..." class="bg-gray-800 border border-gray-700 text-white rounded-l-xl px-4 py-2.5 text-xs focus:outline-none focus:border-indigo-500 w-full">
+                    <button type="button" onclick="showToast('🎉 Thank you for subscribing! Check your email for GH₵ 20 voucher.')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold px-6 py-2.5 rounded-r-xl transition flex-shrink-0 text-xs uppercase">
+                        SUBSCRIBE
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4-Column Navigation Links -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
+            <!-- Col 1: Need Help? -->
+            <div class="space-y-3">
+                <h5 class="text-xs font-black text-white uppercase tracking-wider">NEED HELP?</h5>
+                <ul class="space-y-2 text-[11px] text-gray-400 font-medium">
+                    <li><a href="javascript:void(0)" onclick="switchTab('catalog')" class="hover:text-indigo-400 transition">Help Center & FAQ</a></li>
+                    <li><a href="javascript:void(0)" onclick="switchTab('orders')" class="hover:text-indigo-400 transition">Track Your Order</a></li>
+                    <li><a href="javascript:void(0)" onclick="switchTab('catalog')" class="hover:text-indigo-400 transition">Shipping & Delivery Timelines</a></li>
+                    <li><a href="javascript:void(0)" onclick="switchTab('catalog')" class="hover:text-indigo-400 transition">Return & Refund Policy</a></li>
+                    <li><a href="javascript:void(0)" onclick="switchTab('catalog')" class="hover:text-indigo-400 transition">Report a Product</a></li>
+                </ul>
+            </div>
+
+            <!-- Col 2: About SD Shopping -->
+            <div class="space-y-3">
+                <h5 class="text-xs font-black text-white uppercase tracking-wider">ABOUT SD SHOPPING</h5>
+                <ul class="space-y-2 text-[11px] text-gray-400 font-medium">
+                    <li><a href="javascript:void(0)" onclick="switchTab('catalog')" class="hover:text-indigo-400 transition">About SD Ghana</a></li>
+                    <li><a href="javascript:void(0)" onclick="switchTab('catalog')" class="hover:text-indigo-400 transition">SD Express Superstore</a></li>
+                    <li><a href="javascript:void(0)" onclick="switchTab('catalog')" class="hover:text-indigo-400 transition">Official Brand Stores</a></li>
+                    <li><a href="javascript:void(0)" onclick="switchTab('catalog')" class="hover:text-indigo-400 transition">Terms & Privacy Notice</a></li>
+                    <li><a href="javascript:void(0)" onclick="switchTab('catalog')" class="hover:text-indigo-400 transition">Flash Sales Calendar</a></li>
+                </ul>
+            </div>
+
+            <!-- Col 3: Buying on SD -->
+            <div class="space-y-3">
+                <h5 class="text-xs font-black text-white uppercase tracking-wider">BUYING ON SD</h5>
+                <ul class="space-y-2 text-[11px] text-gray-400 font-medium">
+                    <li><a href="javascript:void(0)" onclick="switchTab('catalog')" class="hover:text-indigo-400 transition">How to Place an Order</a></li>
+                    <li><a href="javascript:void(0)" onclick="switchTab('catalog')" class="hover:text-indigo-400 transition">Mobile Money Payment (MoMo)</a></li>
+                    <li><a href="javascript:void(0)" onclick="switchTab('catalog')" class="hover:text-indigo-400 transition">Telecel Cash & AT Money</a></li>
+                    <li><a href="javascript:void(0)" onclick="switchTab('catalog')" class="hover:text-indigo-400 transition">Visa & Mastercard Checkout</a></li>
+                    <li><a href="javascript:void(0)" onclick="switchTab('catalog')" class="hover:text-indigo-400 transition">Buyer Protection Guarantee</a></li>
+                </ul>
+            </div>
+
+            <!-- Col 4: SD Payment Methods & Delivery Regions -->
+            <div class="space-y-3">
+                <h5 class="text-xs font-black text-white uppercase tracking-wider">PAYMENT METHODS</h5>
+                <div class="flex flex-wrap gap-2 text-xs">
+                    <span class="bg-gray-800 border border-gray-700 px-2.5 py-1 rounded-md text-[10px] font-bold text-amber-400">MTN MoMo</span>
+                    <span class="bg-gray-800 border border-gray-700 px-2.5 py-1 rounded-md text-[10px] font-bold text-red-400">Telecel Cash</span>
+                    <span class="bg-gray-800 border border-gray-700 px-2.5 py-1 rounded-md text-[10px] font-bold text-blue-400">Visa / Card</span>
+                    <span class="bg-gray-800 border border-gray-700 px-2.5 py-1 rounded-md text-[10px] font-bold text-indigo-400">AT Money</span>
+                </div>
+                <div class="pt-2">
+                    <span class="text-[10px] text-gray-500 uppercase font-black tracking-widest block mb-1">DELIVERING TO</span>
+                    <p class="text-[11px] text-gray-400">Greater Accra, Ashanti (Kumasi), Western (Takoradi), Central, Eastern, Northern & all regions across Ghana.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Copyright Bottom Strip -->
+        <div class="bg-gray-950 py-4 px-4 border-t border-gray-800/80 text-center text-gray-500 text-[11px]">
+            <p>&copy; 2026 SD Shopping Platform. All rights reserved. Built with high-performance responsive architecture & secure MongoDB backend.</p>
+        </div>
     </footer>
 
     <!-- PRODUCT DETAILS MODAL (JUMIA PAGE STYLE) -->
