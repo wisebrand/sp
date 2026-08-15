@@ -15,6 +15,15 @@ const API_BASE = (() => {
     return 'http://localhost:5000/api';
 })();
 
+// --- CURRENCY FORMATTER (GHANA CEDIS GH₵) ---
+const CURRENCY_SYMBOL = 'GH₵';
+const CURRENCY_CODE = 'GHS';
+
+function formatPrice(amount) {
+    const num = Number(amount) || 0;
+    return `${CURRENCY_SYMBOL} ${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 // Safe JSON parser to prevent HTML response SyntaxError crashes
 async function safeParseResponse(response) {
     const contentType = response.headers.get('content-type') || '';
@@ -334,7 +343,7 @@ function renderProducts(filteredList = null) {
                         <p class="text-xs text-gray-500 line-clamp-2 mt-1">${product.description || ''}</p>
                     </div>
                     <div class="mt-4 flex items-center justify-between">
-                        <span class="text-lg font-black text-gray-900">$${Number(product.price).toFixed(2)}</span>
+                        <span class="text-lg font-black text-gray-900">${formatPrice(product.price)}</span>
                         <button onclick="addToCart('${productId}')" class="bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white px-3.5 py-2 rounded-xl transition text-xs font-bold flex items-center space-x-1 shadow-xs">
                             <i class="fa-solid fa-cart-plus"></i>
                             <span>Add</span>
@@ -347,12 +356,12 @@ function renderProducts(filteredList = null) {
 }
 
 // Advanced Search & Filter Controller
-let currentMaxPrice = 1500;
+let currentMaxPrice = 2000;
 
 function handlePriceSlider(val) {
     currentMaxPrice = Number(val);
     const display = document.getElementById('price-slider-display');
-    if (display) display.textContent = `$${currentMaxPrice}`;
+    if (display) display.textContent = `${CURRENCY_SYMBOL} ${currentMaxPrice}`;
     applyFiltersAndRender();
 }
 
@@ -598,7 +607,7 @@ function showAISuggestions(query = '', isMobile = false) {
                                         ${pBrand}
                                     </div>
                                     <div class="flex items-center space-x-2 mt-0.5">
-                                        <span class="text-xs font-extrabold text-indigo-600">$${pPrice}</span>
+                                        <span class="text-xs font-extrabold text-indigo-600">${formatPrice(p.price)}</span>
                                         <span class="text-[10px] text-amber-500 font-bold"><i class="fa-solid fa-star text-[9px]"></i> ${p.rating || 4.5}</span>
                                         <span class="text-[10px] text-gray-400 truncate">• ${p.category || 'General'}</span>
                                     </div>
@@ -655,11 +664,11 @@ if (typeof document !== 'undefined') {
 
 function resetFilters() {
     activeCategory = 'All';
-    currentMaxPrice = 1500;
+    currentMaxPrice = 2000;
     const priceSlider = document.getElementById('price-slider');
-    if (priceSlider) priceSlider.value = '1500';
+    if (priceSlider) priceSlider.value = '2000';
     const priceDisplay = document.getElementById('price-slider-display');
-    if (priceDisplay) priceDisplay.textContent = '$1500';
+    if (priceDisplay) priceDisplay.textContent = 'GH₵ 2000';
 
     const brandSelect = document.getElementById('brand-filter');
     if (brandSelect) brandSelect.value = 'All';
@@ -1018,7 +1027,7 @@ async function openProductModal(productId) {
                         </div>
                         <div>
                             <span class="font-bold text-gray-900 block">Door Delivery</span>
-                            <span class="text-gray-500 text-[11px]">Dispatch within 24-48 hours. Free shipping over $50.</span>
+                            <span class="text-gray-500 text-[11px]">Dispatch within 24-48 hours. Free shipping over GH₵ 500.</span>
                         </div>
                     </div>
                     <div class="pt-2.5 border-t border-gray-200/80 flex items-center justify-between text-[11px] font-semibold">
@@ -1058,8 +1067,8 @@ async function openProductModal(productId) {
                     <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200 flex items-center justify-between">
                         <div>
                             <div class="flex items-baseline space-x-3">
-                                <span class="text-3xl font-black text-gray-900">$${Number(product.price).toFixed(2)}</span>
-                                <span class="text-sm text-gray-400 line-through font-semibold">$${origPrice}</span>
+                                <span class="text-3xl font-black text-gray-900">${formatPrice(product.price)}</span>
+                                <span class="text-sm text-gray-400 line-through font-semibold">${formatPrice(product.price * 1.25)}</span>
                             </div>
                             <span class="text-[11px] text-emerald-600 font-bold block mt-0.5">✓ Best Price Guaranteed</span>
                         </div>
@@ -1269,7 +1278,7 @@ function renderWishlist() {
                 <div>
                     <img src="${image}" onclick="openProductModal('${pId}')" class="w-full h-40 object-cover rounded-xl mb-3 cursor-pointer hover:opacity-90 transition">
                     <h4 onclick="openProductModal('${pId}')" class="font-semibold text-gray-800 line-clamp-1 cursor-pointer hover:text-indigo-600 transition">${pName}</h4>
-                    <span class="text-sm font-bold text-indigo-600 mt-1 block">$${Number(product.price).toFixed(2)}</span>
+                    <span class="text-sm font-bold text-indigo-600 mt-1 block">${formatPrice(product.price)}</span>
                 </div>
                 <div class="mt-4 flex space-x-2">
                     <button onclick="addToCart('${pId}')" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg text-xs font-semibold hover:bg-indigo-700 transition">Move to Cart</button>
@@ -1379,10 +1388,10 @@ function renderCart() {
                 </button>
             </div>
         `;
-        document.getElementById('cart-subtotal').textContent = '$0.00';
-        document.getElementById('cart-discount').textContent = '-$0.00';
-        document.getElementById('cart-shipping').textContent = '$0.00';
-        document.getElementById('cart-total').textContent = '$0.00';
+        document.getElementById('cart-subtotal').textContent = `${CURRENCY_SYMBOL} 0.00`;
+        document.getElementById('cart-discount').textContent = `-${CURRENCY_SYMBOL} 0.00`;
+        document.getElementById('cart-shipping').textContent = `${CURRENCY_SYMBOL} 0.00`;
+        document.getElementById('cart-total').textContent = `${CURRENCY_SYMBOL} 0.00`;
         const checkoutText = document.getElementById('cart-checkout-btn-text');
         if (checkoutText) checkoutText.textContent = 'CHECKOUT NOW';
         return;
@@ -1416,8 +1425,8 @@ function renderCart() {
                         <span class="text-[11px] text-gray-400 block mt-0.5">Category: ${item.category || 'General'}</span>
                         
                         <div class="flex items-center space-x-2 mt-2">
-                            <span class="text-lg font-black text-gray-900">$${Number(item.price).toFixed(2)}</span>
-                            <span class="text-xs text-gray-400 line-through">$${origPrice}</span>
+                            <span class="text-lg font-black text-gray-900">${formatPrice(item.price)}</span>
+                            <span class="text-xs text-gray-400 line-through">${formatPrice(item.price * 1.25)}</span>
                             <span class="bg-rose-50 text-rose-600 font-extrabold text-[10px] px-2 py-0.5 rounded-md">-20%</span>
                         </div>
                     </div>
@@ -1453,17 +1462,17 @@ function renderCart() {
 function calculateTotals() {
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     const discountAmt = subtotal * (appliedDiscount / 100);
-    const shipping = subtotal > 50 || subtotal === 0 ? 0 : 5.00;
+    const shipping = subtotal > 500 || subtotal === 0 ? 0 : 50.00;
     const total = subtotal - discountAmt + shipping;
 
-    document.getElementById('cart-subtotal').textContent = `$${subtotal.toFixed(2)}`;
-    document.getElementById('cart-discount').textContent = `-$${discountAmt.toFixed(2)}`;
-    document.getElementById('cart-shipping').textContent = shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`;
-    document.getElementById('cart-total').textContent = `$${total.toFixed(2)}`;
+    document.getElementById('cart-subtotal').textContent = formatPrice(subtotal);
+    document.getElementById('cart-discount').textContent = `-${formatPrice(discountAmt)}`;
+    document.getElementById('cart-shipping').textContent = shipping === 0 ? 'FREE' : formatPrice(shipping);
+    document.getElementById('cart-total').textContent = formatPrice(total);
 
     const checkoutText = document.getElementById('cart-checkout-btn-text');
     if (checkoutText) {
-        checkoutText.textContent = `CHECKOUT ($${total.toFixed(2)})`;
+        checkoutText.textContent = `CHECKOUT (${formatPrice(total)})`;
     }
 }
 
@@ -1553,12 +1562,12 @@ async function proceedToCheckout() {
 
         const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
         const discountAmt = subtotal * (appliedDiscount / 100);
-        const shipping = subtotal > 50 ? 0 : 5.00;
+        const shipping = subtotal > 500 ? 0 : 50.00;
         pendingOrderTotal = subtotal - discountAmt + shipping;
 
-        document.getElementById('pay-modal-total').textContent = `$${pendingOrderTotal.toFixed(2)}`;
-        document.getElementById('cod-amount').textContent = `$${pendingOrderTotal.toFixed(2)}`;
-        document.getElementById('pay-btn-text').textContent = `Confirm & Pay $${pendingOrderTotal.toFixed(2)}`;
+        document.getElementById('pay-modal-total').textContent = formatPrice(pendingOrderTotal);
+        document.getElementById('cod-amount').textContent = formatPrice(pendingOrderTotal);
+        document.getElementById('pay-btn-text').textContent = `Confirm & Pay ${formatPrice(pendingOrderTotal)}`;
 
         const payAddressInput = document.getElementById('pay-address');
         const momoPhoneInput = document.getElementById('momo-phone');
@@ -1606,9 +1615,9 @@ function selectPaymentMethod(method) {
     const submitText = document.getElementById('pay-btn-text');
     if (submitText) {
         if (method === 'cod') {
-            submitText.textContent = `Place Order ($${pendingOrderTotal.toFixed(2)})`;
+            submitText.textContent = `Place Order (${formatPrice(pendingOrderTotal)})`;
         } else {
-            submitText.textContent = `Confirm & Pay $${pendingOrderTotal.toFixed(2)}`;
+            submitText.textContent = `Confirm & Pay ${formatPrice(pendingOrderTotal)}`;
         }
     }
 }
@@ -1884,7 +1893,7 @@ function renderOrders() {
 
                     <div class="flex items-center space-x-3 self-start sm:self-center">
                         ${getStatusBadge(status)}
-                        <span class="font-black text-indigo-600 text-lg">$${Number(total).toFixed(2)}</span>
+                        <span class="font-black text-indigo-600 text-lg">${formatPrice(total)}</span>
                     </div>
                 </div>
 
@@ -2165,8 +2174,8 @@ function openInvoiceModal(orderId) {
                                     <tr>
                                         <td class="p-3 font-semibold text-gray-900">${item.title || item.name}</td>
                                         <td class="p-3 text-center text-gray-500 font-mono">${qty}</td>
-                                        <td class="p-3 text-right text-gray-600 font-mono">$${unitPrice.toFixed(2)}</td>
-                                        <td class="p-3 text-right font-bold text-gray-900 font-mono">$${itemSubtotal.toFixed(2)}</td>
+                                        <td class="p-3 text-right text-gray-600 font-mono">${formatPrice(unitPrice)}</td>
+                                        <td class="p-3 text-right font-bold text-gray-900 font-mono">${formatPrice(itemSubtotal)}</td>
                                     </tr>
                                 `;
                             }).join('')}
@@ -2178,7 +2187,7 @@ function openInvoiceModal(orderId) {
             <!-- Total Amount Line -->
             <div class="flex justify-between items-center pt-2 border-t border-gray-200">
                 <span class="text-xs font-bold text-gray-500 uppercase">Grand Total (Paid)</span>
-                <span class="text-2xl font-black text-indigo-600 font-mono">$${total}</span>
+                <span class="text-2xl font-black text-indigo-600 font-mono">${formatPrice(total)}</span>
             </div>
 
             <!-- Invoice Modal Buttons -->

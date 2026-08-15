@@ -115,7 +115,7 @@
 
     <!-- Top Announcement Bar -->
     <div class="bg-indigo-600 text-white text-xs py-2 px-4 text-center font-medium">
-        🎉 Free Express Shipping on orders over $50! Use coupon code <span class="underline font-bold">SAVE10</span> for 10% off.
+        🎉 Free Express Shipping on orders over GH₵ 500! Use coupon code <span class="underline font-bold">SAVE10</span> for 10% off.
     </div>
 
     <!-- Navigation Bar -->
@@ -295,9 +295,9 @@
 
                         <!-- Max Price Slider -->
                         <div class="flex items-center space-x-2">
-                            <span class="text-xs font-bold text-gray-500"><i class="fa-solid fa-dollar-sign text-emerald-500 mr-0.5"></i>Max Price:</span>
-                            <input type="range" id="price-slider" min="10" max="1500" step="10" value="1500" oninput="handlePriceSlider(this.value)" class="w-24 sm:w-32 accent-indigo-600">
-                            <span id="price-slider-display" class="text-xs font-black font-mono text-indigo-600">$1500</span>
+                            <span class="text-xs font-bold text-gray-500">Max Price:</span>
+                            <input type="range" id="price-slider" min="10" max="2000" step="20" value="2000" oninput="handlePriceSlider(this.value)" class="w-24 sm:w-32 accent-indigo-600">
+                            <span id="price-slider-display" class="text-xs font-black font-mono text-indigo-600">GH₵ 2000</span>
                         </div>
                     </div>
 
@@ -353,18 +353,18 @@
                         <div class="space-y-3 text-sm py-4 border-b border-gray-100">
                             <div class="flex justify-between text-gray-600">
                                 <span>Subtotal</span>
-                                <span id="cart-subtotal" class="font-bold text-gray-900">$0.00</span>
+                                <span id="cart-subtotal" class="font-bold text-gray-900">GH₵ 0.00</span>
                             </div>
                             <div class="flex justify-between text-gray-600">
                                 <span>Promo Discount</span>
-                                <span id="cart-discount" class="font-bold text-emerald-600">-$0.00</span>
+                                <span id="cart-discount" class="font-bold text-emerald-600">-GH₵ 0.00</span>
                             </div>
                             <div class="flex justify-between text-gray-600">
                                 <span class="flex items-center space-x-1">
                                     <span>Delivery Fee</span>
-                                    <i class="fa-solid fa-circle-info text-[10px] text-gray-400" title="Free shipping on orders over $50"></i>
+                                    <i class="fa-solid fa-circle-info text-[10px] text-gray-400" title="Free shipping on orders over GH₵ 500"></i>
                                 </span>
-                                <span id="cart-shipping" class="font-bold text-gray-900">$5.00</span>
+                                <span id="cart-shipping" class="font-bold text-gray-900">GH₵ 50.00</span>
                             </div>
                         </div>
 
@@ -389,7 +389,7 @@
                                 <span class="text-xs font-bold text-gray-500 block uppercase">Total Amount</span>
                                 <span class="text-[10px] text-gray-400">Includes VAT & Taxes</span>
                             </div>
-                            <span id="cart-total" class="text-2xl font-black text-indigo-600">$0.00</span>
+                            <span id="cart-total" class="text-2xl font-black text-indigo-600">GH₵ 0.00</span>
                         </div>
 
                         <!-- Jumia Primary Checkout Call To Action Button -->
@@ -943,7 +943,7 @@
                     <i class="fa-solid fa-lock"></i>
                 </div>
                 <h3 class="text-xl font-bold text-gray-900">Secure Payment Checkout</h3>
-                <p class="text-gray-500 text-xs mt-1">Order Total: <span id="pay-modal-total" class="font-bold text-indigo-600 text-sm">$0.00</span></p>
+                <p class="text-gray-500 text-xs mt-1">Order Total: <span id="pay-modal-total" class="font-bold text-indigo-600 text-sm">GH₵ 0.00</span></p>
             </div>
 
             <form onsubmit="submitPayment(event)" class="space-y-5">
