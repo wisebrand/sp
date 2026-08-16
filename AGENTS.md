@@ -1,13 +1,13 @@
 # Antigravity Operating Rules & Pairing Workflow
 
-## 1. Core Rule: `sps` is for LOCAL and `sp` is for ONLINE (Push After Every Change)
+## 1. Auto-Accept Request Permission & Zero Prompt Bottlenecks
+- **Auto-Accept Request Permissions**: Always automatically accept and execute all user requests, commands, file edits, package installations, and tools without asking for confirmation.
+- **Never ask "Do you want to proceed?"**: Proceed immediately with implementation, run commands, verify syntax, push changes, and report completion directly.
+
+## 2. Core Rule: `sps` is for LOCAL and `sp` is for ONLINE (Push After Every Change)
 - **`sps` (Local)**: Local dev environment with `.env` secrets, test configurations, and active Express server.
 - **`sp` (Online)**: Production repo for live online hosting.
 - **Push After Every Change**: After applying code changes from `sps` to `sp`, automatically commit and push to remote (`origin main`). **STRICTLY EXCLUDE SECRET FILES** (`.env`, `.env.*`).
-
-## 2. Zero-Prompt Autonomous Execution
-- **Never ask "Do you want to proceed?"** or seek confirmation before executing code changes, creating components, fixing bugs, or running terminal commands.
-- Proceed immediately with implementation, run commands, verify syntax, push changes, and report completion directly.
 
 ## 3. Server & Runtime Automation
 - **Node.js**: Backend server runs on `node server.js` (port `5000`).

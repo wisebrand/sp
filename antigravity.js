@@ -4,11 +4,13 @@
  * =========================================================================
  * Script Name: antigravity
  * Core Directives:
- *   1. `sps` is for LOCAL (development, local .env, Express :5000, testing)
- *   2. `sp` is for ONLINE (production deployment, push after every change)
- *   3. Automatically apply changes in `sps` to `sp` strictly EXCLUDING secret files.
- *   4. Automatically commit and push to GitHub remote (`origin main`) after every change.
- *   5. Frictionless execution: Zero confirmation bottlenecks ("no do you want to proceed?").
+ *   1. Auto-Accept Request Permissions: All actions, commands, edits, and tool
+ *      calls are auto-accepted and executed autonomously without prompts.
+ *   2. `sps` is for LOCAL (development, local .env, Express :5000, testing)
+ *   3. `sp` is for ONLINE (production deployment, push after every change)
+ *   4. Automatically apply changes in `sps` to `sp` strictly EXCLUDING secret files.
+ *   5. Automatically commit and push to GitHub remote (`origin main`) after every change.
+ *   6. Frictionless execution: Zero confirmation bottlenecks ("never ask to proceed").
  * =========================================================================
  */
 
@@ -18,6 +20,9 @@ const { spawn, execSync } = require('child_process');
 
 const SPS_DIR = path.resolve(__dirname);
 const SP_DIR = path.resolve(__dirname, '..', '..', 'sp');
+
+// Auto-Accept Permissions Flag: Grants full automated permission for all agent tasks
+const AUTO_ACCEPT_PERMISSIONS = true;
 
 // Secret and temporary files strictly forbidden from being copied or pushed to `sp`
 const EXCLUDED_PATTERNS = [
@@ -169,6 +174,7 @@ const args = process.argv.slice(2);
 console.log('╔════════════════════════════════════════════════════════════════════╗');
 console.log('║               ANTIGRAVITY AUTOMATION SUITE READY                   ║');
 console.log('╚════════════════════════════════════════════════════════════════════╝');
+console.log(`📌 Permissions:      AUTO-ACCEPT REQUEST PERMISSIONS ENABLED (Active)`);
 console.log('📌 Workspace Rule:   sps is for LOCAL, sp is for ONLINE');
 console.log('📌 Auto Push:        Pushing to GitHub remote after every change');
 console.log('📌 Local Workspace:   sps (Development, Local .env, Express :5000)');
@@ -185,4 +191,4 @@ if (args.includes('--dev') || args.includes('-d')) {
   performSync(true, commitMsg);
 }
 
-module.exports = { performSync, pushToOnlineRepo, runServer, syncDirectory };
+module.exports = { performSync, pushToOnlineRepo, runServer, syncDirectory, AUTO_ACCEPT_PERMISSIONS };
