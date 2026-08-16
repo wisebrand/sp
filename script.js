@@ -189,17 +189,31 @@ function showToast(message, type = 'success') {
     if (!container) return;
 
     const toast = document.createElement('div');
-    const bgClass = type === 'success' ? 'bg-gray-900 text-white' : 'bg-rose-600 text-white';
-    const icon = type === 'success' ? 'fa-circle-check text-emerald-400' : 'fa-circle-exclamation text-white';
     
-    toast.className = `${bgClass} px-4 py-3 rounded-xl shadow-lg flex items-center space-x-3 text-sm font-medium toast-slide`;
-    toast.innerHTML = `<i class="fa-solid ${icon} text-base"></i><span>${message}</span>`;
+    let bgClass = 'bg-gray-900 text-white border border-gray-800';
+    let icon = 'fa-circle-check text-emerald-400';
+
+    if (type === 'error') {
+        bgClass = 'bg-rose-600 text-white shadow-lg shadow-rose-600/30';
+        icon = 'fa-circle-xmark text-white';
+    } else if (type === 'warning') {
+        bgClass = 'bg-amber-600 text-white shadow-lg shadow-amber-600/30';
+        icon = 'fa-triangle-exclamation text-amber-200';
+    } else if (type === 'info') {
+        bgClass = 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30';
+        icon = 'fa-circle-info text-indigo-200';
+    }
+    
+    toast.className = `${bgClass} px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3 text-xs sm:text-sm font-semibold toast-slide max-w-md backdrop-blur-sm z-[99999]`;
+    toast.innerHTML = `<i class="fa-solid ${icon} text-base flex-shrink-0"></i><span class="flex-1 leading-snug">${message}</span>`;
     
     container.appendChild(toast);
     setTimeout(() => {
         toast.style.opacity = '0';
+        toast.style.transform = 'translateX(20px)';
+        toast.style.transition = 'all 0.3s ease-out';
         setTimeout(() => toast.remove(), 300);
-    }, 3500);
+    }, 4500);
 }
 
 // --- NAVIGATION & TAB HISTORY ---
@@ -2467,11 +2481,20 @@ function copyToClipboard(text) {
 }
 
 // --- AUTHENTICATION & OTP SYSTEM ---
-function showAuthError(message) {
+function showAuthError(message, type = 'error') {
     const errorBox = document.getElementById('auth-modal-error');
     const errorText = document.getElementById('auth-modal-error-text');
     if (errorBox && errorText) {
-        errorText.textContent = message;
+        errorText.innerHTML = message;
+        if (type === 'warning') {
+            errorBox.className = "mb-4 p-3.5 bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold rounded-xl flex items-start space-x-2.5 shadow-xs";
+            const icon = errorBox.querySelector('i');
+            if (icon) icon.className = "fa-solid fa-triangle-exclamation text-amber-600 text-base flex-shrink-0 mt-0.5";
+        } else {
+            errorBox.className = "mb-4 p-3.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-xl flex items-start space-x-2.5 shadow-xs";
+            const icon = errorBox.querySelector('i');
+            if (icon) icon.className = "fa-solid fa-circle-exclamation text-rose-500 text-base flex-shrink-0 mt-0.5";
+        }
         errorBox.classList.remove('hidden');
     }
 }
@@ -2481,6 +2504,10 @@ function hideAuthError() {
     if (errorBox) {
         errorBox.classList.add('hidden');
     }
+    const emailInput = document.getElementById('login-email');
+    const passwordInput = document.getElementById('login-password');
+    if (emailInput) emailInput.classList.remove('border-rose-500', 'border-amber-500', 'ring-2', 'ring-rose-200', 'ring-amber-200');
+    if (passwordInput) passwordInput.classList.remove('border-rose-500', 'border-amber-500', 'ring-2', 'ring-rose-200', 'ring-amber-200');
 }
 
 function openAuthModal(mode = 'login') {
@@ -2512,8 +2539,37 @@ function showAuthMode(mode) {
 async function handleLoginSubmit(e) {
     e.preventDefault();
     hideAuthError();
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
+    
+    const emailInput = document.getElementById('login-email');
+    const passwordInput = document.getElementById('login-password');
+    const email = emailInput ? emailInput.value.trim() : '';
+    const password = passwordInput ? passwordInput.value : '';
+
+    // Reset input highlights
+    if (emailInput) emailInput.classList.remove('border-rose-500', 'border-amber-500', 'ring-2', 'ring-rose-200', 'ring-amber-200');
+    if (passwordInput) passwordInput.classList.remove('border-rose-500', 'border-amber-500', 'ring-2', 'ring-rose-200', 'ring-amber-200');
+
+    // Client-side validations
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+        if (emailInput) {
+            emailInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-200');
+            emailInput.focus();
+        }
+        showToast('Please enter a valid email address.', 'error');
+        showAuthError('Please enter a valid email address (e.g. name@example.com).', 'error');
+        return;
+    }
+
+    if (!password) {
+        if (passwordInput) {
+            passwordInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-200');
+            passwordInput.focus();
+        }
+        showToast('Please enter your password.', 'error');
+        showAuthError('Please enter your password to sign in.', 'error');
+        return;
+    }
 
     setButtonLoading('login-submit-btn', true, 'Please wait...');
     showLoading('Please wait', 'Verifying credentials & sending OTP...');
@@ -2526,7 +2582,39 @@ async function handleLoginSubmit(e) {
         });
 
         const data = await safeParseResponse(response);
-        if (!response.ok) throw new Error(data.error || 'Login failed');
+
+        if (!response.ok) {
+            // Case 1: Account Not Found / User hasn't signed up
+            if (response.status === 404 || data.code === 'ACCOUNT_NOT_FOUND' || (data.error && data.error.toLowerCase().includes('no account found'))) {
+                if (emailInput) {
+                    emailInput.classList.add('border-amber-500', 'ring-2', 'ring-amber-200');
+                    emailInput.focus();
+                }
+                const notifMsg = 'No account found with this email. You haven\'t signed up yet!';
+                showToast(notifMsg, 'warning');
+                showAuthError(`<strong>Account not found:</strong> You haven't signed up with this email yet. <a href="javascript:void(0)" onclick="showAuthMode('register'); const regEmail = document.getElementById('reg-email'); if(regEmail) regEmail.value = '${email}';" class="underline text-indigo-600 font-extrabold ml-1 hover:text-indigo-800">Click here to create account</a>`, 'warning');
+                return;
+            }
+
+            // Case 2: Wrong Password
+            if (response.status === 401 || data.code === 'INVALID_PASSWORD' || (data.error && data.error.toLowerCase().includes('incorrect password'))) {
+                if (passwordInput) {
+                    passwordInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-200');
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                }
+                const notifMsg = 'Incorrect password! Please verify your password and try again.';
+                showToast(notifMsg, 'error');
+                showAuthError('<strong>Incorrect password:</strong> Please verify your password and try again.', 'error');
+                return;
+            }
+
+            // Generic error
+            const genericErr = data.error || 'Login failed. Please verify your email and password.';
+            showAuthError(genericErr, 'error');
+            showToast(genericErr, 'error');
+            return;
+        }
 
         if (data.requireOtp) {
             pendingEmail = email;
@@ -2550,8 +2638,8 @@ async function handleLoginSubmit(e) {
         await fetchOrders();
     } catch (error) {
         console.error('Login error:', error);
-        showAuthError(error.message);
-        showToast(error.message, 'error');
+        showAuthError(error.message || 'Login failed. Please try again.', 'error');
+        showToast(error.message || 'Login failed. Please check your connection.', 'error');
     } finally {
         setButtonLoading('login-submit-btn', false);
         hideLoading();

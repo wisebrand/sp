@@ -203,20 +203,35 @@ router.post('/login', async (req, res) => {
       user = await User.findOne({ email: normalizedEmail }).maxTimeMS(1500);
     } catch (dbErr) {}
 
-    // Check MongoDB user
-    if (user) {
-      const isValid = await user.comparePassword(password);
-      if (!isValid) {
-        return res.status(401).json({ error: 'Invalid email or password. Please try again.' });
-      }
-    } else {
-      // Check in-memory store
+    // Find user in MongoDB or memory store
+    if (!user) {
       const memUser = memoryUsers.get(normalizedEmail);
-      if (memUser && memUser.password === password) {
+      if (memUser) {
         user = memUser;
-      } else {
-        return res.status(401).json({ error: 'No account found with this email. Please check your credentials or sign up.' });
       }
+    }
+
+    // 1. Account does not exist (User hasn't signed up yet)
+    if (!user) {
+      return res.status(404).json({
+        code: 'ACCOUNT_NOT_FOUND',
+        error: 'No account found with this email address. You haven\'t signed up yet. Please sign up to create an account.'
+      });
+    }
+
+    // 2. Validate Password
+    let isValid = false;
+    if (typeof user.comparePassword === 'function') {
+      isValid = await user.comparePassword(password);
+    } else {
+      isValid = (user.password === password);
+    }
+
+    if (!isValid) {
+      return res.status(401).json({
+        code: 'INVALID_PASSWORD',
+        error: 'Incorrect password. Please verify your password and try again.'
+      });
     }
 
     // Generate 2FA Login OTP
