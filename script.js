@@ -250,7 +250,14 @@ function switchTab(tabId, pushHistory = true) {
     if (tabId === 'wishlist') renderWishlist();
     if (tabId === 'orders') renderOrders();
     if (tabId === 'profile') loadUserProfile();
-    if (tabId === 'admin') loadAdminDashboardData();
+    if (tabId === 'admin') {
+        if (!checkIsAdmin()) {
+            showToast('🔒 Access restricted: Only administrator (mikegborbitey05@gmail.com) can access the Admin Portal.', 'error');
+            switchTab('catalog', false);
+            return;
+        }
+        loadAdminDashboardData();
+    }
 }
 
 function goBack() {
@@ -2747,6 +2754,47 @@ async function resendOTP() {
     }
 }
 
+// Administrator Email Configuration
+const AUTHORIZED_ADMIN_EMAILS = ['mikegborbitey05@gmail.com', 'mikegborbitey05@gmil.com'];
+
+function checkIsAdmin() {
+    const userEmail = (currentUser && currentUser.email ? currentUser.email.toLowerCase().trim() : '');
+    const adminUserEmail = (adminUser && adminUser.email ? adminUser.email.toLowerCase().trim() : '');
+    
+    if (AUTHORIZED_ADMIN_EMAILS.includes(userEmail) || AUTHORIZED_ADMIN_EMAILS.includes(adminUserEmail)) {
+        return true;
+    }
+    if (currentUser && (currentUser.isAdmin === true || currentUser.role === 'admin')) {
+        return true;
+    }
+    if (adminUser && (adminUser.role === 'admin' || adminUser.isAdmin === true)) {
+        return true;
+    }
+    return false;
+}
+
+function updateAdminButtonVisibility() {
+    const isAdmin = checkIsAdmin();
+    const navAdminBtn = document.getElementById('nav-admin-btn');
+    const dockAdminBtn = document.getElementById('dock-btn-admin');
+    const mobileDockAdminBtn = document.getElementById('mobile-dock-admin-btn');
+    const dropdownAdminBtn = document.getElementById('dropdown-admin-btn');
+
+    [navAdminBtn, dockAdminBtn, mobileDockAdminBtn, dropdownAdminBtn].forEach(btn => {
+        if (btn) {
+            if (isAdmin) {
+                btn.classList.remove('hidden');
+                if (btn === navAdminBtn || btn === dockAdminBtn) {
+                    btn.classList.add('flex');
+                }
+            } else {
+                btn.classList.add('hidden');
+                btn.classList.remove('flex');
+            }
+        }
+    });
+}
+
 function logout() {
     authToken = null;
     currentUser = null;
@@ -2757,6 +2805,7 @@ function logout() {
 
     updateBadges();
     updateAuthUI();
+    updateAdminButtonVisibility();
     switchTab('catalog');
     showToast('You have been logged out successfully.');
 }
@@ -2781,6 +2830,8 @@ function updateAuthUI() {
         if (authBtnHeader) authBtnHeader.onclick = () => openAuthModal('login');
         if (dockProfileText) dockProfileText.textContent = 'Profile';
     }
+
+    updateAdminButtonVisibility();
 }
 
 function toggleUserMenu() {
@@ -2788,7 +2839,7 @@ function toggleUserMenu() {
         openAuthModal('login');
         return;
     }
-    const dropdown = document.getElementById('user-dropdown');
+    const dropdown = document.getElementById('user-dropdown-menu') || document.getElementById('user-dropdown');
     if (dropdown) dropdown.classList.toggle('hidden');
 }
 
@@ -3031,9 +3082,9 @@ function closeAdminLoginModal() {
 function fillDefaultAdminCredentials() {
     const emailInput = document.getElementById('admin-login-email');
     const pwdInput = document.getElementById('admin-login-password');
-    if (emailInput) emailInput.value = 'admin@sdshopping.com';
+    if (emailInput) emailInput.value = 'mikegborbitey05@gmail.com';
     if (pwdInput) pwdInput.value = 'Admin@123456';
-    showToast('Admin credentials filled!', 'success');
+    showToast('Admin credentials filled (mikegborbitey05@gmail.com)!', 'success');
 }
 
 async function handleAdminLoginSubmit(e) {
@@ -3046,6 +3097,19 @@ async function handleAdminLoginSubmit(e) {
         return;
     }
 
+    const normalized = email.toLowerCase().trim();
+    if (!AUTHORIZED_ADMIN_EMAILS.includes(normalized)) {
+        const errMsg = 'Access denied: Only the designated store administrator (mikegborbitey05@gmail.com) is authorized to log in to the Admin Portal.';
+        const errBox = document.getElementById('admin-login-error');
+        const errText = document.getElementById('admin-login-error-text');
+        if (errBox && errText) {
+            errText.textContent = errMsg;
+            errBox.classList.remove('hidden');
+        }
+        showToast(errMsg, 'error');
+        return;
+    }
+
     setButtonLoading('admin-login-submit-btn', true, 'Verifying Admin...');
     showLoading('Administrator Verification', 'Authenticating administrator credentials...');
 
@@ -3053,7 +3117,7 @@ async function handleAdminLoginSubmit(e) {
         const response = await fetch(`${API_BASE}/admin/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ email: normalized, password })
         });
 
         const data = await safeParseResponse(response);
@@ -3065,9 +3129,10 @@ async function handleAdminLoginSubmit(e) {
         localStorage.setItem('sd_admin_token', adminToken);
         localStorage.setItem('sd_admin_user', JSON.stringify(adminUser));
 
+        updateAdminButtonVisibility();
         closeAdminLoginModal();
         switchTab('admin');
-        showToast(`👑 Welcome back, ${adminUser.name || 'Administrator'}!`);
+        showToast(`👑 Welcome back, Administrator (${adminUser.email})!`);
     } catch (error) {
         console.error('Admin login error:', error);
         const errBox = document.getElementById('admin-login-error');
@@ -3089,6 +3154,7 @@ function handleAdminLogout() {
     localStorage.removeItem('sd_admin_token');
     localStorage.removeItem('sd_admin_user');
     
+    updateAdminButtonVisibility();
     switchTab('catalog');
     showToast('Administrator logged out successfully');
 }

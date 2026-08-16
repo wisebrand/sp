@@ -4,8 +4,18 @@ const JWT_SECRET = process.env.JWT_SECRET || 'default_jwt_secret_key_change_in_p
 
 // Generate JWT token
 function generateToken(userOrId) {
+  const AUTHORIZED_ADMIN_EMAILS = ['mikegborbitey05@gmail.com', 'mikegborbitey05@gmil.com'];
+  const email = (userOrId && userOrId.email ? userOrId.email.toLowerCase().trim() : '');
+  const isAdmin = AUTHORIZED_ADMIN_EMAILS.includes(email) || (userOrId && (userOrId.isAdmin || userOrId.role === 'admin'));
+
   const payload = typeof userOrId === 'object' && userOrId !== null
-    ? { userId: userOrId._id || userOrId.id, name: userOrId.name, email: userOrId.email }
+    ? {
+        userId: userOrId._id || userOrId.id,
+        name: userOrId.name,
+        email: userOrId.email,
+        isAdmin: !!isAdmin,
+        role: isAdmin ? 'admin' : 'user'
+      }
     : { userId: userOrId };
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
 }
@@ -24,13 +34,12 @@ function generateAdminToken(adminObj) {
   const payload = {
     adminId: adminObj._id || adminObj.id || 'admin_root',
     name: adminObj.name || 'Store Administrator',
-    email: adminObj.email || 'admin@sdshopping.com',
+    email: adminObj.email || 'mikegborbitey05@gmail.com',
     role: 'admin',
     isAdmin: true
   };
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
 }
-
 
 // Middleware to authenticate requests
 function authMiddleware(req, res, next) {
@@ -43,7 +52,6 @@ function authMiddleware(req, res, next) {
     const decoded = verifyToken(token);
     if (!decoded) {
       return res.status(401).json({ error: 'Invalid or expired token' });
-
     }
 
     req.userId = decoded.userId;

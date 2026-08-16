@@ -223,4 +223,3 @@ module.exports = {
   sendOTPEmail,
   sendOrderReceiptEmail
 };
-

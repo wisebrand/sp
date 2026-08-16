@@ -1,10 +1,6 @@
 node_modules/
 .env
-.env.*
-!.env.example
 .tmp/
 *.log
 .agents/
-.DS_Store
-Thumbs.db
 

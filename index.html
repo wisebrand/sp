@@ -224,6 +224,10 @@
                             <i class="fa-solid fa-heart text-rose-500"></i>
                             <span>Saved Items</span>
                         </button>
+                        <button onclick="handleAdminTabClick()" id="dropdown-admin-btn" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 flex items-center space-x-2 transition hidden">
+                            <i class="fa-solid fa-shield-halved text-amber-500"></i>
+                            <span>Admin Portal</span>
+                        </button>
                         <div class="pt-1 border-t border-gray-100">
                             <button onclick="logout()" class="w-full text-left px-3 py-2 rounded-xl text-xs font-extrabold text-rose-600 hover:bg-rose-50 flex items-center space-x-2 transition">
                                 <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -251,8 +255,8 @@
                     <span class="hidden sm:inline">Cart</span>
                 </button>
 
-                <!-- Dedicated Admin Portal Button -->
-                <button onclick="handleAdminTabClick()" id="nav-admin-btn" class="relative flex items-center space-x-1.5 bg-slate-950 hover:bg-slate-900 text-white px-3.5 py-2.5 rounded-xl text-xs font-extrabold transition shadow-sm border border-slate-800">
+                <!-- Dedicated Admin Portal Button (Hidden unless admin email logs in) -->
+                <button onclick="handleAdminTabClick()" id="nav-admin-btn" class="relative items-center space-x-1.5 bg-slate-950 hover:bg-slate-900 text-white px-3.5 py-2.5 rounded-xl text-xs font-extrabold transition shadow-sm border border-slate-800 hidden">
                     <i class="fa-solid fa-shield-halved text-amber-400"></i>
                     <span class="hidden xl:inline">Admin</span>
                 </button>
@@ -1858,7 +1862,7 @@
             </div>
             <span id="dock-profile-text">Profile</span>
         </button>
-        <button onclick="handleAdminTabClick()" id="dock-btn-admin" class="dock-nav-item flex items-center space-x-2 text-slate-700 hover:text-amber-500 text-xs font-extrabold transition group">
+        <button onclick="handleAdminTabClick()" id="dock-btn-admin" class="dock-nav-item items-center space-x-2 text-slate-700 hover:text-amber-500 text-xs font-extrabold transition group hidden">
             <div class="w-8 h-8 rounded-xl bg-slate-900 group-hover:bg-slate-800 text-amber-400 flex items-center justify-center transition shadow-xs">
                 <i class="fa-solid fa-shield-halved"></i>
             </div>
@@ -1890,7 +1894,7 @@
             <i class="fa-regular fa-user text-base"></i>
             <span>Profile</span>
         </button>
-        <button onclick="handleAdminTabClick()" class="flex flex-col items-center text-slate-800 hover:text-amber-500 focus:text-amber-600 text-[10px] font-extrabold space-y-0.5 transition">
+        <button onclick="handleAdminTabClick()" id="mobile-dock-admin-btn" class="flex flex-col items-center text-slate-800 hover:text-amber-500 focus:text-amber-600 text-[10px] font-extrabold space-y-0.5 transition hidden">
             <i class="fa-solid fa-shield-halved text-base text-amber-500"></i>
             <span>Admin</span>
         </button>
@@ -1916,7 +1920,7 @@
                     <i class="fa-solid fa-shield-halved"></i>
                 </div>
                 <h3 class="text-2xl font-black tracking-tight text-white">Store Administrator Portal</h3>
-                <p class="text-slate-400 text-xs mt-1">Sign in with administrator privileges to manage store catalog, customer orders, and analytics.</p>
+                <p class="text-slate-400 text-xs mt-1">Sign in with administrator privileges (mikegborbitey05@gmail.com) to manage store catalog, customer orders, and analytics.</p>
             </div>
 
             <!-- Admin Login Error Box -->
@@ -1929,7 +1933,7 @@
             <form onsubmit="handleAdminLoginSubmit(event)" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Admin Email</label>
-                    <input type="email" id="admin-login-email" required placeholder="admin@sdshopping.com" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition">
+                    <input type="email" id="admin-login-email" required placeholder="mikegborbitey05@gmail.com" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Admin Password</label>

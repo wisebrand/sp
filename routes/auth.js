@@ -6,6 +6,18 @@ const User = require('../models/User');
 const Otp = require('../models/Otp');
 const Order = require('../models/Order');
 
+// Authorized Administrator Accounts
+const AUTHORIZED_ADMIN_EMAILS = [
+  'mikegborbitey05@gmail.com',
+  'mikegborbitey05@gmil.com',
+  (process.env.ADMIN_EMAIL || '').toLowerCase().trim()
+].filter(Boolean);
+
+function isUserAdmin(email) {
+  if (!email) return false;
+  return AUTHORIZED_ADMIN_EMAILS.includes(email.toLowerCase().trim());
+}
+
 // In-memory persistent maps for OTPs and Users when DB is connecting or offline
 const pendingOtps = new Map();
 const memoryUsers = new Map();
@@ -129,9 +141,10 @@ router.post('/verify-otp', async (req, res) => {
     pendingOtps.delete(normalizedEmail);
 
     const token = generateToken(user);
+    const isAdmin = isUserAdmin(normalizedEmail);
     res.json({
       message: 'Account verified and created successfully! Welcome to SD Shopping.',
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id, name: user.name, email: user.email, isAdmin, role: isAdmin ? 'admin' : 'user' },
       token
     });
   } catch (error) {
@@ -313,6 +326,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
       orderCount = await Order.countDocuments({ userId: req.userId }).maxTimeMS(1500);
     } catch (e) {}
 
+    const isAdmin = isUserAdmin(user.email);
     res.json({
       user: {
         id: user._id || user.id,
@@ -321,6 +335,8 @@ router.get('/profile', authMiddleware, async (req, res) => {
         phone: user.phone || '',
         address: user.address || '',
         city: user.city || '',
+        isAdmin,
+        role: isAdmin ? 'admin' : 'user',
         isVerified: user.isVerified !== undefined ? user.isVerified : true,
         createdAt: user.createdAt || new Date()
       },
@@ -335,13 +351,16 @@ router.get('/profile', authMiddleware, async (req, res) => {
 // Alias for /me
 router.get('/me', authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select('name email phone address city createdAt isVerified').maxTimeMS(1500);
+    const user = await User.findById(req.userId).select('name email phone address city createdAt isVerified role').maxTimeMS(1500);
     if (!user) {
-      return res.json({ id: req.userId, name: req.userName || 'Customer', email: req.userEmail || '' });
+      const isAdmin = isUserAdmin(req.userEmail);
+      return res.json({ id: req.userId, name: req.userName || 'Customer', email: req.userEmail || '', isAdmin, role: isAdmin ? 'admin' : 'user' });
     }
-    res.json(user);
+    const isAdmin = isUserAdmin(user.email) || user.role === 'admin';
+    res.json({ id: user._id, name: user.name, email: user.email, isAdmin, role: isAdmin ? 'admin' : 'user' });
   } catch (error) {
-    res.json({ id: req.userId, name: req.userName || 'Customer', email: req.userEmail || '' });
+    const isAdmin = isUserAdmin(req.userEmail);
+    res.json({ id: req.userId, name: req.userName || 'Customer', email: req.userEmail || '', isAdmin, role: isAdmin ? 'admin' : 'user' });
   }
 });
 
@@ -397,6 +416,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
     }
 
     const newToken = generateToken(updatedUser);
+    const isAdmin = isUserAdmin(updatedUser.email);
 
     res.json({
       message: 'Profile updated successfully',
@@ -407,6 +427,8 @@ router.put('/profile', authMiddleware, async (req, res) => {
         phone: updatedUser.phone || '',
         address: updatedUser.address || '',
         city: updatedUser.city || '',
+        isAdmin,
+        role: isAdmin ? 'admin' : 'user',
         isVerified: updatedUser.isVerified !== undefined ? updatedUser.isVerified : true
       },
       token: newToken

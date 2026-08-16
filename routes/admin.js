@@ -5,9 +5,15 @@ const Order = require('../models/Order');
 const User = require('../models/User');
 const { generateAdminToken, adminAuthMiddleware } = require('../utils/jwt');
 
-// Default Admin Credentials (Configurable via environment variables)
+// Authorized Administrator Accounts (Exclusive access)
+const AUTHORIZED_ADMIN_EMAILS = [
+  'mikegborbitey05@gmail.com',
+  'mikegborbitey05@gmil.com',
+  (process.env.ADMIN_EMAIL || '').toLowerCase().trim()
+].filter(Boolean);
+
 const ADMIN_CREDENTIALS = {
-  email: (process.env.ADMIN_EMAIL || 'admin@sdshopping.com').toLowerCase().trim(),
+  email: 'mikegborbitey05@gmail.com',
   password: process.env.ADMIN_PASSWORD || 'Admin@123456',
   name: 'Store Administrator'
 };
@@ -47,28 +53,38 @@ router.post('/login', async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check Root Admin credentials
-    const isRootAdmin = (normalizedEmail === ADMIN_CREDENTIALS.email) && (password === ADMIN_CREDENTIALS.password);
+    // STRICT PERMISSION: Only authorized administrator email is accepted
+    if (!AUTHORIZED_ADMIN_EMAILS.includes(normalizedEmail)) {
+      return res.status(403).json({
+        code: 'ADMIN_ACCESS_DENIED',
+        error: 'Access denied: Only the designated store administrator (mikegborbitey05@gmail.com) is authorized to log in to the Admin Portal.'
+      });
+    }
 
     let adminUser = null;
+
+    // Check Root Admin Password
+    const isRootAdmin = (password === ADMIN_CREDENTIALS.password);
 
     if (isRootAdmin) {
       adminUser = {
         _id: 'admin_root',
         name: ADMIN_CREDENTIALS.name,
-        email: ADMIN_CREDENTIALS.email,
-        role: 'admin'
+        email: normalizedEmail,
+        role: 'admin',
+        isAdmin: true
       };
     } else {
-      // Optional check in DB for users with role='admin'
+      // Check MongoDB user password for this admin account
       try {
-        const dbUser = await User.findOne({ email: normalizedEmail, role: 'admin' }).maxTimeMS(1500);
+        const dbUser = await User.findOne({ email: normalizedEmail }).maxTimeMS(2000);
         if (dbUser && (await dbUser.comparePassword(password))) {
           adminUser = {
             _id: dbUser._id,
-            name: dbUser.name,
+            name: dbUser.name || ADMIN_CREDENTIALS.name,
             email: dbUser.email,
-            role: 'admin'
+            role: 'admin',
+            isAdmin: true
           };
         }
       } catch (e) {}
@@ -76,7 +92,8 @@ router.post('/login', async (req, res) => {
 
     if (!adminUser) {
       return res.status(401).json({
-        error: 'Invalid Administrator credentials. Please check your admin email and password.'
+        code: 'INVALID_ADMIN_CREDENTIALS',
+        error: 'Incorrect administrator password. Please verify your admin password and try again.'
       });
     }
 
@@ -90,7 +107,8 @@ router.post('/login', async (req, res) => {
         id: adminUser._id,
         name: adminUser.name,
         email: adminUser.email,
-        role: 'admin'
+        role: 'admin',
+        isAdmin: true
       },
       token
     });
