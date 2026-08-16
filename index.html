@@ -1221,6 +1221,13 @@
 
                 <!-- Admin Action Buttons -->
                 <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">
+                    <span class="inline-flex items-center space-x-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[11px] font-black px-3 py-1.5 rounded-xl shadow-xs">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span>LIVE STORE ACTIVE</span>
+                    </span>
                     <button onclick="goBack()" class="bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-600 transition flex items-center space-x-1.5 shadow-sm">
                         <i class="fa-solid fa-store"></i>
                         <span>Back to Store</span>
@@ -1244,7 +1251,7 @@
                     </div>
                     <div class="mt-3">
                         <span id="admin-stat-revenue" class="text-2xl font-black text-gray-900 font-mono">GH₵ 0.00</span>
-                        <p class="text-[11px] text-emerald-600 font-semibold mt-0.5"><i class="fa-solid fa-arrow-trend-up mr-1"></i>Fulfilled & in-transit orders</p>
+                        <p class="text-[11px] text-emerald-600 font-semibold mt-0.5"><i class="fa-solid fa-bolt mr-1"></i>Live auto-calculated</p>
                     </div>
                 </div>
 
@@ -1275,7 +1282,7 @@
                     </div>
                     <div class="mt-3">
                         <span id="admin-stat-products" class="text-2xl font-black text-gray-900">0</span>
-                        <p class="text-[11px] text-gray-500 mt-0.5">Active products in catalog</p>
+                        <p class="text-[11px] text-gray-500 mt-0.5">Active items in catalog</p>
                     </div>
                 </div>
 
@@ -1310,6 +1317,7 @@
                     <button onclick="switchAdminSubTab('users')" id="admin-subtab-btn-users" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-bold transition bg-gray-50 text-gray-700 hover:bg-gray-100 flex items-center space-x-2">
                         <i class="fa-solid fa-users-gear"></i>
                         <span>Registered Customers</span>
+                        <span id="admin-nav-users-count" class="bg-gray-200 text-gray-700 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
                     </button>
                 </div>
 
@@ -1328,16 +1336,20 @@
                         <!-- Product Search Input -->
                         <div class="relative flex-1 min-w-[200px] max-w-md">
                             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-gray-400 text-xs"></i>
-                            <input type="text" id="admin-product-search" oninput="filterAdminProducts()" placeholder="Search products by title, category, or brand..." class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:bg-white focus:border-indigo-500">
+                            <input type="text" id="admin-product-search" oninput="filterAdminProducts()" placeholder="Search bags, shoes, boots, sneakers..." class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:bg-white focus:border-indigo-500">
                         </div>
 
                         <!-- Category Filter -->
                         <select id="admin-product-category" onchange="filterAdminProducts()" class="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500">
                             <option value="All">All Categories</option>
-                            <option value="Electronics">Electronics</option>
-                            <option value="Audio">Audio</option>
-                            <option value="Wearables">Wearables</option>
-                            <option value="Accessories">Accessories</option>
+                            <option value="Handbags & Totes">Handbags & Totes</option>
+                            <option value="Sneakers & Trainers">Sneakers & Trainers</option>
+                            <option value="Heels & Pumps">Heels & Pumps</option>
+                            <option value="Backpacks & Travel">Backpacks & Travel</option>
+                            <option value="Loafers & Dress Shoes">Loafers & Dress Shoes</option>
+                            <option value="Crossbody & Clutches">Crossbody & Clutches</option>
+                            <option value="Boots & Ankle Boots">Boots & Ankle Boots</option>
+                            <option value="Sandals & Slides">Sandals & Slides</option>
                         </select>
                     </div>
 
@@ -1437,7 +1449,8 @@
                                     <th class="p-3.5">City / Address</th>
                                     <th class="p-3.5">Status</th>
                                     <th class="p-3.5">Total Orders</th>
-                                    <th class="p-3.5 pr-5 text-right">Registered Date</th>
+                                    <th class="p-3.5">Registered Date</th>
+                                    <th class="p-3.5 pr-5 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="admin-users-table-body" class="divide-y divide-gray-100 font-medium">

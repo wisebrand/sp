@@ -18,8 +18,22 @@ const ADMIN_CREDENTIALS = {
   name: 'Store Administrator'
 };
 
-// Fallback in-memory product list for offline DB resilience
-const memoryAdminProducts = new Map();
+// Complete default catalog for immediate offline & admin inventory availability
+const DEFAULT_CATALOG = [
+  { _id: '1', title: 'Italian Saffiano Leather Tote Bag', description: 'Structured designer leather tote bag with gold-tone hardware, top zip closure, and spacious multi-compartment interior.', price: 1250.00, image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80', category: 'Handbags & Totes', brand: 'Prada', stock: 25, rating: 4.9, ratingCount: 42, createdAt: new Date() },
+  { _id: '2', title: 'Air Max Urban Running Sneakers', description: 'Lightweight responsive athletic sneakers with breathable mesh upper, cushioned air sole, and high-traction tread.', price: 680.00, image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&auto=format&fit=crop&q=80', category: 'Sneakers & Trainers', brand: 'Nike', stock: 40, rating: 4.8, ratingCount: 65, createdAt: new Date() },
+  { _id: '3', title: 'Classic Pointed Stiletto Pumps', description: 'Elegant 4-inch stiletto heels crafted with premium gloss finish, padded comfort insole, and sleek silhouette.', price: 420.00, image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&auto=format&fit=crop&q=80', category: 'Heels & Pumps', brand: 'Zara', stock: 30, rating: 4.7, ratingCount: 28, createdAt: new Date() },
+  { _id: '4', title: 'Waterproof Travel Laptop Backpack', description: 'Durable weather-resistant commuter backpack with 16-inch padded laptop sleeve and USB pass-through.', price: 320.00, image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80', category: 'Backpacks & Travel', brand: 'SD Originals', stock: 50, rating: 4.9, ratingCount: 51, createdAt: new Date() },
+  { _id: '5', title: 'Handcrafted Penny Leather Loafers', description: 'Timeless slip-on dress shoes made with genuine burnished calfskin leather and non-slip rubber soles.', price: 590.00, image: 'https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=800&auto=format&fit=crop&q=80', category: 'Loafers & Dress Shoes', brand: 'Clarks', stock: 35, rating: 4.6, ratingCount: 19, createdAt: new Date() },
+  { _id: '6', title: 'Quilted Chain Crossbody Bag', description: 'Chic diamond-quilted shoulder bag featuring an adjustable gold-link chain strap and magnetic snap flap.', price: 780.00, image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&auto=format&fit=crop&q=80', category: 'Crossbody & Clutches', brand: 'Michael Kors', stock: 20, rating: 4.8, ratingCount: 34, createdAt: new Date() },
+  { _id: '7', title: 'Premium Suede Chelsea Ankle Boots', description: 'Classic British ankle boots with elasticated side gussets and Goodyear welted sole construction.', price: 650.00, image: 'https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=800&auto=format&fit=crop&q=80', category: 'Boots & Ankle Boots', brand: 'Aldo', stock: 28, rating: 4.9, ratingCount: 22, createdAt: new Date() },
+  { _id: '8', title: 'Ultraboost Streetwear Sport Sneakers', description: 'High-energy return sports running shoes with flexible knit upper and Continental rubber outsole.', price: 720.00, image: 'https://images.unsplash.com/photo-1587563871167-1ee9c731aefb?w=800&auto=format&fit=crop&q=80', category: 'Sneakers & Trainers', brand: 'Adidas', stock: 45, rating: 4.8, ratingCount: 47, createdAt: new Date() },
+  { _id: '9', title: 'Monogram Canvas Luxury Handbag', description: 'Iconic patterned top-handle satchel with detachable shoulder strap and padlock detail.', price: 1850.00, image: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&auto=format&fit=crop&q=80', category: 'Handbags & Totes', brand: 'Gucci', stock: 15, rating: 5.0, ratingCount: 16, createdAt: new Date() },
+  { _id: '10', title: 'Comfort Leather Slide Sandals', description: 'Casual slip-on slides with contoured footbed, dual buckle straps, and soft leather lining.', price: 210.00, image: 'https://images.unsplash.com/photo-1603808033192-082d6919d3e1?w=800&auto=format&fit=crop&q=80', category: 'Sandals & Slides', brand: 'Zara', stock: 60, rating: 4.5, ratingCount: 39, createdAt: new Date() }
+];
+
+// Fallback in-memory product list initialized with full default catalog
+const memoryAdminProducts = new Map(DEFAULT_CATALOG.map(p => [p._id, { ...p }]));
 
 // Helper to generate tracking status checkpoint
 function generateTrackingEntry(status) {
@@ -408,7 +422,7 @@ router.patch('/orders/:id/status', adminAuthMiddleware, async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// 5. REGISTERED CUSTOMERS
+// 5. REGISTERED CUSTOMERS MANAGEMENT
 // -------------------------------------------------------------
 
 router.get('/users', adminAuthMiddleware, async (req, res) => {
@@ -418,22 +432,50 @@ router.get('/users', adminAuthMiddleware, async (req, res) => {
       users = await User.find().select('-password').sort({ createdAt: -1 }).maxTimeMS(2500);
     } catch (e) {}
 
+    // Include in-memory users if DB is starting up
+    try {
+      const authModule = require('./auth');
+      if (authModule.memoryUsers && authModule.memoryUsers.size > 0) {
+        for (const [email, u] of authModule.memoryUsers.entries()) {
+          if (!users.some(dbU => dbU.email === email)) {
+            users.push({
+              _id: u._id || 'user_' + email,
+              name: u.name || 'Customer',
+              email: u.email,
+              phone: u.phone || '',
+              city: u.city || '',
+              address: u.address || '',
+              isVerified: u.isVerified !== false,
+              createdAt: u.createdAt || new Date()
+            });
+          }
+        }
+      }
+    } catch (e) {}
+
     // Enhance users with order counts
     const enhanced = await Promise.all(users.map(async (u) => {
       let orderCount = 0;
+      const uId = u._id ? u._id.toString() : '';
       try {
-        orderCount = await Order.countDocuments({ userId: u._id }).maxTimeMS(1000);
+        orderCount = await Order.countDocuments({
+          $or: [
+            { userId: u._id },
+            { 'shippingAddress.email': u.email }
+          ]
+        }).maxTimeMS(1000);
       } catch (e) {}
+
       return {
-        id: u._id,
-        name: u.name,
+        id: u._id || u.id,
+        name: u.name || 'Customer',
         email: u.email,
-        phone: u.phone || '',
-        city: u.city || '',
-        address: u.address || '',
-        isVerified: u.isVerified !== undefined ? u.isVerified : true,
+        phone: u.phone || '—',
+        city: u.city || '—',
+        address: u.address || '—',
+        isVerified: u.isVerified !== false,
         orderCount,
-        createdAt: u.createdAt
+        createdAt: u.createdAt || new Date()
       };
     }));
 
@@ -441,6 +483,38 @@ router.get('/users', adminAuthMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Admin get users error:', error);
     res.status(500).json({ error: 'Failed to fetch registered customers' });
+  }
+});
+
+// Delete User Account
+router.delete('/users/:id', adminAuthMiddleware, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    let deleted = false;
+
+    try {
+      const resDb = await User.findByIdAndDelete(userId).maxTimeMS(2000);
+      if (resDb) deleted = true;
+    } catch (e) {}
+
+    try {
+      const authModule = require('./auth');
+      if (authModule.memoryUsers) {
+        for (const [email, u] of authModule.memoryUsers.entries()) {
+          if (u._id === userId || u.id === userId) {
+            authModule.memoryUsers.delete(email);
+            deleted = true;
+          }
+        }
+      }
+    } catch (e) {}
+
+    console.log(`👤 [Admin Removed User]: ID ${userId}`);
+
+    res.json({ message: 'User account removed successfully from database', id: userId });
+  } catch (error) {
+    console.error('Admin delete user error:', error);
+    res.status(500).json({ error: 'Failed to delete user account' });
   }
 });
 

@@ -518,4 +518,5 @@ router.post('/clear-users', async (req, res) => {
   }
 });
 
+router.memoryUsers = memoryUsers;
 module.exports = router;

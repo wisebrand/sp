@@ -1940,8 +1940,11 @@ async function submitPayment(e) {
         closePaymentModal();
         cart = [];
         localStorage.setItem('sd_cart', JSON.stringify(cart));
-        updateBadges();
         await fetchOrders();
+
+        // Trigger immediate live real-time update in Admin Portal
+        window.dispatchEvent(new CustomEvent('sd_order_placed', { detail: data.order || data }));
+        try { localStorage.setItem('sd_last_order_event', Date.now().toString()); } catch (e) {}
 
         const userEmail = currentUser ? currentUser.email : 'your inbox';
         if (momoNoticeText) {
@@ -3184,10 +3187,10 @@ function switchAdminSubTab(subTab) {
     if (subTab === 'users') loadAdminUsers();
 }
 
-// --- ADMIN DASHBOARD DATA LOADER ---
-async function loadAdminDashboardData() {
+// --- ADMIN DASHBOARD DATA LOADER (WITH REAL-TIME LIVE SYNC) ---
+async function loadAdminDashboardData(silent = false) {
     if (!adminToken) {
-        openAdminLoginModal();
+        if (!silent) openAdminLoginModal();
         return;
     }
 
@@ -3196,7 +3199,7 @@ async function loadAdminDashboardData() {
         const nameDisplay = document.getElementById('admin-user-display');
         const emailDisplay = document.getElementById('admin-email-display');
         if (nameDisplay) nameDisplay.textContent = adminUser.name || 'Store Administrator';
-        if (emailDisplay) emailDisplay.textContent = adminUser.email || 'admin@sdshopping.com';
+        if (emailDisplay) emailDisplay.textContent = adminUser.email || 'mikegborbitey05@gmail.com';
     }
 
     try {
@@ -3208,7 +3211,7 @@ async function loadAdminDashboardData() {
 
         if (response.status === 401 || response.status === 403) {
             handleAdminLogout();
-            openAdminLoginModal();
+            if (!silent) openAdminLoginModal();
             return;
         }
 
@@ -3228,20 +3231,22 @@ async function loadAdminDashboardData() {
 
             const navProdCount = document.getElementById('admin-nav-products-count');
             const navOrdCount = document.getElementById('admin-nav-orders-count');
+            const navUsersCount = document.getElementById('admin-nav-users-count');
             if (navProdCount) navProdCount.textContent = data.totalProducts || 0;
             if (navOrdCount) navOrdCount.textContent = data.totalOrders || 0;
+            if (navUsersCount) navUsersCount.textContent = data.totalUsers || 0;
         }
     } catch (e) {
-        console.warn('Admin stats load notice:', e.message);
+        if (!silent) console.warn('Admin stats load notice:', e.message);
     }
 
-    await loadAdminProducts();
-    await loadAdminOrders();
-    await loadAdminUsers();
+    await loadAdminProducts(silent);
+    await loadAdminOrders(silent);
+    await loadAdminUsers(silent);
 }
 
 // --- ADMIN PRODUCT INVENTORY CRUD ---
-async function loadAdminProducts() {
+async function loadAdminProducts(silent = false) {
     if (!adminToken) return;
 
     try {
@@ -3845,8 +3850,8 @@ function openInvoiceModalFromData(order) {
     if (invoiceModal) invoiceModal.classList.remove('hidden');
 }
 
-// --- ADMIN REGISTERED CUSTOMERS ---
-async function loadAdminUsers() {
+// --- ADMIN REGISTERED CUSTOMERS MANAGEMENT ---
+async function loadAdminUsers(silent = false) {
     if (!adminToken) return;
 
     try {
@@ -3860,6 +3865,7 @@ async function loadAdminUsers() {
             adminUsersList = [];
         }
     } catch (e) {
+        if (!silent) console.warn('Admin users load notice:', e.message);
         adminUsersList = [];
     }
 
@@ -3877,7 +3883,8 @@ function filterAdminUsers() {
             (u.name || '').toLowerCase().includes(query) ||
             (u.email || '').toLowerCase().includes(query) ||
             (u.phone || '').toLowerCase().includes(query) ||
-            (u.city || '').toLowerCase().includes(query)
+            (u.city || '').toLowerCase().includes(query) ||
+            (u.address || '').toLowerCase().includes(query)
         );
     }
 
@@ -3891,9 +3898,9 @@ function renderAdminUsersTable(items) {
     if (items.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" class="p-8 text-center text-gray-400">
-                    <i class="fa-solid fa-users text-3xl mb-2 block"></i>
-                    No customer records found.
+                <td colspan="8" class="p-8 text-center text-gray-400">
+                    <i class="fa-solid fa-users text-3xl mb-2 block text-gray-300"></i>
+                    No registered customers found matching your search.
                 </td>
             </tr>
         `;
@@ -3901,34 +3908,117 @@ function renderAdminUsersTable(items) {
     }
 
     tbody.innerHTML = items.map(u => {
-        const dateStr = u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '2026';
+        const uId = u.id || u._id || '';
+        const dateStr = u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent';
         const isVerified = u.isVerified !== false;
+        const initial = (u.name || u.email || 'U').charAt(0).toUpperCase();
+        const addressText = [u.city, u.address].filter(Boolean).join(', ') || '—';
         
         return `
             <tr class="hover:bg-gray-50/80 transition">
                 <td class="p-3.5 pl-5">
                     <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-extrabold flex items-center justify-center text-xs">
-                            ${(u.name || 'U').charAt(0).toUpperCase()}
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-black flex items-center justify-center text-xs shadow-xs">
+                            ${initial}
                         </div>
-                        <span class="font-bold text-gray-900">${u.name || 'Customer'}</span>
+                        <div>
+                            <span class="font-bold text-gray-900 block leading-tight">${escapeHtml(u.name || 'Customer')}</span>
+                            <span class="text-[10px] text-gray-400 font-mono">ID: ${uId.substring(0, 8)}...</span>
+                        </div>
                     </div>
                 </td>
-                <td class="p-3.5 text-gray-700 font-mono text-xs">${u.email || 'N/A'}</td>
-                <td class="p-3.5 text-gray-500">${u.phone || '—'}</td>
-                <td class="p-3.5 text-gray-600">${[u.city, u.address].filter(Boolean).join(', ') || '—'}</td>
+                <td class="p-3.5">
+                    <a href="mailto:${escapeHtml(u.email || '')}" class="text-indigo-600 hover:underline font-mono text-xs font-semibold inline-flex items-center space-x-1">
+                        <i class="fa-regular fa-envelope text-[10px]"></i>
+                        <span>${escapeHtml(u.email || 'N/A')}</span>
+                    </a>
+                </td>
+                <td class="p-3.5 text-gray-600 font-medium">
+                    ${u.phone && u.phone !== '—' ? `<a href="tel:${escapeHtml(u.phone)}" class="text-gray-700 hover:text-indigo-600">${escapeHtml(u.phone)}</a>` : '<span class="text-gray-300">—</span>'}
+                </td>
+                <td class="p-3.5 text-gray-600 max-w-[180px] truncate" title="${escapeHtml(addressText)}">
+                    ${escapeHtml(addressText)}
+                </td>
                 <td class="p-3.5">
                     ${isVerified 
-                        ? `<span class="bg-emerald-50 text-emerald-700 font-extrabold px-2.5 py-0.5 rounded-full text-[10px] border border-emerald-200 inline-flex items-center space-x-1"><i class="fa-solid fa-check"></i><span>Verified</span></span>`
-                        : `<span class="bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded-full text-[10px]">Unverified</span>`
+                        ? `<span class="bg-emerald-50 text-emerald-700 font-extrabold px-2.5 py-0.5 rounded-full text-[10px] border border-emerald-200 inline-flex items-center space-x-1"><i class="fa-solid fa-circle-check"></i><span>Verified</span></span>`
+                        : `<span class="bg-amber-50 text-amber-700 font-bold px-2.5 py-0.5 rounded-full text-[10px] border border-amber-200">Unverified</span>`
                     }
                 </td>
-                <td class="p-3.5 font-bold text-indigo-600 font-mono">${u.orderCount || 0}</td>
-                <td class="p-3.5 pr-5 text-right text-gray-400 text-[11px]">${dateStr}</td>
+                <td class="p-3.5">
+                    <span class="bg-indigo-50 text-indigo-700 font-bold font-mono px-2.5 py-1 rounded-lg text-xs border border-indigo-100">
+                        ${u.orderCount || 0} ${Number(u.orderCount) === 1 ? 'order' : 'orders'}
+                    </span>
+                </td>
+                <td class="p-3.5 text-gray-500 font-mono text-xs whitespace-nowrap">${dateStr}</td>
+                <td class="p-3.5 pr-5 text-right whitespace-nowrap">
+                    <button onclick="handleAdminDeleteUser('${uId}', '${escapeHtml(u.name || u.email || 'User')}')" class="bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1" title="Delete customer account">
+                        <i class="fa-solid fa-trash-can"></i>
+                        <span>Delete</span>
+                    </button>
+                </td>
             </tr>
         `;
     }).join('');
 }
+
+async function handleAdminDeleteUser(userId, userName) {
+    if (!adminToken) return;
+
+    if (!confirm(`Are you sure you want to remove customer account "${userName}"?`)) {
+        return;
+    }
+
+    showLoading('Removing Customer', 'Deleting customer record from database...');
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/users/${userId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const data = await safeParseResponse(response);
+        if (!response.ok) throw new Error(data.error || 'Failed to delete user');
+
+        await loadAdminUsers();
+        await loadAdminDashboardData(true);
+        showToast(`🗑️ Customer account "${userName}" removed successfully.`);
+    } catch (e) {
+        console.error('Delete user error:', e);
+        showToast(e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// --- REAL-TIME LIVE DASHBOARD SYNC ENGINE ---
+let adminLivePollInterval = null;
+
+function startAdminLiveSync() {
+    if (adminLivePollInterval) clearInterval(adminLivePollInterval);
+    // Silent live sync every 3.5 seconds
+    adminLivePollInterval = setInterval(() => {
+        const adminTab = document.getElementById('tab-admin');
+        if (adminTab && !adminTab.classList.contains('hidden') && isAdminLoggedIn()) {
+            loadAdminDashboardData(true);
+        }
+    }, 3500);
+}
+
+// Immediate live event listener for order placements
+window.addEventListener('sd_order_placed', () => {
+    if (isAdminLoggedIn()) {
+        loadAdminDashboardData(true);
+    }
+});
+
+// Cross-tab storage synchronization
+window.addEventListener('storage', (e) => {
+    if (e.key === 'sd_last_order_event' || e.key === 'sd_orders') {
+        if (isAdminLoggedIn()) {
+            loadAdminDashboardData(true);
+        }
+    }
+});
 
 // Safe attribute JSON encoder
 function escapeJsonForAttr(obj) {
@@ -3938,4 +4028,7 @@ function escapeJsonForAttr(obj) {
         return '{}';
     }
 }
+
+// Start live sync automatically
+startAdminLiveSync();
 
