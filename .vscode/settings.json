@@ -1,0 +1,8 @@
+{
+  "antigravity.agent.autoApprove": true,
+  "antigravity.agent.permissionMode": "unrestricted",
+  "antigravity.terminal.autoApprove": true,
+  "antigravity.files.autoApprove": true,
+  "chat.tools.autoApprove": true,
+  "security.workspace.trust.untrustedFiles": "open"
+}
