@@ -160,14 +160,38 @@ router.get('/stats', adminAuthMiddleware, async (req, res) => {
       usersCount = await User.countDocuments().maxTimeMS(1500);
     } catch (e) {}
 
-    // Fallback counts
-    if (productsCount === 0) productsCount = memoryAdminProducts.size;
-    try {
-      const authModule = require('./auth');
-      if (authModule.memoryUsers && authModule.memoryUsers.size > usersCount) {
-        usersCount = authModule.memoryUsers.size;
+    // Merge in-memory orders
+    if (global.sdAllOrders && global.sdAllOrders.length > 0) {
+      for (const memO of global.sdAllOrders) {
+        const memId = (memO._id || memO.id || '').toString();
+        if (!orders.some(o => (o._id || o.id || '').toString() === memId)) {
+          orders.unshift(memO);
+        }
       }
+    }
+
+    // Catalog counts
+    if (productsCount === 0) productsCount = memoryAdminProducts.size;
+
+    // Calculate unique customers count
+    const uniqueUserEmails = new Set();
+    try {
+      const allDbUsers = await User.find().select('email').maxTimeMS(1500);
+      allDbUsers.forEach(u => u.email && uniqueUserEmails.add(u.email.toLowerCase().trim()));
     } catch (e) {}
+
+    if (global.sdMemoryUsers) {
+      for (const email of global.sdMemoryUsers.keys()) {
+        uniqueUserEmails.add(email.toLowerCase().trim());
+      }
+    }
+
+    orders.forEach(o => {
+      const em = (o.userEmail || o.shippingAddress?.email || '').toLowerCase().trim();
+      if (em) uniqueUserEmails.add(em);
+    });
+
+    usersCount = Math.max(usersCount, uniqueUserEmails.size, 1);
 
     // Calculate revenue and counts
     let totalRevenue = 0;
@@ -220,8 +244,14 @@ router.get('/products', adminAuthMiddleware, async (req, res) => {
     } catch (e) {}
 
     if (!products || products.length === 0) {
-      // Fallback
       products = Array.from(memoryAdminProducts.values());
+    } else {
+      // Merge memory additions that might not be in DB yet
+      for (const [id, memP] of memoryAdminProducts.entries()) {
+        if (!products.some(p => p._id.toString() === id.toString())) {
+          products.unshift(memP);
+        }
+      }
     }
 
     res.json(products);
@@ -341,6 +371,14 @@ router.delete('/products/:id', adminAuthMiddleware, async (req, res) => {
       deleted = true;
     }
 
+    // Also check string vs ObjectId
+    for (const key of memoryAdminProducts.keys()) {
+      if (key.toString() === productId.toString()) {
+        memoryAdminProducts.delete(key);
+        deleted = true;
+      }
+    }
+
     res.json({ message: 'Product removed successfully from store catalog', id: productId });
   } catch (error) {
     console.error('Admin delete product error:', error);
@@ -356,26 +394,37 @@ router.delete('/products/:id', adminAuthMiddleware, async (req, res) => {
 router.get('/orders', adminAuthMiddleware, async (req, res) => {
   try {
     const { status, search } = req.query;
-    let query = {};
-
-    if (status && status !== 'all') {
-      query.status = status.toLowerCase();
-    }
-
-    if (search) {
-      const regex = new RegExp(search.trim(), 'i');
-      query.$or = [
-        { trackingNumber: regex },
-        { transactionId: regex },
-        { 'shippingAddress.address': regex },
-        { 'shippingAddress.city': regex }
-      ];
-    }
-
     let orders = [];
     try {
-      orders = await Order.find(query).sort({ createdAt: -1 }).maxTimeMS(2500);
+      orders = await Order.find().sort({ createdAt: -1 }).maxTimeMS(2500);
     } catch (e) {}
+
+    // Merge in-memory orders
+    if (global.sdAllOrders && global.sdAllOrders.length > 0) {
+      for (const memO of global.sdAllOrders) {
+        const memId = (memO._id || memO.id || '').toString();
+        if (!orders.some(o => (o._id || o.id || '').toString() === memId)) {
+          orders.unshift(memO);
+        }
+      }
+    }
+
+    // Apply status filter
+    if (status && status !== 'all') {
+      orders = orders.filter(o => (o.status || 'pending').toLowerCase() === status.toLowerCase());
+    }
+
+    // Apply search filter
+    if (search) {
+      const q = search.toLowerCase().trim();
+      orders = orders.filter(o => 
+        (o.trackingNumber || '').toLowerCase().includes(q) ||
+        (o.transactionId || '').toLowerCase().includes(q) ||
+        (typeof o.shippingAddress === 'string' ? o.shippingAddress.toLowerCase().includes(q) : false) ||
+        (o.shippingAddress?.city || '').toLowerCase().includes(q) ||
+        (o.shippingAddress?.address || '').toLowerCase().includes(q)
+      );
+    }
 
     res.json(orders);
   } catch (error) {
@@ -411,6 +460,18 @@ router.patch('/orders/:id/status', adminAuthMiddleware, async (req, res) => {
       }
     } catch (e) {}
 
+    // Update in global.sdAllOrders
+    if (global.sdAllOrders) {
+      const memOrder = global.sdAllOrders.find(o => (o._id || o.id || '').toString() === req.params.id.toString());
+      if (memOrder) {
+        memOrder.status = cleanStatus;
+        memOrder.statusHistory = memOrder.statusHistory || [];
+        memOrder.statusHistory.push(trackingEntry);
+        memOrder.updatedAt = new Date();
+        if (!updatedOrder) updatedOrder = memOrder;
+      }
+    }
+
     if (!updatedOrder) {
       return res.status(404).json({ error: 'Order not found' });
     }
@@ -438,39 +499,59 @@ router.get('/users', adminAuthMiddleware, async (req, res) => {
       users = await User.find().select('-password').sort({ createdAt: -1 }).maxTimeMS(2500);
     } catch (e) {}
 
-    // Include in-memory users if DB is starting up
-    try {
-      const authModule = require('./auth');
-      if (authModule.memoryUsers && authModule.memoryUsers.size > 0) {
-        for (const [email, u] of authModule.memoryUsers.entries()) {
-          if (!users.some(dbU => dbU.email === email)) {
-            users.push({
-              _id: u._id || 'user_' + email,
-              name: u.name || 'Customer',
-              email: u.email,
-              phone: u.phone || '',
-              city: u.city || '',
-              address: u.address || '',
-              isVerified: u.isVerified !== false,
-              createdAt: u.createdAt || new Date()
-            });
-          }
+    // Include global.sdMemoryUsers
+    if (global.sdMemoryUsers && global.sdMemoryUsers.size > 0) {
+      for (const [email, u] of global.sdMemoryUsers.entries()) {
+        if (!users.some(dbU => (dbU.email || '').toLowerCase() === email.toLowerCase())) {
+          users.push(u);
         }
       }
-    } catch (e) {}
+    }
+
+    // Also include any customer from orders who might have checked out
+    const allOrders = (global.sdAllOrders || []);
+    for (const ord of allOrders) {
+      const custEmail = (ord.userEmail || ord.shippingAddress?.email || '').toLowerCase().trim();
+      const custName = ord.shippingAddress?.name || ord.userName || 'Customer';
+      if (custEmail && !users.some(u => (u.email || '').toLowerCase() === custEmail)) {
+        users.push({
+          _id: 'cust_' + Date.now(),
+          name: custName,
+          email: custEmail,
+          phone: ord.shippingAddress?.phone || ord.phone || '—',
+          city: ord.shippingAddress?.city || '—',
+          address: typeof ord.shippingAddress === 'string' ? ord.shippingAddress : (ord.shippingAddress?.address || '—'),
+          isVerified: true,
+          createdAt: ord.createdAt || new Date()
+        });
+      }
+    }
 
     // Enhance users with order counts
     const enhanced = await Promise.all(users.map(async (u) => {
       let orderCount = 0;
-      const uId = u._id ? u._id.toString() : '';
+      const uEmail = (u.email || '').toLowerCase().trim();
+      const uId = (u._id || u.id || '').toString();
+
       try {
         orderCount = await Order.countDocuments({
           $or: [
             { userId: u._id },
-            { 'shippingAddress.email': u.email }
+            { userEmail: uEmail },
+            { 'shippingAddress.email': uEmail }
           ]
         }).maxTimeMS(1000);
       } catch (e) {}
+
+      // Check global.sdAllOrders
+      if (global.sdAllOrders && global.sdAllOrders.length > 0) {
+        const memCount = global.sdAllOrders.filter(o => 
+          (o.userId && o.userId.toString() === uId) ||
+          (o.userEmail && o.userEmail.toLowerCase() === uEmail) ||
+          (o.shippingAddress?.email && o.shippingAddress.email.toLowerCase() === uEmail)
+        ).length;
+        if (memCount > orderCount) orderCount = memCount;
+      }
 
       return {
         id: u._id || u.id,
@@ -503,17 +584,14 @@ router.delete('/users/:id', adminAuthMiddleware, async (req, res) => {
       if (resDb) deleted = true;
     } catch (e) {}
 
-    try {
-      const authModule = require('./auth');
-      if (authModule.memoryUsers) {
-        for (const [email, u] of authModule.memoryUsers.entries()) {
-          if (u._id === userId || u.id === userId) {
-            authModule.memoryUsers.delete(email);
-            deleted = true;
-          }
+    if (global.sdMemoryUsers) {
+      for (const [email, u] of global.sdMemoryUsers.entries()) {
+        if (u._id === userId || u.id === userId) {
+          global.sdMemoryUsers.delete(email);
+          deleted = true;
         }
       }
-    } catch (e) {}
+    }
 
     console.log(`👤 [Admin Removed User]: ID ${userId}`);
 

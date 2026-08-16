@@ -2716,6 +2716,10 @@ async function handleOtpSubmit(e) {
         localStorage.setItem('sd_token', authToken);
         localStorage.setItem('sd_user', JSON.stringify(currentUser));
 
+        // Trigger immediate live update for Admin Dashboard across tabs/windows
+        window.dispatchEvent(new CustomEvent('sd_user_registered', { detail: currentUser }));
+        try { localStorage.setItem('sd_last_user_event', Date.now().toString()); } catch (e) {}
+
         updateAuthUI();
         closeAuthModal();
         showToast(data.message || `Welcome, ${currentUser.name}!`);
@@ -3995,13 +3999,13 @@ let adminLivePollInterval = null;
 
 function startAdminLiveSync() {
     if (adminLivePollInterval) clearInterval(adminLivePollInterval);
-    // Silent live sync every 3.5 seconds
+    // Silent live sync every 2.5 seconds when admin tab is open
     adminLivePollInterval = setInterval(() => {
         const adminTab = document.getElementById('tab-admin');
         if (adminTab && !adminTab.classList.contains('hidden') && isAdminLoggedIn()) {
             loadAdminDashboardData(true);
         }
-    }, 3500);
+    }, 2500);
 }
 
 // Immediate live event listener for order placements
@@ -4011,9 +4015,16 @@ window.addEventListener('sd_order_placed', () => {
     }
 });
 
-// Cross-tab storage synchronization
+// Immediate live event listener for user registrations
+window.addEventListener('sd_user_registered', () => {
+    if (isAdminLoggedIn()) {
+        loadAdminDashboardData(true);
+    }
+});
+
+// Cross-tab storage synchronization for orders and user signups
 window.addEventListener('storage', (e) => {
-    if (e.key === 'sd_last_order_event' || e.key === 'sd_orders') {
+    if (e.key === 'sd_last_order_event' || e.key === 'sd_orders' || e.key === 'sd_last_user_event' || e.key === 'sd_user') {
         if (isAdminLoggedIn()) {
             loadAdminDashboardData(true);
         }

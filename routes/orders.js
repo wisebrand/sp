@@ -81,6 +81,25 @@ router.post('/', authMiddleware, async (req, res) => {
       order = { _id: 'order_' + Date.now(), ...orderData };
     }
 
+    // Save to global order list so Admin dashboard sees it immediately
+    global.sdAllOrders = global.sdAllOrders || [];
+    global.sdAllOrders.unshift(order);
+
+    // Also attach to global.sdMemoryUsers if userEmail was given
+    const userEmail = (req.body.userEmail || req.userEmail || '').toLowerCase().trim();
+    if (userEmail && global.sdMemoryUsers && !global.sdMemoryUsers.has(userEmail)) {
+      global.sdMemoryUsers.set(userEmail, {
+        _id: req.userId || 'user_' + Date.now(),
+        name: typeof shippingAddress === 'object' ? (shippingAddress.name || 'Customer') : 'Customer',
+        email: userEmail,
+        phone: typeof shippingAddress === 'object' ? (shippingAddress.phone || '—') : '—',
+        city: typeof shippingAddress === 'object' ? (shippingAddress.city || '—') : '—',
+        address: typeof shippingAddress === 'object' ? (shippingAddress.address || '—') : (shippingAddress || '—'),
+        isVerified: true,
+        createdAt: new Date()
+      });
+    }
+
     // Cache in-memory
     const userOrders = memoryOrders.get(req.userId) || [];
     userOrders.unshift(order);

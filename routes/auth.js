@@ -18,14 +18,17 @@ function isUserAdmin(email) {
   return AUTHORIZED_ADMIN_EMAILS.includes(email.toLowerCase().trim());
 }
 
-// In-memory persistent maps for OTPs and Users when DB is connecting or offline
-const pendingOtps = new Map();
-const memoryUsers = new Map();
+// Global in-memory persistent maps for OTPs and Users shared across all modules
+global.sdPendingOtps = global.sdPendingOtps || new Map();
+global.sdMemoryUsers = global.sdMemoryUsers || new Map();
+
+const pendingOtps = global.sdPendingOtps;
+const memoryUsers = global.sdMemoryUsers;
 
 // 1. Send OTP Registration Route
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, phone, city, address } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email, and password are required' });
@@ -51,13 +54,30 @@ router.post('/register', async (req, res) => {
 
     const otp = generateOTP();
 
-    // Store in-memory fallback
-    pendingOtps.set(normalizedEmail, { name: name.trim(), email: normalizedEmail, password, otp, createdAt: new Date() });
+    // Store in-memory fallback with full profile fields
+    pendingOtps.set(normalizedEmail, {
+      name: (name || '').trim(),
+      email: normalizedEmail,
+      password,
+      phone: (phone || '').trim(),
+      city: (city || '').trim(),
+      address: (address || '').trim(),
+      otp,
+      createdAt: new Date()
+    });
 
     // Store in MongoDB Otp collection if available
     try {
       await Otp.deleteMany({ email: normalizedEmail }).maxTimeMS(1500);
-      await Otp.create({ email: normalizedEmail, name: name.trim(), password, otp });
+      await Otp.create({
+        email: normalizedEmail,
+        name: (name || '').trim(),
+        password,
+        phone: (phone || '').trim(),
+        city: (city || '').trim(),
+        address: (address || '').trim(),
+        otp
+      });
     } catch (otpDbErr) {}
 
     // Send email via HTTPS API or Gmail SSL/TLS transporter
@@ -110,10 +130,13 @@ router.post('/verify-otp', async (req, res) => {
     // Create or update verified user in MongoDB
     let user = null;
     try {
-      user = await User.findOne({ email: normalizedEmail }).maxTimeMS(1500);
+      user = await User.findOne({ email: normalizedEmail }).maxTimeMS(2000);
       if (user) {
-        user.name = storedOtp.name;
-        user.password = storedOtp.password;
+        user.name = storedOtp.name || user.name;
+        user.password = storedOtp.password || user.password;
+        user.phone = storedOtp.phone || user.phone;
+        user.city = storedOtp.city || user.city;
+        user.address = storedOtp.address || user.address;
         user.isVerified = true;
         await user.save();
       } else {
@@ -121,21 +144,37 @@ router.post('/verify-otp', async (req, res) => {
           name: storedOtp.name,
           email: storedOtp.email,
           password: storedOtp.password,
+          phone: storedOtp.phone || '',
+          city: storedOtp.city || '',
+          address: storedOtp.address || '',
           isVerified: true
         });
       }
       await Otp.deleteMany({ email: normalizedEmail }).catch(() => {});
     } catch (userDbErr) {
-      user = { _id: 'user_' + Date.now(), name: storedOtp.name, email: storedOtp.email };
+      console.warn('DB User save notice:', userDbErr.message);
+      user = {
+        _id: 'user_' + Date.now(),
+        name: storedOtp.name,
+        email: storedOtp.email,
+        phone: storedOtp.phone || '',
+        city: storedOtp.city || '',
+        address: storedOtp.address || '',
+        isVerified: true,
+        createdAt: new Date()
+      };
     }
 
-    // Persist in memory store for instant zero-latency login
+    // Persist in global memory store for instant zero-latency login and admin visibility
     memoryUsers.set(normalizedEmail, {
       _id: user._id || 'user_' + Date.now(),
-      name: storedOtp.name,
+      name: user.name || storedOtp.name,
       email: normalizedEmail,
-      password: storedOtp.password,
-      isVerified: true
+      phone: user.phone || storedOtp.phone || '',
+      city: user.city || storedOtp.city || '',
+      address: user.address || storedOtp.address || '',
+      isVerified: true,
+      createdAt: user.createdAt || new Date()
     });
 
     pendingOtps.delete(normalizedEmail);
