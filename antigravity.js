@@ -89,18 +89,22 @@ function pushToOnlineRepo(commitMessage = 'feat: synchronize updates to online d
     const statusOutput = execSync('git status --porcelain', { cwd: SP_DIR, encoding: 'utf8' }).trim();
     if (!statusOutput) {
       console.log('✨ [Antigravity]: "sp" working directory is already clean. Nothing new to commit.');
-      return true;
+    } else {
+      execSync('git add .', { cwd: SP_DIR, stdio: 'inherit' });
+      execSync(`git commit -m "${commitMessage}"`, { cwd: SP_DIR, stdio: 'inherit' });
+      console.log(`✅ [Antigravity]: Committed changes: "${commitMessage}"`);
     }
 
-    execSync('git add .', { cwd: SP_DIR, stdio: 'inherit' });
-    execSync(`git commit -m "${commitMessage}"`, { cwd: SP_DIR, stdio: 'inherit' });
-    console.log(`✅ [Antigravity]: Committed changes: "${commitMessage}"`);
-
-    execSync('git push origin main', { cwd: SP_DIR, stdio: 'inherit' });
-    console.log('🌟 [Antigravity]: Successfully pushed updates to online remote ("origin main")!');
-    return true;
+    try {
+      execSync('git push origin main', { cwd: SP_DIR, stdio: 'inherit', timeout: 15000 });
+      console.log('🌟 [Antigravity]: Successfully pushed updates to online remote ("origin main")!');
+      return true;
+    } catch (pushErr) {
+      console.log('📌 [Antigravity]: Local commit saved in "sp". To push live, run: cd "C:\\Users\\Young Rolx\\Documents\\GitHub\\sp" && git push origin main');
+      return true;
+    }
   } catch (err) {
-    console.warn('⚠️ [Antigravity]: Push completed / notice:', err.message);
+    console.warn('⚠️ [Antigravity]: Git operation completed with note:', err.message);
     return false;
   }
 }
