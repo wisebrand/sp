@@ -160,9 +160,14 @@ router.get('/stats', adminAuthMiddleware, async (req, res) => {
       usersCount = await User.countDocuments().maxTimeMS(1500);
     } catch (e) {}
 
-    // Fallback counts if DB is starting up
-    if (productsCount === 0) productsCount = 8;
-    if (usersCount === 0) usersCount = 1;
+    // Fallback counts
+    if (productsCount === 0) productsCount = memoryAdminProducts.size;
+    try {
+      const authModule = require('./auth');
+      if (authModule.memoryUsers && authModule.memoryUsers.size > usersCount) {
+        usersCount = authModule.memoryUsers.size;
+      }
+    } catch (e) {}
 
     // Calculate revenue and counts
     let totalRevenue = 0;
@@ -193,7 +198,8 @@ router.get('/stats', adminAuthMiddleware, async (req, res) => {
       cancelledOrders: cancelledCount,
       totalProducts: productsCount,
       totalUsers: usersCount,
-      recentOrders: orders.slice(0, 6)
+      recentOrders: orders.slice(0, 6),
+      liveTimestamp: new Date().toISOString()
     });
   } catch (error) {
     console.error('Admin stats error:', error);
