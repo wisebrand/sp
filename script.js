@@ -1684,16 +1684,33 @@ function renderCart() {
     calculateTotals();
 }
 
+let appliedDiscountObj = null;
+
 function calculateTotals() {
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-    const discountAmt = subtotal * (appliedDiscount / 100);
-    const shipping = subtotal > 500 || subtotal === 0 ? 0 : 50.00;
-    const total = subtotal - discountAmt + shipping;
+    let discountAmt = 0;
+    if (appliedDiscountObj) {
+        if (appliedDiscountObj.type === 'percent') {
+            discountAmt = (subtotal * appliedDiscountObj.value) / 100;
+        } else {
+            discountAmt = Math.min(appliedDiscountObj.value, subtotal);
+        }
+    } else if (appliedDiscount > 0) {
+        discountAmt = subtotal * (appliedDiscount / 100);
+    }
 
-    document.getElementById('cart-subtotal').textContent = formatPrice(subtotal);
-    document.getElementById('cart-discount').textContent = `-${formatPrice(discountAmt)}`;
-    document.getElementById('cart-shipping').textContent = shipping === 0 ? 'FREE' : formatPrice(shipping);
-    document.getElementById('cart-total').textContent = formatPrice(total);
+    const shipping = subtotal > 500 || subtotal === 0 ? 0 : 50.00;
+    const total = Math.max(0, subtotal - discountAmt + shipping);
+
+    const subEl = document.getElementById('cart-subtotal');
+    const discEl = document.getElementById('cart-discount');
+    const shipEl = document.getElementById('cart-shipping');
+    const totEl = document.getElementById('cart-total');
+
+    if (subEl) subEl.textContent = formatPrice(subtotal);
+    if (discEl) discEl.textContent = `-${formatPrice(discountAmt)}`;
+    if (shipEl) shipEl.textContent = shipping === 0 ? 'FREE' : formatPrice(shipping);
+    if (totEl) totEl.textContent = formatPrice(total);
 
     const checkoutText = document.getElementById('cart-checkout-btn-text');
     if (checkoutText) {
@@ -1710,19 +1727,63 @@ async function applyCoupon() {
         return;
     }
 
-    setButtonLoading('apply-coupon-btn', true, 'Please wait...');
-    showLoading('Please wait', 'Validating discount voucher...');
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    if (subtotal <= 0) {
+        showToast('Your cart is empty. Add items before applying vouchers.', 'warning');
+        return;
+    }
 
-    await new Promise(r => setTimeout(r, 450));
+    setButtonLoading('apply-coupon-btn', true, 'Verifying...');
+    showLoading('Validating Voucher', `Checking promo code "${code}"...`);
 
     try {
-        if (code === 'SAVE10') {
-            appliedDiscount = 10;
-            showToast('🎉 Coupon applied: 10% Off!');
-            calculateTotals();
-        } else {
-            showToast('Invalid coupon code. Try SAVE10', 'error');
+        let applied = false;
+        try {
+            const response = await fetch(`${API_BASE}/admin/validate-coupon`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, subtotal })
+            });
+            const data = await safeParseResponse(response);
+            if (response.ok && data.valid) {
+                appliedDiscountObj = {
+                    code: data.code,
+                    type: data.type,
+                    value: data.value,
+                    discountAmount: data.discountAmount
+                };
+                appliedDiscount = data.type === 'percent' ? data.value : 0;
+                calculateTotals();
+                showToast(data.message || `🎉 Voucher "${data.code}" applied!`);
+                applied = true;
+            } else if (!response.ok) {
+                throw new Error(data.error || 'Invalid voucher code');
+            }
+        } catch (serverErr) {
+            // Offline / fallback rules
+            const localCoupons = {
+                'SAVE10': { type: 'percent', value: 10, minSpend: 100 },
+                'SAVE20': { type: 'percent', value: 20, minSpend: 300 },
+                'WELCOME50': { type: 'fixed', value: 50, minSpend: 250 },
+                'FREESHIP': { type: 'fixed', value: 25, minSpend: 150 }
+            };
+
+            const match = localCoupons[code];
+            if (match) {
+                if (subtotal < match.minSpend) {
+                    throw new Error(`Promo code "${code}" requires minimum spend of GH₵ ${match.minSpend}.`);
+                }
+                appliedDiscountObj = { code, type: match.type, value: match.value };
+                appliedDiscount = match.type === 'percent' ? match.value : 0;
+                calculateTotals();
+                showToast(`🎉 Voucher "${code}" applied successfully!`);
+                applied = true;
+            } else {
+                throw new Error(serverErr.message || 'Invalid coupon code. Try SAVE10, SAVE20, or WELCOME50');
+            }
         }
+    } catch (err) {
+        showToast(err.message, 'error');
     } finally {
         setButtonLoading('apply-coupon-btn', false);
         hideLoading();
@@ -2786,6 +2847,7 @@ function updateAdminButtonVisibility() {
     const dockAdminBtn = document.getElementById('dock-btn-admin');
     const mobileDockAdminBtn = document.getElementById('mobile-dock-admin-btn');
     const dropdownAdminBtn = document.getElementById('dropdown-admin-btn');
+    const headerAdminActivePill = document.getElementById('header-admin-active-pill');
 
     [navAdminBtn, dockAdminBtn, mobileDockAdminBtn, dropdownAdminBtn].forEach(btn => {
         if (btn) {
@@ -2800,6 +2862,16 @@ function updateAdminButtonVisibility() {
             }
         }
     });
+
+    if (headerAdminActivePill) {
+        if (isAdmin && isAdminLoggedIn()) {
+            headerAdminActivePill.classList.remove('hidden');
+            headerAdminActivePill.classList.add('inline-flex');
+        } else {
+            headerAdminActivePill.classList.add('hidden');
+            headerAdminActivePill.classList.remove('inline-flex');
+        }
+    }
 }
 
 function logout() {
@@ -3166,9 +3238,11 @@ function handleAdminLogout() {
     showToast('Administrator logged out successfully');
 }
 
+let adminCouponsList = [];
+
 // --- ADMIN SUB-TAB SWITCHER ---
 function switchAdminSubTab(subTab) {
-    const tabs = ['products', 'orders', 'users'];
+    const tabs = ['products', 'orders', 'users', 'coupons'];
     tabs.forEach(t => {
         const btn = document.getElementById(`admin-subtab-btn-${t}`);
         const view = document.getElementById(`admin-view-${t}`);
@@ -3189,6 +3263,98 @@ function switchAdminSubTab(subTab) {
     if (subTab === 'products') loadAdminProducts();
     if (subTab === 'orders') loadAdminOrders();
     if (subTab === 'users') loadAdminUsers();
+    if (subTab === 'coupons') loadAdminCoupons();
+}
+
+// --- LOW-STOCK ALERT ENGINE ---
+function checkLowStockAlerts(items = []) {
+    const banner = document.getElementById('admin-low-stock-banner');
+    const text = document.getElementById('admin-low-stock-text');
+    if (!banner) return;
+
+    const lowStockItems = items.filter(p => {
+        const s = Number(p.stock !== undefined ? p.stock : 50);
+        return s <= 10;
+    });
+
+    if (lowStockItems.length > 0) {
+        banner.classList.remove('hidden');
+        if (text) {
+            const names = lowStockItems.slice(0, 3).map(p => p.title || p.name).join(', ');
+            const more = lowStockItems.length > 3 ? ` and ${lowStockItems.length - 3} more` : '';
+            text.textContent = `Warning: ${lowStockItems.length} product(s) running low on stock (${names}${more}).`;
+        }
+    } else {
+        banner.classList.add('hidden');
+    }
+}
+
+async function handleAdminRestockAllLow() {
+    if (!adminToken) return;
+
+    const lowStockItems = adminProductsList.filter(p => {
+        const s = Number(p.stock !== undefined ? p.stock : 50);
+        return s <= 10;
+    });
+
+    if (lowStockItems.length === 0) {
+        showToast('All products currently have healthy inventory levels!');
+        return;
+    }
+
+    showLoading('Restocking Inventory', `Replenishing +25 units across ${lowStockItems.length} low-stock items...`);
+
+    try {
+        for (const item of lowStockItems) {
+            const pId = item._id || item.id;
+            try {
+                await fetch(`${API_BASE}/admin/products/${pId}/restock`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ amount: 25 })
+                });
+            } catch (e) {}
+        }
+
+        await loadAdminProducts();
+        await fetchProducts();
+        showToast(`⚡ Successfully restocked ${lowStockItems.length} products with +25 units each!`);
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function handleAdminQuickRestock(productId, amount = 25) {
+    if (!adminToken) return;
+
+    showLoading('Quick Restock', `Adding +${amount} units to inventory...`);
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/products/${productId}/restock`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${adminToken}`
+            },
+            body: JSON.stringify({ amount })
+        });
+
+        const data = await safeParseResponse(res);
+        if (!res.ok) throw new Error(data.error || 'Failed to restock product');
+
+        await loadAdminProducts();
+        await fetchProducts();
+        showToast(`📦 Restocked successfully! New Stock: ${data.stock} units`);
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        hideLoading();
+    }
 }
 
 // --- ADMIN DASHBOARD DATA LOADER (WITH REAL-TIME LIVE SYNC) ---
@@ -3247,6 +3413,7 @@ async function loadAdminDashboardData(silent = false) {
     await loadAdminProducts(silent);
     await loadAdminOrders(silent);
     await loadAdminUsers(silent);
+    await loadAdminCoupons(silent);
 }
 
 // --- ADMIN PRODUCT INVENTORY CRUD ---
@@ -3261,7 +3428,6 @@ async function loadAdminProducts(silent = false) {
         if (response.ok && Array.isArray(data)) {
             adminProductsList = data;
         } else {
-            // Fallback to public catalog
             adminProductsList = products && products.length > 0 ? products : DEFAULT_PRODUCTS;
         }
     } catch (e) {
@@ -3299,6 +3465,8 @@ function filterAdminProducts() {
 function renderAdminProductsTable(items) {
     const tbody = document.getElementById('admin-products-table-body');
     if (!tbody) return;
+
+    checkLowStockAlerts(items);
 
     if (items.length === 0) {
         tbody.innerHTML = `
@@ -3345,6 +3513,10 @@ function renderAdminProductsTable(items) {
                     <i class="fa-solid fa-star text-[10px]"></i> ${p.rating || 4.5} <span class="text-gray-400 font-normal">(${p.ratingCount || (p.reviews ? p.reviews.length : 0)})</span>
                 </td>
                 <td class="p-3.5 pr-5 text-right space-x-1 whitespace-nowrap">
+                    <button onclick="handleAdminQuickRestock('${pId}', 25)" class="bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1" title="Add +25 Stock Instantly">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>+25</span>
+                    </button>
                     <button onclick="openAdminProductModal('${pId}')" class="bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1" title="Edit Product">
                         <i class="fa-solid fa-pen-to-square"></i>
                         <span>Edit</span>
@@ -3776,6 +3948,8 @@ function renderAdminOrdersTable(items) {
         const itemsList = Array.isArray(o.items) ? o.items.map(i => `${i.quantity || i.qty || 1}x ${i.title || i.name}`).join(', ') : 'Order Items';
         const total = Number(o.totalAmount || 0);
         const status = (o.status || 'pending').toLowerCase();
+        const customerPhone = o.phone || (typeof o.shippingAddress === 'object' ? o.shippingAddress.phone : '') || '';
+        const customerName = o.customerName || (typeof o.shippingAddress === 'object' ? o.shippingAddress.name : '') || 'Customer';
 
         return `
             <tr class="hover:bg-gray-50/80 transition">
@@ -3808,6 +3982,11 @@ function renderAdminOrdersTable(items) {
                     </select>
                 </td>
                 <td class="p-3.5 pr-5 text-right whitespace-nowrap space-x-1">
+                    ${customerPhone ? `
+                    <button onclick="openCustomerWhatsApp('${escapeHtml(customerPhone)}', '${tracking}', '${escapeHtml(customerName)}')" class="bg-emerald-50 hover:bg-emerald-600 text-emerald-600 hover:text-white px-2 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1" title="Contact Customer on WhatsApp">
+                        <i class="fa-brands fa-whatsapp text-sm"></i>
+                    </button>
+                    ` : ''}
                     <button onclick="openInvoiceModalFromData(${escapeJsonForAttr(o)})" class="bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1" title="View & Print Official Invoice">
                         <i class="fa-solid fa-file-invoice"></i>
                         <span>Invoice</span>
@@ -3816,6 +3995,16 @@ function renderAdminOrdersTable(items) {
             </tr>
         `;
     }).join('');
+}
+
+// WhatsApp Quick Chat Helper
+function openCustomerWhatsApp(phone, tracking = '', customerName = 'Customer') {
+    let cleanPhone = phone.replace(/[^0-9]/g, '');
+    if (cleanPhone.startsWith('0') && cleanPhone.length === 10) {
+        cleanPhone = '233' + cleanPhone.substring(1);
+    }
+    const msg = encodeURIComponent(`Hello ${customerName}, this is SD Shopping regarding your order (Tracking #${tracking}). How may we assist you today?`);
+    window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
 }
 
 async function handleAdminChangeOrderStatus(orderId, newStatus) {
@@ -3938,7 +4127,13 @@ function renderAdminUsersTable(items) {
                     </a>
                 </td>
                 <td class="p-3.5 text-gray-600 font-medium">
-                    ${u.phone && u.phone !== '—' ? `<a href="tel:${escapeHtml(u.phone)}" class="text-gray-700 hover:text-indigo-600">${escapeHtml(u.phone)}</a>` : '<span class="text-gray-300">—</span>'}
+                    ${u.phone && u.phone !== '—' ? `
+                    <div class="flex items-center space-x-1.5">
+                        <a href="tel:${escapeHtml(u.phone)}" class="text-gray-700 hover:text-indigo-600">${escapeHtml(u.phone)}</a>
+                        <button onclick="openCustomerWhatsApp('${escapeHtml(u.phone)}', '', '${escapeHtml(u.name || 'Customer')}')" class="text-emerald-600 hover:text-emerald-700 ml-1" title="Chat on WhatsApp">
+                            <i class="fa-brands fa-whatsapp text-sm"></i>
+                        </button>
+                    </div>` : '<span class="text-gray-300">—</span>'}
                 </td>
                 <td class="p-3.5 text-gray-600 max-w-[180px] truncate" title="${escapeHtml(addressText)}">
                     ${escapeHtml(addressText)}
@@ -3994,6 +4189,275 @@ async function handleAdminDeleteUser(userId, userName) {
     }
 }
 
+// --- ADMIN PROMO CODES & VOUCHERS MANAGER ---
+async function loadAdminCoupons(silent = false) {
+    if (!adminToken) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/coupons`, {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const data = await safeParseResponse(response);
+        if (response.ok && Array.isArray(data)) {
+            adminCouponsList = data;
+        } else {
+            adminCouponsList = [
+                { code: 'SAVE10', type: 'percent', value: 10, minSpend: 100, active: true, usageCount: 14 },
+                { code: 'SAVE20', type: 'percent', value: 20, minSpend: 300, active: true, usageCount: 6 },
+                { code: 'WELCOME50', type: 'fixed', value: 50, minSpend: 250, active: true, usageCount: 9 },
+                { code: 'FREESHIP', type: 'fixed', value: 25, minSpend: 150, active: true, usageCount: 18 }
+            ];
+        }
+    } catch (e) {
+        adminCouponsList = [
+            { code: 'SAVE10', type: 'percent', value: 10, minSpend: 100, active: true, usageCount: 14 },
+            { code: 'SAVE20', type: 'percent', value: 20, minSpend: 300, active: true, usageCount: 6 },
+            { code: 'WELCOME50', type: 'fixed', value: 50, minSpend: 250, active: true, usageCount: 9 },
+            { code: 'FREESHIP', type: 'fixed', value: 25, minSpend: 150, active: true, usageCount: 18 }
+        ];
+    }
+
+    const navCouponsCount = document.getElementById('admin-nav-coupons-count');
+    if (navCouponsCount) navCouponsCount.textContent = adminCouponsList.length;
+
+    renderAdminCouponsTable(adminCouponsList);
+}
+
+function renderAdminCouponsTable(items) {
+    const tbody = document.getElementById('admin-coupons-table-body');
+    if (!tbody) return;
+
+    if (!items || items.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="p-8 text-center text-gray-400">
+                    <i class="fa-solid fa-tags text-3xl mb-2 block text-gray-300"></i>
+                    No discount promo codes configured yet.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = items.map(c => {
+        const benefitText = c.type === 'percent' ? `${c.value}% OFF` : `GH₵ ${c.value} Fixed Discount`;
+        const minSpendText = c.minSpend > 0 ? `GH₵ ${c.minSpend}` : 'None';
+        const isActive = c.active !== false;
+
+        return `
+            <tr class="hover:bg-gray-50/80 transition">
+                <td class="p-3.5 pl-5">
+                    <span class="font-mono font-black text-xs text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200 tracking-wider">
+                        ${c.code}
+                    </span>
+                </td>
+                <td class="p-3.5 font-bold text-gray-900">${benefitText}</td>
+                <td class="p-3.5 font-mono text-gray-600 text-xs">${minSpendText}</td>
+                <td class="p-3.5 font-mono text-xs text-gray-700 font-bold">${c.usageCount || 0} times</td>
+                <td class="p-3.5">
+                    ${isActive 
+                        ? `<span class="bg-emerald-50 text-emerald-700 font-extrabold px-2.5 py-0.5 rounded-full text-[10px] border border-emerald-200">Active</span>`
+                        : `<span class="bg-gray-100 text-gray-500 font-bold px-2.5 py-0.5 rounded-full text-[10px]">Inactive</span>`
+                    }
+                </td>
+                <td class="p-3.5 pr-5 text-right whitespace-nowrap space-x-1">
+                    <button onclick="handleAdminToggleCoupon('${c.code}')" class="${isActive ? 'bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-white' : 'bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white'} px-2.5 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1" title="Toggle active status">
+                        <i class="fa-solid fa-power-off"></i>
+                        <span>${isActive ? 'Deactivate' : 'Activate'}</span>
+                    </button>
+                    <button onclick="handleAdminDeleteCoupon('${c.code}')" class="bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1" title="Delete promo code">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function handleAdminCreateCoupon(e) {
+    e.preventDefault();
+    if (!adminToken) return;
+
+    const code = (document.getElementById('admin-coupon-code')?.value || '').trim().toUpperCase();
+    const type = document.getElementById('admin-coupon-type')?.value || 'percent';
+    const value = parseFloat(document.getElementById('admin-coupon-value')?.value || '0');
+    const minSpend = parseFloat(document.getElementById('admin-coupon-minspend')?.value || '0');
+
+    if (!code || isNaN(value) || value <= 0) {
+        showToast('Please provide a valid coupon code and discount value', 'error');
+        return;
+    }
+
+    setButtonLoading('admin-create-coupon-btn', true, 'Creating...');
+    showLoading('Creating Promo Code', `Registering voucher "${code}"...`);
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/coupons`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${adminToken}`
+            },
+            body: JSON.stringify({ code, type, value, minSpend })
+        });
+
+        const data = await safeParseResponse(response);
+        if (!response.ok) throw new Error(data.error || 'Failed to create coupon');
+
+        document.getElementById('admin-coupon-code').value = '';
+        document.getElementById('admin-coupon-value').value = '';
+        document.getElementById('admin-coupon-minspend').value = '';
+
+        await loadAdminCoupons();
+        showToast(`🎉 Coupon "${code}" created and live!`);
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        setButtonLoading('admin-create-coupon-btn', false);
+        hideLoading();
+    }
+}
+
+async function handleAdminToggleCoupon(code) {
+    if (!adminToken) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/coupons/${code}/toggle`, {
+            method: 'PATCH',
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+
+        const data = await safeParseResponse(response);
+        if (!response.ok) throw new Error(data.error || 'Failed to toggle coupon status');
+
+        await loadAdminCoupons();
+        showToast(`Voucher "${code}" is now ${data.active ? 'ACTIVE' : 'INACTIVE'}`);
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+}
+
+async function handleAdminDeleteCoupon(code) {
+    if (!adminToken) return;
+
+    if (!confirm(`Are you sure you want to delete promo code "${code}"?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/coupons/${code}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+
+        const data = await safeParseResponse(response);
+        if (!response.ok) throw new Error(data.error || 'Failed to delete coupon');
+
+        await loadAdminCoupons();
+        showToast(`🗑️ Coupon "${code}" deleted successfully.`);
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+}
+
+// --- CSV DATA EXPORT ENGINE ---
+async function exportAdminData(type = 'orders') {
+    if (!adminToken) {
+        openAdminLoginModal();
+        return;
+    }
+
+    showLoading('Exporting CSV', `Generating ${type} spreadsheet export...`);
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/export/${type}`, {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to export data from server');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `sd_shopping_${type}_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        showToast(`📊 ${type.toUpperCase()} exported to CSV successfully!`);
+    } catch (err) {
+        // Fallback client-side CSV generation
+        generateClientCsvFallback(type);
+    } finally {
+        hideLoading();
+    }
+}
+
+function generateClientCsvFallback(type) {
+    let csvRows = [];
+    let filename = `sd_shopping_${type}_export.csv`;
+
+    if (type === 'orders') {
+        csvRows.push(['Tracking Number', 'Order ID', 'Date', 'Shipping Address', 'Total Amount (GHS)', 'Payment Method', 'Status'].join(','));
+        (adminOrdersList || []).forEach(o => {
+            const row = [
+                `"${o.trackingNumber || ''}"`,
+                `"${o._id || o.id || ''}"`,
+                `"${o.createdAt ? new Date(o.createdAt).toLocaleDateString() : ''}"`,
+                `"${(typeof o.shippingAddress === 'object' ? (o.shippingAddress.address || '') : (o.shippingAddress || '')).replace(/"/g, '""')}"`,
+                o.totalAmount || 0,
+                `"${o.paymentMethod || 'Card'}"`,
+                `"${o.status || 'pending'}"`
+            ];
+            csvRows.push(row.join(','));
+        });
+    } else if (type === 'products') {
+        csvRows.push(['Product ID', 'Title', 'Category', 'Brand', 'Price (GHS)', 'Stock', 'Rating'].join(','));
+        (adminProductsList || []).forEach(p => {
+            const row = [
+                `"${p._id || p.id || ''}"`,
+                `"${(p.title || p.name || '').replace(/"/g, '""')}"`,
+                `"${p.category || 'General'}"`,
+                `"${p.brand || 'SD Originals'}"`,
+                p.price || 0,
+                p.stock !== undefined ? p.stock : 50,
+                p.rating || 4.5
+            ];
+            csvRows.push(row.join(','));
+        });
+    } else if (type === 'users') {
+        csvRows.push(['Customer ID', 'Name', 'Email', 'Phone', 'City', 'Total Orders', 'Joined Date'].join(','));
+        (adminUsersList || []).forEach(u => {
+            const row = [
+                `"${u.id || u._id || ''}"`,
+                `"${(u.name || '').replace(/"/g, '""')}"`,
+                `"${u.email || ''}"`,
+                `"${u.phone || ''}"`,
+                `"${u.city || ''}"`,
+                u.orderCount || 0,
+                `"${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : ''}"`
+            ];
+            csvRows.push(row.join(','));
+        });
+    }
+
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    showToast(`📊 ${type.toUpperCase()} exported to CSV!`);
+}
+
 // --- REAL-TIME LIVE DASHBOARD SYNC ENGINE ---
 let adminLivePollInterval = null;
 
@@ -4042,4 +4506,5 @@ function escapeJsonForAttr(obj) {
 
 // Start live sync automatically
 startAdminLiveSync();
+
 

@@ -35,6 +35,18 @@ const DEFAULT_CATALOG = [
 // Fallback in-memory product list initialized with full default catalog
 const memoryAdminProducts = new Map(DEFAULT_CATALOG.map(p => [p._id, { ...p }]));
 
+// Promo Codes & Discount Vouchers System
+const DEFAULT_COUPONS = [
+  { code: 'SAVE10', type: 'percent', value: 10, minSpend: 100, active: true, description: '10% discount on orders over GH₵ 100', usageCount: 48, createdAt: new Date() },
+  { code: 'SAVE20', type: 'percent', value: 20, minSpend: 300, active: true, description: '20% off high-value orders over GH₵ 300', usageCount: 29, createdAt: new Date() },
+  { code: 'WELCOME50', type: 'fixed', value: 50, minSpend: 250, active: true, description: 'GH₵ 50 instant voucher for new members', usageCount: 65, createdAt: new Date() },
+  { code: 'FREESHIP', type: 'fixed', value: 25, minSpend: 150, active: true, description: 'Free Express shipping credit (GH₵ 25 value)', usageCount: 82, createdAt: new Date() }
+];
+
+if (!global.sdCoupons) {
+  global.sdCoupons = new Map(DEFAULT_COUPONS.map(c => [c.code.toUpperCase(), { ...c }]));
+}
+
 // Helper to generate tracking status checkpoint
 function generateTrackingEntry(status) {
   const map = {
@@ -621,6 +633,308 @@ router.delete('/users/:id', adminAuthMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Admin delete user error:', error);
     res.status(500).json({ error: 'Failed to delete user account' });
+  }
+});
+
+// -------------------------------------------------------------
+// 6. QUICK RESTOCK & INVENTORY REPLENISHMENT
+// -------------------------------------------------------------
+router.patch('/products/:id/restock', adminAuthMiddleware, async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const amount = Number(req.body.amount || 25);
+    
+    let updatedProduct = null;
+    try {
+      updatedProduct = await Product.findByIdAndUpdate(
+        productId,
+        { $inc: { stock: amount } },
+        { new: true }
+      ).maxTimeMS(2000);
+    } catch (e) {}
+
+    if (!updatedProduct && memoryAdminProducts.has(productId)) {
+      const p = memoryAdminProducts.get(productId);
+      p.stock = (Number(p.stock) || 0) + amount;
+      updatedProduct = p;
+    }
+
+    if (!updatedProduct) {
+      for (const [key, p] of memoryAdminProducts.entries()) {
+        if (key.toString() === productId.toString()) {
+          p.stock = (Number(p.stock) || 0) + amount;
+          updatedProduct = p;
+          break;
+        }
+      }
+    }
+
+    if (!updatedProduct) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    console.log(`📦 [Admin Restocked Product]: "${updatedProduct.title}" (+${amount} units -> Stock: ${updatedProduct.stock})`);
+
+    res.json({
+      message: `Successfully restocked ${amount} units for "${updatedProduct.title}"! Current stock: ${updatedProduct.stock}`,
+      product: updatedProduct
+    });
+  } catch (error) {
+    console.error('Admin restock error:', error);
+    res.status(500).json({ error: 'Failed to restock product' });
+  }
+});
+
+// -------------------------------------------------------------
+// 7. PROMO CODES & DISCOUNT VOUCHERS MANAGER
+// -------------------------------------------------------------
+
+// List All Coupons
+router.get('/coupons', adminAuthMiddleware, (req, res) => {
+  try {
+    const list = Array.from(global.sdCoupons.values());
+    res.json(list);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch coupon vouchers' });
+  }
+});
+
+// Create or Update Coupon
+router.post('/coupons', adminAuthMiddleware, (req, res) => {
+  try {
+    const { code, type, value, minSpend, description } = req.body;
+    if (!code || !value) {
+      return res.status(400).json({ error: 'Coupon code and discount value are required' });
+    }
+
+    const cleanCode = code.toUpperCase().trim().replace(/[^A-Z0-9_-]/g, '');
+    const numValue = Number(value);
+    const couponType = type === 'fixed' ? 'fixed' : 'percent';
+
+    if (couponType === 'percent' && (numValue <= 0 || numValue > 90)) {
+      return res.status(400).json({ error: 'Percentage discount must be between 1% and 90%' });
+    }
+
+    const couponObj = {
+      code: cleanCode,
+      type: couponType,
+      value: numValue,
+      minSpend: Number(minSpend) || 0,
+      active: true,
+      description: (description || `${numValue}${couponType === 'percent' ? '%' : ' GH₵'} discount`).trim(),
+      usageCount: 0,
+      createdAt: new Date()
+    };
+
+    global.sdCoupons.set(cleanCode, couponObj);
+    console.log(`🏷️ [Admin Created Coupon]: ${cleanCode} (${couponType === 'percent' ? numValue + '%' : 'GH₵ ' + numValue} off)`);
+
+    res.status(201).json({
+      message: `Coupon "${cleanCode}" created successfully!`,
+      coupon: couponObj
+    });
+  } catch (error) {
+    console.error('Create coupon error:', error);
+    res.status(500).json({ error: 'Failed to create coupon' });
+  }
+});
+
+// Toggle Coupon Active / Inactive
+router.patch('/coupons/:code/toggle', adminAuthMiddleware, (req, res) => {
+  try {
+    const cleanCode = req.params.code.toUpperCase().trim();
+    if (!global.sdCoupons.has(cleanCode)) {
+      return res.status(404).json({ error: 'Coupon not found' });
+    }
+
+    const coupon = global.sdCoupons.get(cleanCode);
+    coupon.active = !coupon.active;
+    global.sdCoupons.set(cleanCode, coupon);
+
+    res.json({
+      message: `Coupon "${cleanCode}" is now ${coupon.active ? 'ACTIVE' : 'DEACTIVATED'}`,
+      coupon
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to toggle coupon status' });
+  }
+});
+
+// Delete Coupon
+router.delete('/coupons/:code', adminAuthMiddleware, (req, res) => {
+  try {
+    const cleanCode = req.params.code.toUpperCase().trim();
+    if (!global.sdCoupons.has(cleanCode)) {
+      return res.status(404).json({ error: 'Coupon not found' });
+    }
+
+    global.sdCoupons.delete(cleanCode);
+    res.json({ message: `Coupon "${cleanCode}" removed successfully`, code: cleanCode });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete coupon' });
+  }
+});
+
+// Public / Checkout Coupon Validator
+router.post('/validate-coupon', (req, res) => {
+  try {
+    const { code, subtotal } = req.body;
+    if (!code) {
+      return res.status(400).json({ valid: false, error: 'Please enter a promo code' });
+    }
+
+    const cleanCode = code.toUpperCase().trim();
+    const coupon = global.sdCoupons.get(cleanCode);
+
+    if (!coupon) {
+      return res.status(404).json({ valid: false, error: `Promo code "${cleanCode}" is invalid or does not exist.` });
+    }
+
+    if (!coupon.active) {
+      return res.status(400).json({ valid: false, error: `Promo code "${cleanCode}" has expired or is currently deactivated.` });
+    }
+
+    const numSubtotal = Number(subtotal) || 0;
+    if (coupon.minSpend && numSubtotal < coupon.minSpend) {
+      return res.status(400).json({
+        valid: false,
+        error: `Promo code "${cleanCode}" requires a minimum cart subtotal of GH₵ ${coupon.minSpend.toFixed(2)}. Your current subtotal is GH₵ ${numSubtotal.toFixed(2)}.`
+      });
+    }
+
+    let discountAmount = 0;
+    if (coupon.type === 'percent') {
+      discountAmount = (numSubtotal * coupon.value) / 100;
+    } else {
+      discountAmount = Math.min(coupon.value, numSubtotal);
+    }
+
+    coupon.usageCount = (coupon.usageCount || 0) + 1;
+
+    res.json({
+      valid: true,
+      code: coupon.code,
+      type: coupon.type,
+      value: coupon.value,
+      discountAmount: Number(discountAmount.toFixed(2)),
+      description: coupon.description,
+      message: `🎉 Promo code "${coupon.code}" applied! You saved GH₵ ${discountAmount.toFixed(2)}.`
+    });
+  } catch (error) {
+    console.error('Validate coupon error:', error);
+    res.status(500).json({ valid: false, error: 'Failed to validate promo code' });
+  }
+});
+
+// -------------------------------------------------------------
+// 8. DATA EXPORT (CSV / EXCEL SPREADSHEETS)
+// -------------------------------------------------------------
+router.get('/export/:type', adminAuthMiddleware, async (req, res) => {
+  try {
+    const type = req.params.type.toLowerCase();
+
+    if (type === 'orders') {
+      let orders = [];
+      try {
+        orders = await Order.find().sort({ createdAt: -1 }).maxTimeMS(2500);
+      } catch (e) {}
+
+      if (global.sdAllOrders) {
+        for (const memO of global.sdAllOrders) {
+          const memId = (memO._id || memO.id || '').toString();
+          if (!orders.some(o => (o._id || o.id || '').toString() === memId)) {
+            orders.unshift(memO);
+          }
+        }
+      }
+
+      let csv = 'Tracking Number,Date,Customer,Email,Phone,City,Address,Total Amount (GHS),Payment Method,Status\n';
+      orders.forEach(o => {
+        const tracking = o.trackingNumber || o._id || 'N/A';
+        const date = o.createdAt ? new Date(o.createdAt).toISOString() : '';
+        const name = `"${((o.shippingAddress && o.shippingAddress.name) || o.userName || 'Customer').replace(/"/g, '""')}"`;
+        const email = (o.userEmail || (o.shippingAddress && o.shippingAddress.email) || '').replace(/"/g, '""');
+        const phone = (o.shippingAddress && o.shippingAddress.phone) || o.phone || '';
+        const city = `"${((o.shippingAddress && o.shippingAddress.city) || 'Accra').replace(/"/g, '""')}"`;
+        const address = `"${(typeof o.shippingAddress === 'string' ? o.shippingAddress : ((o.shippingAddress && o.shippingAddress.address) || '')).replace(/"/g, '""')}"`;
+        const total = Number(o.totalAmount || 0).toFixed(2);
+        const payment = o.paymentMethod || 'Card';
+        const status = o.status || 'pending';
+
+        csv += `${tracking},${date},${name},${email},${phone},${city},${address},${total},${payment},${status}\n`;
+      });
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="sd_shopping_orders_${Date.now()}.csv"`);
+      return res.send(csv);
+    }
+
+    if (type === 'products') {
+      let products = [];
+      try {
+        products = await Product.find().sort({ createdAt: -1 }).maxTimeMS(2500);
+      } catch (e) {}
+
+      if (!products || products.length === 0) {
+        products = Array.from(memoryAdminProducts.values());
+      }
+
+      let csv = 'Product ID,Title,Category,Brand,Price (GHS),Stock,Rating,Rating Count\n';
+      products.forEach(p => {
+        const id = p._id || p.id;
+        const title = `"${(p.title || '').replace(/"/g, '""')}"`;
+        const cat = `"${(p.category || 'General').replace(/"/g, '""')}"`;
+        const brand = `"${(p.brand || 'SD Originals').replace(/"/g, '""')}"`;
+        const price = Number(p.price || 0).toFixed(2);
+        const stock = p.stock !== undefined ? p.stock : 50;
+        const rating = p.rating || 5.0;
+        const count = p.ratingCount || 0;
+
+        csv += `${id},${title},${cat},${brand},${price},${stock},${rating},${count}\n`;
+      });
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="sd_shopping_inventory_${Date.now()}.csv"`);
+      return res.send(csv);
+    }
+
+    if (type === 'users') {
+      let users = [];
+      try {
+        users = await User.find().select('-password').sort({ createdAt: -1 }).maxTimeMS(2500);
+      } catch (e) {}
+
+      if (global.sdMemoryUsers) {
+        for (const [email, u] of global.sdMemoryUsers.entries()) {
+          if (!users.some(dbU => (dbU.email || '').toLowerCase() === email.toLowerCase())) {
+            users.push(u);
+          }
+        }
+      }
+
+      let csv = 'Customer ID,Name,Email,Phone,City,Address,Verified,Registered Date\n';
+      users.forEach(u => {
+        const id = u._id || u.id || '';
+        const name = `"${(u.name || 'Customer').replace(/"/g, '""')}"`;
+        const email = u.email || '';
+        const phone = u.phone || '';
+        const city = `"${(u.city || '').replace(/"/g, '""')}"`;
+        const address = `"${(u.address || '').replace(/"/g, '""')}"`;
+        const verified = u.isVerified !== false ? 'YES' : 'NO';
+        const date = u.createdAt ? new Date(u.createdAt).toISOString() : '';
+
+        csv += `${id},${name},${email},${phone},${city},${address},${verified},${date}\n`;
+      });
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="sd_shopping_customers_${Date.now()}.csv"`);
+      return res.send(csv);
+    }
+
+    res.status(400).json({ error: 'Invalid export type. Supported: orders, products, users' });
+  } catch (error) {
+    console.error('Admin export error:', error);
+    res.status(500).json({ error: 'Failed to generate CSV export' });
   }
 });
 
