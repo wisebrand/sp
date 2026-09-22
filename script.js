@@ -4224,12 +4224,15 @@ function renderAdminUsersTable(items) {
         return `
             <tr class="hover:bg-gray-50/80 transition">
                 <td class="p-3.5 pl-5">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-black flex items-center justify-center text-xs shadow-xs">
+                    <div class="flex items-center space-x-3 cursor-pointer group" onclick="openAdminCustomerModal('${uId || escapeHtml(u.email)}')" title="View customer profile & orders">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-black flex items-center justify-center text-xs shadow-xs group-hover:scale-110 transition">
                             ${initial}
                         </div>
                         <div>
-                            <span class="font-bold text-gray-900 block leading-tight">${escapeHtml(u.name || 'Customer')}</span>
+                            <span class="font-bold text-gray-900 block leading-tight group-hover:text-indigo-600 transition flex items-center space-x-1">
+                                <span>${escapeHtml(u.name || 'Customer')}</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-gray-300 group-hover:text-indigo-500 opacity-0 group-hover:opacity-100 transition"></i>
+                            </span>
                             <span class="text-[10px] text-gray-400 font-mono">ID: ${uId.substring(0, 8)}...</span>
                         </div>
                     </div>
@@ -4259,12 +4262,17 @@ function renderAdminUsersTable(items) {
                     }
                 </td>
                 <td class="p-3.5">
-                    <span class="bg-indigo-50 text-indigo-700 font-bold font-mono px-2.5 py-1 rounded-lg text-xs border border-indigo-100">
-                        ${u.orderCount || 0} ${Number(u.orderCount) === 1 ? 'order' : 'orders'}
-                    </span>
+                    <button onclick="openAdminCustomerModal('${uId || escapeHtml(u.email)}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold font-mono px-2.5 py-1 rounded-lg text-xs border border-indigo-100 inline-flex items-center space-x-1 transition" title="View customer order history">
+                        <i class="fa-solid fa-cart-shopping text-[10px]"></i>
+                        <span>${u.orderCount || 0} ${Number(u.orderCount) === 1 ? 'order' : 'orders'}</span>
+                    </button>
                 </td>
                 <td class="p-3.5 text-gray-500 font-mono text-xs whitespace-nowrap">${dateStr}</td>
                 <td class="p-3.5 pr-5 text-right whitespace-nowrap">
+                    <button onclick="openAdminCustomerModal('${uId || escapeHtml(u.email)}')" class="bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1 mr-1.5 shadow-2xs" title="View full customer profile & order history">
+                        <i class="fa-solid fa-eye"></i>
+                        <span>View Details</span>
+                    </button>
                     <button onclick="handleAdminDeleteUser('${uId}', '${escapeHtml(u.name || u.email || 'User')}')" class="bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1" title="Delete customer account">
                         <i class="fa-solid fa-trash-can"></i>
                         <span>Delete</span>
@@ -4273,6 +4281,228 @@ function renderAdminUsersTable(items) {
             </tr>
         `;
     }).join('');
+}
+
+async function openAdminCustomerModal(userIdOrEmail) {
+    if (!adminToken || !userIdOrEmail) return;
+
+    const modal = document.getElementById('admin-customer-modal');
+    const container = document.getElementById('admin-customer-modal-content');
+    if (!modal || !container) return;
+
+    modal.classList.remove('hidden');
+    container.innerHTML = `
+        <div class="py-16 text-center text-gray-500 space-y-3">
+            <i class="fa-solid fa-circle-notch fa-spin text-3xl text-indigo-600"></i>
+            <p class="text-xs font-semibold">Loading verified customer profile & order history...</p>
+        </div>
+    `;
+
+    try {
+        let user = null;
+        let stats = null;
+        let orders = [];
+
+        try {
+            const res = await fetch(`${API_BASE}/admin/users/${encodeURIComponent(userIdOrEmail)}`, {
+                headers: { 'Authorization': `Bearer ${adminToken}` }
+            });
+            if (res.ok) {
+                const data = await safeParseResponse(res);
+                user = data.user;
+                stats = data.stats;
+                orders = data.orders || [];
+            }
+        } catch (fetchErr) {}
+
+        // Fallback to local admin arrays if network delay
+        if (!user) {
+            user = adminUsersList.find(u => (u.id || u._id) === userIdOrEmail || (u.email && u.email.toLowerCase() === userIdOrEmail.toLowerCase()));
+            if (user) {
+                const uEmail = (user.email || '').toLowerCase().trim();
+                orders = adminOrdersList.filter(o => (o.userEmail && o.userEmail.toLowerCase() === uEmail) || (o.shippingAddress?.email && o.shippingAddress.email.toLowerCase() === uEmail));
+                const totalSpent = orders.reduce((sum, o) => o.status !== 'cancelled' ? sum + Number(o.totalAmount || 0) : sum, 0);
+                stats = {
+                    totalOrders: orders.length,
+                    totalSpent,
+                    avgOrderValue: orders.length > 0 ? (totalSpent / orders.length) : 0,
+                    deliveredCount: orders.filter(o => (o.status || '').toLowerCase() === 'delivered').length,
+                    activeCount: orders.filter(o => ['pending', 'processing', 'shipped'].includes((o.status || '').toLowerCase())).length
+                };
+            }
+        }
+
+        if (!user) {
+            container.innerHTML = `
+                <div class="py-12 text-center text-gray-400 space-y-3">
+                    <i class="fa-solid fa-user-xmark text-4xl text-gray-300"></i>
+                    <h3 class="text-sm font-bold text-gray-700">Customer details not found</h3>
+                    <p class="text-xs text-gray-400">Could not retrieve account details for ID: ${escapeHtml(userIdOrEmail)}</p>
+                </div>
+            `;
+            return;
+        }
+
+        const uId = user.id || user._id || '';
+        const initial = (user.name || user.email || 'U').charAt(0).toUpperCase();
+        const dateStr = user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Recent';
+        const addressText = user.address || [user.city, user.address].filter(Boolean).join(', ') || 'Address not registered yet';
+        const phoneClean = user.phone && user.phone !== '—' ? user.phone : '';
+
+        container.innerHTML = `
+            <!-- Customer Hero Profile Header -->
+            <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-6 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-500 to-amber-500 flex items-center justify-center text-2xl font-black text-white shadow-md flex-shrink-0">
+                        ${initial}
+                    </div>
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h3 class="text-xl font-black text-white leading-tight">${escapeHtml(user.name || 'Customer')}</h3>
+                            <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-extrabold px-2 py-0.5 rounded-full flex items-center space-x-1">
+                                <i class="fa-solid fa-circle-check text-[9px]"></i>
+                                <span>${user.isVerified ? 'Verified Account' : 'Guest Account'}</span>
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-300 font-mono mt-0.5">${escapeHtml(user.email || 'N/A')}</p>
+                        <p class="text-[11px] text-slate-400 mt-1">Customer since <strong class="text-slate-200">${dateStr}</strong></p>
+                    </div>
+                </div>
+
+                <!-- Contact & Communication Bar -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <a href="mailto:${escapeHtml(user.email)}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition inline-flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-regular fa-envelope"></i>
+                        <span>Send Email</span>
+                    </a>
+                    ${phoneClean ? `
+                        <button onclick="openCustomerWhatsApp('${escapeHtml(phoneClean)}', '', '${escapeHtml(user.name || 'Customer')}')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition inline-flex items-center space-x-1.5 shadow-sm" title="Message on WhatsApp">
+                            <i class="fa-brands fa-whatsapp"></i>
+                            <span>WhatsApp</span>
+                        </button>
+                        <a href="tel:${escapeHtml(phoneClean)}" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-3 py-2 rounded-xl border border-slate-700 transition inline-flex items-center space-x-1.5">
+                            <i class="fa-solid fa-phone"></i>
+                            <span>Call</span>
+                        </a>
+                    ` : ''}
+                </div>
+            </div>
+
+            <!-- Customer Lifetime Key Metric Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <span class="text-[10px] uppercase font-extrabold text-gray-400 block tracking-wider">Total Orders</span>
+                    <span class="text-2xl font-black text-gray-900 mt-1 block">${stats?.totalOrders || orders.length}</span>
+                    <span class="text-[11px] text-indigo-600 font-semibold mt-0.5 block">${stats?.deliveredCount || 0} delivered</span>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <span class="text-[10px] uppercase font-extrabold text-gray-400 block tracking-wider">Lifetime Spent</span>
+                    <span class="text-2xl font-black text-gray-900 font-mono mt-1 block">${formatPrice(stats?.totalSpent || 0)}</span>
+                    <span class="text-[11px] text-emerald-600 font-semibold mt-0.5 block">Store transactions</span>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <span class="text-[10px] uppercase font-extrabold text-gray-400 block tracking-wider">Avg Order Value</span>
+                    <span class="text-2xl font-black text-gray-900 font-mono mt-1 block">${formatPrice(stats?.avgOrderValue || 0)}</span>
+                    <span class="text-[11px] text-gray-500 font-semibold mt-0.5 block">Per completed checkout</span>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <span class="text-[10px] uppercase font-extrabold text-gray-400 block tracking-wider">Account ID</span>
+                    <span class="text-xs font-bold text-gray-700 font-mono mt-2 block truncate" title="${escapeHtml(uId)}">${escapeHtml(uId)}</span>
+                    <span class="text-[11px] text-gray-400 mt-0.5 block">Unique Customer Ref</span>
+                </div>
+            </div>
+
+            <!-- Address & Location Card -->
+            <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div class="flex items-start space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold flex-shrink-0 mt-0.5">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-gray-900 block">Registered Shipping Address</span>
+                        <p class="text-xs text-gray-600 mt-0.5">${escapeHtml(addressText)}</p>
+                        ${user.city ? `<span class="text-[11px] text-gray-400">City / Region: <strong class="text-gray-700">${escapeHtml(user.city)}</strong></span>` : ''}
+                    </div>
+                </div>
+                ${phoneClean ? `
+                    <div class="text-right sm:border-l sm:border-gray-200 sm:pl-4">
+                        <span class="text-[11px] text-gray-400 block">Primary Contact:</span>
+                        <span class="text-xs font-bold text-gray-900 font-mono">${escapeHtml(phoneClean)}</span>
+                    </div>
+                ` : ''}
+            </div>
+
+            <!-- Customer Past Orders Timeline -->
+            <div class="mt-6 pt-4 border-t border-gray-100 space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-clock-rotate-left text-indigo-600 text-sm"></i>
+                        <h4 class="text-xs font-black uppercase tracking-wider text-gray-900">Order Purchase History (${orders.length})</h4>
+                    </div>
+                    <span class="text-[11px] text-gray-400">Complete transaction records</span>
+                </div>
+
+                ${orders.length === 0 ? `
+                    <div class="py-8 text-center bg-gray-50/50 rounded-2xl border border-gray-100 text-gray-400 text-xs">
+                        <i class="fa-solid fa-box-open text-3xl text-gray-300 mb-2 block"></i>
+                        No recorded orders for this customer yet.
+                    </div>
+                ` : `
+                    <div class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                        ${orders.map(ord => {
+                            const oId = ord._id || ord.id || 'ORD-0';
+                            const trk = ord.trackingNumber || 'SD-TRK-982104';
+                            const st = (ord.status || 'pending').toLowerCase();
+                            const items = ord.items || [];
+                            const itemsCount = items.reduce((s, it) => s + (Number(it.quantity || it.qty) || 1), 0);
+                            const dateO = ord.createdAt ? new Date(ord.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent';
+                            
+                            return `
+                                <div class="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-2xs hover:shadow-sm transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div class="space-y-1">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="font-black text-xs font-mono text-indigo-700">${escapeHtml(trk)}</span>
+                                            <span class="text-gray-300">•</span>
+                                            <span class="text-[11px] text-gray-500">${dateO}</span>
+                                            <span class="text-gray-300">•</span>
+                                            <span class="text-[11px] font-semibold text-gray-600">${ord.paymentMethod || 'Card'}</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2 text-xs text-gray-700">
+                                            <span class="font-bold">${itemsCount} item(s):</span>
+                                            <span class="text-gray-500 text-[11px] truncate max-w-xs">${escapeHtml(items.map(it => it.title || it.name).join(', ') || 'Store items')}</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-3 justify-between sm:justify-end">
+                                        <div class="text-right">
+                                            <span class="text-sm font-black text-gray-900 font-mono block">${formatPrice(ord.totalAmount)}</span>
+                                            ${getStatusBadge(st)}
+                                        </div>
+                                        <button onclick="closeAdminCustomerModal(); openTrackingModal('${escapeHtml(trk)}')" class="bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-700 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1" title="Track this package">
+                                            <i class="fa-solid fa-satellite-dish text-[10px]"></i>
+                                            <span>Track</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `}
+            </div>
+        `;
+    } catch (err) {
+        console.error('Customer details modal error:', err);
+        container.innerHTML = `
+            <div class="py-12 text-center text-rose-500 text-xs">
+                <i class="fa-solid fa-circle-exclamation text-3xl mb-2"></i>
+                <p class="font-bold">Error loading customer profile: ${escapeHtml(err.message)}</p>
+            </div>
+        `;
+    }
+}
+
+function closeAdminCustomerModal() {
+    const modal = document.getElementById('admin-customer-modal');
+    if (modal) modal.classList.add('hidden');
 }
 
 async function handleAdminDeleteUser(userId, userName) {

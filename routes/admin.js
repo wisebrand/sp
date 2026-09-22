@@ -137,6 +137,13 @@ router.post('/login', async (req, res) => {
         role: 'admin',
         isAdmin: true
       },
+      user: {
+        id: adminUser._id,
+        name: adminUser.name,
+        email: adminUser.email,
+        role: 'admin',
+        isAdmin: true
+      },
       token
     });
   } catch (error) {
@@ -161,7 +168,7 @@ router.get('/me', adminAuthMiddleware, (req, res) => {
 // 2. DASHBOARD OVERVIEW & ANALYTICS
 // -------------------------------------------------------------
 
-router.get('/stats', adminAuthMiddleware, async (req, res) => {
+router.get(['/stats', '/analytics'], adminAuthMiddleware, async (req, res) => {
   try {
     let orders = [];
     let productsCount = 0;
@@ -658,6 +665,108 @@ router.get('/users', adminAuthMiddleware, async (req, res) => {
   }
 });
 
+// Get Single Customer Detailed Profile & Order History
+router.get('/users/:id', adminAuthMiddleware, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    let user = null;
+
+    // Try finding by MongoDB ID
+    try {
+      user = await User.findById(userId).select('-password').maxTimeMS(2000);
+    } catch (e) {}
+
+    // Try finding by email
+    if (!user) {
+      try {
+        user = await User.findOne({ email: userId.toLowerCase().trim() }).select('-password').maxTimeMS(2000);
+      } catch (e) {}
+    }
+
+    // Try finding in global.sdMemoryUsers
+    if (!user && global.sdMemoryUsers) {
+      for (const [em, u] of global.sdMemoryUsers.entries()) {
+        if ((u._id || u.id || '').toString() === userId.toString() || em.toLowerCase() === userId.toLowerCase()) {
+          user = u;
+          break;
+        }
+      }
+    }
+
+    // Find all orders placed by this customer
+    let allOrders = [];
+    try {
+      allOrders = await Order.find().sort({ createdAt: -1 }).maxTimeMS(2500);
+    } catch (e) {}
+    if (global.sdAllOrders) {
+      for (const ord of global.sdAllOrders) {
+        if (!allOrders.some(o => (o._id || o.id || '').toString() === (ord._id || ord.id || '').toString())) {
+          allOrders.unshift(ord);
+        }
+      }
+    }
+
+    const uEmail = user ? (user.email || '').toLowerCase().trim() : userId.toLowerCase().trim();
+    const uIdStr = user ? (user._id || user.id || '').toString() : userId.toString();
+
+    const userOrders = allOrders.filter(o => 
+      (o.userId && o.userId.toString() === uIdStr) ||
+      (o.userEmail && o.userEmail.toLowerCase().trim() === uEmail) ||
+      (o.shippingAddress?.email && o.shippingAddress.email.toLowerCase().trim() === uEmail)
+    );
+
+    // If user record wasn't found in User collection, reconstruct from their orders
+    if (!user && userOrders.length > 0) {
+      const firstOrder = userOrders[0];
+      user = {
+        _id: firstOrder.userId || userId,
+        id: firstOrder.userId || userId,
+        name: (firstOrder.shippingAddress && firstOrder.shippingAddress.name) || firstOrder.userName || 'Valued Shopper',
+        email: firstOrder.userEmail || (firstOrder.shippingAddress && firstOrder.shippingAddress.email) || uEmail,
+        phone: (firstOrder.shippingAddress && firstOrder.shippingAddress.phone) || firstOrder.phone || '—',
+        city: (firstOrder.shippingAddress && firstOrder.shippingAddress.city) || 'Accra',
+        address: typeof firstOrder.shippingAddress === 'string' ? firstOrder.shippingAddress : ((firstOrder.shippingAddress && firstOrder.shippingAddress.address) || '—'),
+        isVerified: true,
+        createdAt: firstOrder.createdAt || new Date()
+      };
+    }
+
+    if (!user) {
+      return res.status(404).json({ error: 'Customer not found' });
+    }
+
+    // Calculate customer lifetime metrics
+    const totalSpent = userOrders.reduce((sum, o) => o.status !== 'cancelled' ? sum + Number(o.totalAmount || 0) : sum, 0);
+    const deliveredCount = userOrders.filter(o => (o.status || '').toLowerCase() === 'delivered').length;
+    const activeCount = userOrders.filter(o => ['pending', 'processing', 'shipped'].includes((o.status || '').toLowerCase())).length;
+
+    res.json({
+      user: {
+        id: user._id || user.id,
+        _id: user._id || user.id,
+        name: user.name || 'Customer',
+        email: user.email,
+        phone: user.phone || (userOrders[0]?.shippingAddress?.phone) || '—',
+        city: user.city || (userOrders[0]?.shippingAddress?.city) || '—',
+        address: user.address || (typeof userOrders[0]?.shippingAddress === 'string' ? userOrders[0].shippingAddress : userOrders[0]?.shippingAddress?.address) || '—',
+        isVerified: user.isVerified !== false,
+        createdAt: user.createdAt || new Date()
+      },
+      stats: {
+        totalOrders: userOrders.length,
+        totalSpent: Number(totalSpent.toFixed(2)),
+        avgOrderValue: userOrders.length > 0 ? Number((totalSpent / userOrders.length).toFixed(2)) : 0,
+        deliveredCount,
+        activeCount
+      },
+      orders: userOrders
+    });
+  } catch (error) {
+    console.error('Admin get user details error:', error);
+    res.status(500).json({ error: 'Failed to fetch customer details' });
+  }
+});
+
 // Delete User Account
 router.delete('/users/:id', adminAuthMiddleware, async (req, res) => {
   try {
@@ -690,10 +799,10 @@ router.delete('/users/:id', adminAuthMiddleware, async (req, res) => {
 // -------------------------------------------------------------
 // 6. QUICK RESTOCK & INVENTORY REPLENISHMENT
 // -------------------------------------------------------------
-router.patch('/products/:id/restock', adminAuthMiddleware, async (req, res) => {
+const restockHandler = async (req, res) => {
   try {
     const productId = req.params.id;
-    const amount = Number(req.body.amount || 25);
+    const amount = Number(req.body.amount || req.body.additionalStock || 25);
     
     let updatedProduct = null;
     try {
@@ -728,13 +837,17 @@ router.patch('/products/:id/restock', adminAuthMiddleware, async (req, res) => {
 
     res.json({
       message: `Successfully restocked ${amount} units for "${updatedProduct.title}"! Current stock: ${updatedProduct.stock}`,
+      stock: updatedProduct.stock,
       product: updatedProduct
     });
   } catch (error) {
     console.error('Admin restock error:', error);
     res.status(500).json({ error: 'Failed to restock product' });
   }
-});
+};
+
+router.patch('/products/:id/restock', adminAuthMiddleware, restockHandler);
+router.post('/products/:id/restock', adminAuthMiddleware, restockHandler);
 
 // -------------------------------------------------------------
 // 7. PROMO CODES & DISCOUNT VOUCHERS MANAGER
