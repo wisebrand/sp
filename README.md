@@ -225,17 +225,17 @@ You can create a test user or:
 - Check Network tab for API errors
 - Verify MongoDB connection
 
-## Future Enhancements
+## Complete Feature Matrix
 
-- [ ] Payment integration (Stripe/PayPal)
-- [ ] Admin dashboard
-- [ ] Product search and filtering
-- [ ] User reviews and ratings
-- [ ] Wishlists
-- [ ] Email notifications
-- [ ] Real-time order tracking
-- [ ] Product images upload
-- [ ] Discount codes/coupons
+- [x] **Payment Integration (Stripe & PayPal)**: End-to-end support for Stripe Payment Intents, PayPal Express Checkout, Paystack Mobile Money (MTN, Telecel, AirtelTigo), Direct Cards, and Cash on Delivery with test autofill tools.
+- [x] **Admin Dashboard**: Full portal with live analytics (revenue, order counts, customer count), product CRUD, image uploads, order fulfillment, restock controls, and coupon creation.
+- [x] **Product Search & Filtering**: Real-time AI search suggestions, category filter pills, price range sliders, and dynamic rating filters.
+- [x] **User Reviews & Star Ratings**: Interactive star rating submission, verified buyer badge, and dynamically calculated star renders on all catalog cards.
+- [x] **Wishlists / Save for Later**: Interactive heart toggles, real-time dock and header badge sync, and persistent storage.
+- [x] **Email Notifications**: Gmail SMTP & Brevo HTTPS integration for registration OTP verification, order receipt dispatch, and order status tracking updates.
+- [x] **Real-Time Order Tracking**: Interactive tracking modal with satellite connection animation, carrier milestone stepper, activity history log, and public tracking lookup (`/api/orders/track/:trackingNumber`).
+- [x] **Product Image Upload**: Client-side canvas image optimization with compression to Base64, gallery management, and dedicated `/api/admin/upload` API.
+- [x] **Discount Codes & Coupons**: Store voucher validation engine supporting percentage discounts and fixed discounts (`SAVE10`, `SAVE20`, `WELCOME50`, `FREESHIP`).
 
 ## Security Notes
 

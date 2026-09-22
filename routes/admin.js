@@ -4,6 +4,7 @@ const Product = require('../models/Product');
 const Order = require('../models/Order');
 const User = require('../models/User');
 const { generateAdminToken, adminAuthMiddleware } = require('../utils/jwt');
+const { sendOrderStatusEmail } = require('../utils/email');
 
 // Authorized Administrator Accounts (Exclusive access)
 const AUTHORIZED_ADMIN_EMAILS = [
@@ -398,6 +399,33 @@ router.delete('/products/:id', adminAuthMiddleware, async (req, res) => {
   }
 });
 
+// Upload Product Image (Base64 / DataURI or Direct Upload)
+router.post('/upload', adminAuthMiddleware, async (req, res) => {
+  try {
+    const { image, filename = 'product-upload.jpg' } = req.body;
+    if (!image) {
+      return res.status(400).json({ error: 'Image data is required' });
+    }
+
+    // High quality Base64 / DataURI support
+    const cleanUrl = image.startsWith('data:') ? image : `data:image/jpeg;base64,${image}`;
+    const approxSizeKb = Math.round(cleanUrl.length * 0.75 / 1024);
+
+    console.log(`📸 [Admin Uploaded Image]: ${filename} (~${approxSizeKb} KB)`);
+
+    res.json({
+      success: true,
+      message: 'Product image uploaded successfully',
+      url: cleanUrl,
+      filename,
+      sizeKb: approxSizeKb
+    });
+  } catch (error) {
+    console.error('Admin image upload error:', error);
+    res.status(500).json({ error: 'Failed to upload image' });
+  }
+});
+
 // -------------------------------------------------------------
 // 4. ORDER FULFILLMENT & STATUS TRACKING
 // -------------------------------------------------------------
@@ -489,6 +517,29 @@ router.patch('/orders/:id/status', adminAuthMiddleware, async (req, res) => {
     }
 
     console.log(`📦 [Admin Updated Order #${updatedOrder.trackingNumber}]: Status -> ${cleanStatus.toUpperCase()}`);
+
+    // Asynchronously send status update email notification to customer
+    (async () => {
+      try {
+        let recipientEmail = '';
+        if (updatedOrder.userEmail) {
+          recipientEmail = updatedOrder.userEmail;
+        } else if (updatedOrder.userId) {
+          const u = await User.findById(updatedOrder.userId).maxTimeMS(2000).catch(() => null);
+          if (u && u.email) recipientEmail = u.email;
+        }
+        if (!recipientEmail && typeof updatedOrder.shippingAddress === 'object' && updatedOrder.shippingAddress.email) {
+          recipientEmail = updatedOrder.shippingAddress.email;
+        }
+
+        if (recipientEmail) {
+          console.log(`✉️ [Status Update Notification]: Sending update email to ${recipientEmail} for Order #${updatedOrder.trackingNumber}...`);
+          await sendOrderStatusEmail(recipientEmail, updatedOrder, cleanStatus, trackingEntry);
+        }
+      } catch (emailErr) {
+        console.warn('Status update email notification notice:', emailErr.message);
+      }
+    })();
 
     res.json({
       message: `Order #${updatedOrder.trackingNumber} status updated to "${cleanStatus}"`,

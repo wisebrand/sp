@@ -362,9 +362,21 @@ router.post('/:id/reviews', authMiddleware, async (req, res) => {
     customList.unshift(newReview);
     memoryReviews.set(req.params.id, customList);
 
+    const fallbackProd = DEFAULT_PRODUCTS.find(p => p._id === req.params.id);
+    if (fallbackProd) {
+      fallbackProd.reviews = fallbackProd.reviews || [];
+      if (!fallbackProd.reviews.some(r => r.comment === newReview.comment)) {
+        fallbackProd.reviews.unshift(newReview);
+      }
+      const sum = fallbackProd.reviews.reduce((acc, r) => acc + (r.rating || 5), 0);
+      fallbackProd.rating = Number((sum / fallbackProd.reviews.length).toFixed(1));
+      fallbackProd.ratingCount = fallbackProd.reviews.length;
+    }
+
     res.status(201).json({
       message: 'Review submitted successfully!',
-      review: newReview
+      review: newReview,
+      product: fallbackProd || { _id: req.params.id, reviews: customList }
     });
   } catch (error) {
     console.error('Submit review error:', error);

@@ -135,9 +135,9 @@ function performSync(autoPush = true, commitMsg) {
     fs.unlinkSync(spEnvPath);
   }
 
-  // Run syntax checks
+  // Run comprehensive syntax checks
   try {
-    execSync('node --check script.js routes/auth.js routes/admin.js utils/jwt.js server.js', { cwd: SP_DIR, stdio: 'pipe' });
+    execSync('node --check server.js routes/auth.js routes/admin.js routes/orders.js routes/payments.js routes/products.js routes/reviews.js utils/email.js utils/jwt.js utils/db.js', { cwd: SP_DIR, stdio: 'pipe' });
     console.log('✅ [Antigravity]: All JavaScript syntax verified in "sp".');
   } catch (err) {
     console.error('❌ [Antigravity]: Syntax check failed in "sp":', err.message);

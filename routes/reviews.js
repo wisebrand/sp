@@ -3,6 +3,7 @@ const router = express.Router();
 const { authMiddleware } = require('../utils/jwt');
 const Review = require('../models/Review');
 const User = require('../models/User');
+const Product = require('../models/Product');
 
 // In-memory reviews store fallback for offline/delayed DB
 const memoryReviews = new Map();
@@ -96,6 +97,19 @@ router.post('/', authMiddleware, async (req, res) => {
     try {
       const newReview = new Review(reviewData);
       review = await newReview.save();
+
+      // Update product rating and reviews count in Product collection
+      try {
+        const product = await Product.findById(productId).maxTimeMS(2000);
+        if (product) {
+          product.reviews = product.reviews || [];
+          product.reviews.unshift(reviewData);
+          const sum = product.reviews.reduce((acc, r) => acc + (r.rating || 5), 0);
+          product.rating = Number((sum / product.reviews.length).toFixed(1));
+          product.ratingCount = product.reviews.length;
+          await product.save();
+        }
+      } catch (pErr) {}
     } catch (dbErr) {
       console.warn('Review save DB notice (using in-memory fallback):', dbErr.message);
       review = { _id: 'rev_' + Date.now(), ...reviewData };

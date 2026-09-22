@@ -3,7 +3,7 @@ const router = express.Router();
 const { authMiddleware } = require('../utils/jwt');
 const Order = require('../models/Order');
 const User = require('../models/User');
-const { sendOrderReceiptEmail } = require('../utils/email');
+const { sendOrderReceiptEmail, sendOrderStatusEmail } = require('../utils/email');
 
 // In-memory orders cache fallback
 const memoryOrders = new Map();
@@ -298,6 +298,22 @@ router.put('/:id/cancel', authMiddleware, async (req, res) => {
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
+
+    // Auto-dispatch cancellation email
+    (async () => {
+      try {
+        let recipientEmail = (order.userEmail || (req.user && req.user.email) || '').trim();
+        if (!recipientEmail && req.userId) {
+          const u = await User.findById(req.userId).maxTimeMS(2000).catch(() => null);
+          if (u && u.email) recipientEmail = u.email;
+        }
+        if (recipientEmail) {
+          await sendOrderStatusEmail(recipientEmail, order, 'cancelled', cancelEntry);
+        }
+      } catch (err) {
+        console.warn('Cancel email dispatch notice:', err.message);
+      }
+    })();
 
     res.json({ message: 'Order cancelled successfully', order });
   } catch (error) {

@@ -218,8 +218,99 @@ async function sendOrderReceiptEmail(email, order) {
   }
 }
 
+async function sendOrderStatusEmail(email, order, newStatus, trackingEntry = {}) {
+  const user = process.env.GMAIL_USER || 'mikegborbitey05@gmail.com';
+  const pass = (process.env.GMAIL_APP_PASSWORD || 'shfxkgvmrugdvbtw').replace(/\s+/g, '');
+  const brevoKey = (process.env.BREVO_API_KEY || process.env.BREVO_KEY || process.env.SENDINBLUE_API_KEY || process.env.BREVO_TOKEN || '').trim().replace(/^["']|["']$/g, '');
+
+  const id = order._id || order.id || 'order_0';
+  const orderId = `ORD-${id.toString().substring(Math.max(0, id.toString().length - 6)).toUpperCase()}`;
+  const trackingNum = order.trackingNumber || 'SD-TRK-982104';
+  const carrier = order.carrier || 'SD Express Delivery';
+  const statusUpper = (newStatus || 'updated').toUpperCase();
+  const statusTitle = trackingEntry.title || `Order Status: ${statusUpper}`;
+  const statusDesc = trackingEntry.description || `Your order status has been updated to ${statusUpper}.`;
+  const location = trackingEntry.location || 'SD Shopping Logistics Center';
+
+  const statusColorMap = {
+    pending: '#f59e0b',
+    processing: '#6366f1',
+    shipped: '#0ea5e9',
+    delivered: '#10b981',
+    cancelled: '#ef4444'
+  };
+  const badgeColor = statusColorMap[(newStatus || '').toLowerCase()] || '#6366f1';
+
+  const htmlContent = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 32px; border: 1px solid #e5e7eb;">
+      <div style="text-align: center; border-bottom: 2px solid #f3f4f6; padding-bottom: 20px; margin-bottom: 24px;">
+        <div style="background: #4f46e5; color: #ffffff; width: 48px; height: 48px; border-radius: 12px; font-size: 20px; font-weight: bold; line-height: 48px; margin: 0 auto 12px auto;">SD</div>
+        <span style="background: ${badgeColor}; color: #ffffff; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px;">${statusUpper}</span>
+        <h2 style="color: #111827; margin: 12px 0 4px 0; font-size: 22px; font-weight: 800;">${statusTitle}</h2>
+        <p style="color: #6b7280; font-size: 13px; margin: 0;">Order #${orderId} • Tracking: <strong style="color: #4f46e5; font-family: monospace;">${trackingNum}</strong></p>
+      </div>
+
+      <div style="background: #f9fafb; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+        <p style="color: #374151; font-size: 14px; margin: 0 0 10px 0; line-height: 1.5;">${statusDesc}</p>
+        <div style="font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 10px;">
+          <span>📍 Current Location: <strong style="color: #111827;">${location}</strong></span><br/>
+          <span>🚚 Carrier: <strong style="color: #111827;">${carrier}</strong></span>
+        </div>
+      </div>
+
+      <div style="text-align: center; color: #9ca3af; font-size: 11px; border-top: 1px solid #f3f4f6; padding-top: 16px;">
+        <p style="margin: 0;">You can track this delivery in real time at any moment on SD Shopping.</p>
+      </div>
+    </div>
+  `;
+
+  if (brevoKey) {
+    try {
+      const senderEmail = (process.env.BREVO_SENDER_EMAIL || process.env.GMAIL_USER || 'mikegborbitey05@gmail.com').trim();
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { 'api-key': brevoKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender: { name: 'SD Shopping Logistics', email: senderEmail },
+          to: [{ email }],
+          subject: `SD Shopping Update: Order #${trackingNum} is now ${statusUpper}`,
+          htmlContent
+        })
+      });
+      if (res.ok) {
+        console.log(`✅ [Status Email Delivered via Brevo to ${email}] Order: ${orderId} (${statusUpper})`);
+        return { success: true };
+      }
+    } catch (e) {
+      console.warn('Brevo status email error:', e.message);
+    }
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: { user, pass },
+      tls: { rejectUnauthorized: false }
+    });
+    await transporter.sendMail({
+      from: `"SD Shopping Logistics" <${user}>`,
+      to: email,
+      subject: `SD Shopping Update: Order #${trackingNum} is now ${statusUpper}`,
+      html: htmlContent
+    });
+    console.log(`✅ [Status Email Delivered via SMTP to ${email}] Order: ${orderId} (${statusUpper})`);
+    return { success: true };
+  } catch (err) {
+    console.warn(`⚠️ [Status Email SMTP notice for ${email}]:`, err.message);
+    return { success: false, error: err.message };
+  }
+}
+
 module.exports = {
   generateOTP,
   sendOTPEmail,
-  sendOrderReceiptEmail
+  sendOrderReceiptEmail,
+  sendOrderStatusEmail
 };
