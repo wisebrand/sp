@@ -74,6 +74,218 @@
             opacity: 0.85 !important;
             cursor: wait !important;
         }
+1
+        /* =========================================================
+           SHOPADMIN EXECUTIVE FRONT VIEW & DASHBOARD ENGINE
+           ========================================================= */
+        body.admin-view-mode {
+            background-color: #f4f6f8 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow-x: hidden;
+        }
+        body.admin-view-mode #top-announcement-bar,
+        body.admin-view-mode #main-store-header,
+        body.admin-view-mode #mobile-store-search,
+        body.admin-view-mode #main-store-footer,
+        body.admin-view-mode #desktop-floating-dock,
+        body.admin-view-mode #mobile-bottom-dock {
+            display: none !important;
+        }
+        body.admin-view-mode #main-content-wrapper {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background-color: #f4f6f8 !important;
+        }
+        body.admin-view-mode #tab-admin {
+            display: flex !important;
+            min-height: 100vh;
+            width: 100%;
+            background-color: #f4f6f8;
+            color: #333;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: #1a1d24;
+            color: #cbd5e1;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex-shrink: 0;
+            min-height: 100vh;
+            border-right: 1px solid #11141a;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 50;
+        }
+        .sidebar h2 {
+            color: #fff;
+            font-size: 1.25rem;
+            padding-left: 8px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .nav-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+        }
+        .nav-links li a {
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: 0.2s ease;
+            cursor: pointer;
+        }
+        .nav-links li a.active, .nav-links li a:hover {
+            background-color: #272d3b;
+            color: #38bdf8;
+            font-weight: 600;
+        }
+        .admin-nav-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 9999px;
+            background-color: #272d3b;
+            color: #94a3b8;
+            font-family: ui-monospace, monospace;
+        }
+        .nav-links li a.active .admin-nav-badge {
+            background-color: #0369a1;
+            color: #e0f2fe;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            max-width: calc(100% - 250px);
+            min-height: 100vh;
+            background-color: #f4f6f8;
+        }
+        @media (max-width: 1024px) {
+            .main-content {
+                max-width: 100%;
+                padding: 20px 16px;
+            }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                transform: translateX(-100%);
+            }
+            .sidebar.mobile-open {
+                transform: translateX(0);
+                box-shadow: 0 0 30px rgba(0,0,0,0.6);
+            }
+        }
+        .admin-top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .admin-top-header h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            transform: translateY(-1px);
+        }
+        .card h3 {
+            font-size: 0.85rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+        .card .value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-top: 8px;
+            color: #0f172a;
+        }
+
+        /* Data Table */
+        .table-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .table-container h2 {
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        .admin-table th, .admin-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .admin-table th {
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: #f8fafc;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+        .badge.paid { background-color: #dcfce7; color: #15803d; }
+        .badge.shipped { background-color: #e0f2fe; color: #0369a1; }
+        .badge.pending { background-color: #fef3c7; color: #b45309; }
+        .badge.delivered { background-color: #dcfce7; color: #15803d; }
+        .badge.processing { background-color: #ede9fe; color: #6d28d9; }
+        .badge.cancelled { background-color: #fee2e2; color: #b91c1c; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
@@ -114,7 +326,7 @@
     <div id="toast-container" class="fixed bottom-5 right-5 z-[9999] flex flex-col space-y-2"></div>
 
     <!-- Jumia Top Super-Header / Announcement Bar -->
-    <div class="bg-indigo-900 text-white text-[11px] py-1.5 px-4 border-b border-indigo-800/60 hidden sm:block">
+    <div id="top-announcement-bar" class="bg-indigo-900 text-white text-[11px] py-1.5 px-4 border-b border-indigo-800/60 hidden sm:block">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             <div class="flex items-center space-x-4">
                 <span class="flex items-center space-x-1.5 text-amber-300 font-bold">
@@ -149,7 +361,7 @@
     </div>
 
     <!-- Main Jumia-Style Header Navigation Bar -->
-    <header class="sticky top-0 z-40 bg-white shadow-md border-b border-gray-100">
+    <header id="main-store-header" class="sticky top-0 z-40 bg-white shadow-md border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 py-2.5 flex items-center justify-between gap-4">
             <!-- Brand Logo (SD Shopping) -->
             <div class="flex items-center space-x-2.5 cursor-pointer flex-shrink-0" onclick="switchTab('catalog')">
@@ -270,7 +482,7 @@
         </div>
 
         <!-- Mobile Search Bar (Jumia Full Width) -->
-        <div class="md:hidden px-4 pb-3 relative">
+        <div id="mobile-store-search" class="md:hidden px-4 pb-3 relative">
             <div class="relative w-full flex items-center shadow-xs rounded-xl overflow-hidden border-2 border-indigo-600">
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
                     <i class="fa-solid fa-magnifying-glass text-xs"></i>
@@ -295,7 +507,7 @@
     </header>
 
     <!-- Main Content Area -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <main id="main-content-wrapper" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
         <!-- TAB 1: PRODUCT CATALOG & JUMIA PORTAL -->
         <div id="tab-catalog" class="tab-content space-y-6">
@@ -1201,382 +1413,513 @@
         </div>
 
         <!-- TAB 6: DEDICATED STORE ADMINISTRATOR PORTAL -->
-        <div id="tab-admin" class="tab-content hidden space-y-6">
-            <!-- Executive Admin Hero Banner -->
-            <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 border border-slate-700/50">
-                <div class="flex items-center space-x-5">
-                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-amber-500/10 border-2 border-amber-400/30 flex items-center justify-center text-3xl font-black text-amber-400 shadow-inner">
-                        <i class="fa-solid fa-shield-halved"></i>
-                    </div>
-                    <div>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <h2 class="text-2xl sm:text-3xl font-black tracking-tight">Admin Management Portal</h2>
-                            <span class="bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center space-x-1">
-                                <i class="fa-solid fa-key text-[9px]"></i>
-                                <span>Privileged Access</span>
-                            </span>
+        <div id="tab-admin" class="tab-content hidden admin-layout-wrapper">
+            <!-- Sidebar -->
+            <aside class="sidebar admin-sidebar" id="admin-sidebar">
+                <div class="sidebar-brand flex items-center justify-between pb-4 border-b border-slate-800">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center font-black text-sm border border-sky-400/30">
+                            <i class="fa-solid fa-shield-halved"></i>
                         </div>
-                        <p class="text-xs text-slate-300 mt-1">Logged in as: <span id="admin-user-display" class="font-bold text-white">Store Administrator</span> (<span id="admin-email-display" class="text-amber-300">admin@sdshopping.com</span>)</p>
-                        <div class="flex items-center space-x-3 mt-2 text-[11px] text-slate-400">
-                            <span class="flex items-center space-x-1 text-emerald-400"><i class="fa-solid fa-circle text-[8px] animate-pulse"></i><span>Store Online & Syncing</span></span>
-                            <span>•</span>
-                            <span>Separate Admin Session</span>
+                        <div>
+                            <h2 class="text-white text-lg font-bold">ShopAdmin</h2>
+                            <span class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">SD Store Control</span>
                         </div>
                     </div>
+                    <button type="button" onclick="toggleAdminMobileSidebar()" class="lg:hidden text-slate-400 hover:text-white p-1">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
                 </div>
 
-                <!-- Admin Action Buttons -->
-                <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">
-                    <span class="inline-flex items-center space-x-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[11px] font-black px-3 py-1.5 rounded-xl shadow-xs">
-                        <span class="relative flex h-2 w-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                        </span>
-                        <span>LIVE STORE ACTIVE</span>
-                    </span>
-                    <button onclick="goBack()" class="bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-600 transition flex items-center space-x-1.5 shadow-sm">
-                        <i class="fa-solid fa-store"></i>
+                <ul class="nav-links admin-nav-links">
+                    <li>
+                        <a href="javascript:void(0)" onclick="switchAdminSubTab('dashboard')" id="admin-subtab-btn-dashboard" class="active">
+                            <span><i class="fa-solid fa-gauge-high mr-2 text-sky-400"></i>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" onclick="switchAdminSubTab('orders')" id="admin-subtab-btn-orders">
+                            <span><i class="fa-solid fa-boxes-stacked mr-2"></i>Orders</span>
+                            <span id="admin-nav-orders-count" class="admin-nav-badge">0</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" onclick="switchAdminSubTab('products')" id="admin-subtab-btn-products">
+                            <span><i class="fa-solid fa-layer-group mr-2"></i>Products</span>
+                            <span id="admin-nav-products-count" class="admin-nav-badge">0</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" onclick="switchAdminSubTab('inventory')" id="admin-subtab-btn-inventory">
+                            <span><i class="fa-solid fa-warehouse mr-2"></i>Inventory</span>
+                            <span id="admin-nav-inventory-badge" class="hidden text-[10px] bg-amber-500/20 text-amber-300 font-bold px-1.5 py-0.5 rounded">Low</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" onclick="switchAdminSubTab('users')" id="admin-subtab-btn-users">
+                            <span><i class="fa-solid fa-users mr-2"></i>Customers</span>
+                            <span id="admin-nav-users-count" class="admin-nav-badge">0</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" onclick="switchAdminSubTab('coupons')" id="admin-subtab-btn-coupons">
+                            <span><i class="fa-solid fa-tags mr-2 text-rose-400"></i>Discounts</span>
+                            <span id="admin-nav-coupons-count" class="admin-nav-badge">4</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" onclick="switchAdminSubTab('analytics')" id="admin-subtab-btn-analytics">
+                            <span><i class="fa-solid fa-chart-line mr-2 text-indigo-400"></i>Analytics</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Sidebar Footer Quick Actions -->
+                <div class="sidebar-footer pt-4 border-t border-slate-800 space-y-1.5 mt-auto">
+                    <a href="javascript:void(0)" onclick="switchTab('catalog')" class="flex items-center space-x-2 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 px-3 py-2.5 rounded-lg transition">
+                        <i class="fa-solid fa-store text-amber-400"></i>
                         <span>Back to Store</span>
-                    </button>
-                    <button onclick="handleAdminLogout()" class="bg-rose-600/90 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center space-x-1.5 shadow-md">
+                    </a>
+                    <a href="javascript:void(0)" onclick="handleAdminLogout()" class="flex items-center space-x-2 text-xs font-semibold text-rose-400 hover:text-white hover:bg-rose-600/80 px-3 py-2.5 rounded-lg transition">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         <span>Logout Admin</span>
-                    </button>
+                    </a>
                 </div>
-            </div>
+            </aside>
 
-            <!-- Executive KPI Analytics Metric Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Card 1: Total Revenue -->
-                <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs hover:shadow-md transition">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Sales Revenue</span>
-                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
-                            <i class="fa-solid fa-cedi-sign"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <span id="admin-stat-revenue" class="text-2xl font-black text-gray-900 font-mono">GH₵ 0.00</span>
-                        <p class="text-[11px] text-emerald-600 font-semibold mt-0.5"><i class="fa-solid fa-bolt mr-1"></i>Live auto-calculated</p>
-                    </div>
-                </div>
+            <!-- Backdrop for Mobile Sidebar -->
+            <div id="admin-sidebar-backdrop" onclick="toggleAdminMobileSidebar()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-40 hidden lg:hidden"></div>
 
-                <!-- Card 2: Total Orders -->
-                <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs hover:shadow-md transition">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Customer Orders</span>
-                        <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
-                            <i class="fa-solid fa-boxes-stacked"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <div class="flex items-baseline space-x-2">
-                            <span id="admin-stat-orders" class="text-2xl font-black text-gray-900">0</span>
-                            <span id="admin-stat-pending" class="text-xs font-extrabold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">0 Pending</span>
-                        </div>
-                        <p class="text-[11px] text-gray-500 mt-0.5">Live store transactions</p>
-                    </div>
-                </div>
-
-                <!-- Card 3: Active Products -->
-                <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs hover:shadow-md transition">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Catalog Inventory</span>
-                        <div class="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center text-lg">
-                            <i class="fa-solid fa-layer-group"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <span id="admin-stat-products" class="text-2xl font-black text-gray-900">0</span>
-                        <p class="text-[11px] text-gray-500 mt-0.5">Active items in catalog</p>
-                    </div>
-                </div>
-
-                <!-- Card 4: Registered Customers -->
-                <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs hover:shadow-md transition">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Customer Accounts</span>
-                        <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-lg">
-                            <i class="fa-solid fa-users"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <span id="admin-stat-users" class="text-2xl font-black text-gray-900">0</span>
-                        <p class="text-[11px] text-gray-500 mt-0.5">Registered shoppers</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Low-Stock Alert Banner (Auto-populated if items <= 10) -->
-            <div id="admin-low-stock-banner" class="hidden bg-amber-500/10 border-2 border-amber-500/30 rounded-2xl p-4 sm:p-5 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center text-lg font-black flex-shrink-0 animate-bounce">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-extrabold text-amber-950 text-sm">Low Inventory Stock Warning</h4>
-                        <p id="admin-low-stock-text" class="text-amber-800 text-xs mt-0.5">Some items in your catalog are running out of stock.</p>
-                    </div>
-                </div>
-                <button onclick="handleAdminRestockAllLow()" class="bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs px-4 py-2 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-sm flex-shrink-0">
-                    <i class="fa-solid fa-bolt"></i>
-                    <span>⚡ Quick Restock Low Items (+25)</span>
-                </button>
-            </div>
-
-            <!-- Admin Sub-Navigation Tabs Bar & Export Hub -->
-            <div class="bg-white border border-gray-200 rounded-2xl p-2 shadow-sm flex flex-wrap items-center justify-between gap-2">
-                <div class="flex items-center space-x-2 overflow-x-auto scrollbar-none py-1">
-                    <button onclick="switchAdminSubTab('products')" id="admin-subtab-btn-products" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-extrabold transition bg-slate-900 text-white shadow-xs flex items-center space-x-2">
-                        <i class="fa-solid fa-box-archive"></i>
-                        <span>Products Inventory</span>
-                        <span id="admin-nav-products-count" class="bg-slate-700 text-amber-300 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
-                    </button>
-                    <button onclick="switchAdminSubTab('orders')" id="admin-subtab-btn-orders" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-bold transition bg-gray-50 text-gray-700 hover:bg-gray-100 flex items-center space-x-2">
-                        <i class="fa-solid fa-truck-ramp-box"></i>
-                        <span>Customer Orders</span>
-                        <span id="admin-nav-orders-count" class="bg-gray-200 text-gray-700 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
-                    </button>
-                    <button onclick="switchAdminSubTab('users')" id="admin-subtab-btn-users" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-bold transition bg-gray-50 text-gray-700 hover:bg-gray-100 flex items-center space-x-2">
-                        <i class="fa-solid fa-users-gear"></i>
-                        <span>Registered Customers</span>
-                        <span id="admin-nav-users-count" class="bg-gray-200 text-gray-700 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
-                    </button>
-                    <button onclick="switchAdminSubTab('coupons')" id="admin-subtab-btn-coupons" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-bold transition bg-gray-50 text-gray-700 hover:bg-gray-100 flex items-center space-x-2">
-                        <i class="fa-solid fa-tags text-rose-500"></i>
-                        <span>Promo & Vouchers</span>
-                        <span id="admin-nav-coupons-count" class="bg-rose-100 text-rose-700 text-[10px] px-1.5 py-0.2 rounded-full font-mono">4</span>
-                    </button>
-                </div>
-
-                <div class="flex items-center space-x-2">
-                    <!-- Export CSV Dropdown / Action -->
-                    <div class="relative group">
-                        <button class="text-xs font-bold text-gray-700 hover:text-indigo-600 bg-gray-100 hover:bg-gray-200 px-3.5 py-2 rounded-xl transition inline-flex items-center space-x-1.5 shadow-2xs">
-                            <i class="fa-solid fa-file-excel text-emerald-600"></i>
-                            <span>Export CSV</span>
-                            <i class="fa-solid fa-chevron-down text-[9px] text-gray-400"></i>
+            <!-- Main Content Area -->
+            <main class="main-content admin-main-content" id="admin-main-content">
+                <!-- Top Header -->
+                <header class="admin-top-header">
+                    <div class="flex items-center space-x-3">
+                        <button type="button" onclick="toggleAdminMobileSidebar()" class="lg:hidden p-2 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-slate-900 shadow-xs">
+                            <i class="fa-solid fa-bars text-sm"></i>
                         </button>
-                        <div class="hidden group-hover:block absolute right-0 top-full mt-1 w-44 bg-white border border-gray-200 rounded-xl shadow-xl p-1 z-30 space-y-0.5 text-xs">
-                            <button onclick="exportAdminData('orders')" class="w-full text-left px-3 py-1.5 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg font-bold flex items-center space-x-2 transition">
-                                <i class="fa-solid fa-boxes-stacked text-indigo-500"></i>
-                                <span>Orders Sheet</span>
-                            </button>
-                            <button onclick="exportAdminData('products')" class="w-full text-left px-3 py-1.5 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg font-bold flex items-center space-x-2 transition">
-                                <i class="fa-solid fa-layer-group text-violet-500"></i>
-                                <span>Inventory Catalog</span>
-                            </button>
-                            <button onclick="exportAdminData('users')" class="w-full text-left px-3 py-1.5 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg font-bold flex items-center space-x-2 transition">
-                                <i class="fa-solid fa-users text-sky-500"></i>
-                                <span>Customer Directory</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <button onclick="loadAdminDashboardData()" class="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3.5 py-2 rounded-xl transition inline-flex items-center space-x-1.5" title="Refresh Dashboard Data">
-                        <i class="fa-solid fa-rotate"></i>
-                        <span>Refresh</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- SUB-VIEW 1: PRODUCTS INVENTORY MANAGEMENT -->
-            <div id="admin-view-products" class="space-y-4">
-                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="flex flex-wrap items-center gap-3 flex-1">
-                        <!-- Product Search Input -->
-                        <div class="relative flex-1 min-w-[200px] max-w-md">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-gray-400 text-xs"></i>
-                            <input type="text" id="admin-product-search" oninput="filterAdminProducts()" placeholder="Search bags, shoes, boots, sneakers..." class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:bg-white focus:border-indigo-500">
-                        </div>
-
-                        <!-- Category Filter -->
-                        <select id="admin-product-category" onchange="filterAdminProducts()" class="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500">
-                            <option value="All">All Categories</option>
-                            <option value="Handbags & Totes">Handbags & Totes</option>
-                            <option value="Sneakers & Trainers">Sneakers & Trainers</option>
-                            <option value="Heels & Pumps">Heels & Pumps</option>
-                            <option value="Backpacks & Travel">Backpacks & Travel</option>
-                            <option value="Loafers & Dress Shoes">Loafers & Dress Shoes</option>
-                            <option value="Crossbody & Clutches">Crossbody & Clutches</option>
-                            <option value="Boots & Ankle Boots">Boots & Ankle Boots</option>
-                            <option value="Sandals & Slides">Sandals & Slides</option>
-                        </select>
-                    </div>
-
-                    <!-- Add New Product Button -->
-                    <button onclick="openAdminProductModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold px-4 py-2.5 rounded-xl shadow-md transition inline-flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-circle-plus"></i>
-                        <span>Add New Product</span>
-                    </button>
-                </div>
-
-                <!-- Products Table Container -->
-                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase tracking-wider font-extrabold text-[11px]">
-                                <tr>
-                                    <th class="p-3.5 pl-5">Product</th>
-                                    <th class="p-3.5">Category</th>
-                                    <th class="p-3.5">Brand</th>
-                                    <th class="p-3.5">Price (GH₵)</th>
-                                    <th class="p-3.5">Stock Status</th>
-                                    <th class="p-3.5">Rating</th>
-                                    <th class="p-3.5 pr-5 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-products-table-body" class="divide-y divide-gray-100 font-medium">
-                                <!-- Populated dynamically by script.js -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SUB-VIEW 2: CUSTOMER ORDERS MANAGEMENT -->
-            <div id="admin-view-orders" class="hidden space-y-4">
-                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="flex flex-wrap items-center gap-3 flex-1">
-                        <!-- Order Search Input -->
-                        <div class="relative flex-1 min-w-[200px] max-w-md">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-gray-400 text-xs"></i>
-                            <input type="text" id="admin-order-search" oninput="filterAdminOrders()" placeholder="Search by tracking #, transaction ID, or city..." class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:bg-white focus:border-indigo-500">
-                        </div>
-
-                        <!-- Status Filter Buttons -->
-                        <div class="flex items-center space-x-1 overflow-x-auto scrollbar-none py-1">
-                            <button onclick="setAdminOrderStatusFilter('all')" class="admin-order-filter-btn px-3 py-1.5 rounded-lg text-xs font-extrabold bg-indigo-600 text-white transition" data-status="all">All</button>
-                            <button onclick="setAdminOrderStatusFilter('pending')" class="admin-order-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-status="pending">Pending</button>
-                            <button onclick="setAdminOrderStatusFilter('processing')" class="admin-order-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-status="processing">Processing</button>
-                            <button onclick="setAdminOrderStatusFilter('shipped')" class="admin-order-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-status="shipped">Shipped</button>
-                            <button onclick="setAdminOrderStatusFilter('delivered')" class="admin-order-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-status="delivered">Delivered</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Orders Table Container -->
-                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase tracking-wider font-extrabold text-[11px]">
-                                <tr>
-                                    <th class="p-3.5 pl-5">Tracking #</th>
-                                    <th class="p-3.5">Date Placed</th>
-                                    <th class="p-3.5">Shipping Details</th>
-                                    <th class="p-3.5">Items Summary</th>
-                                    <th class="p-3.5">Total Amount</th>
-                                    <th class="p-3.5">Payment</th>
-                                    <th class="p-3.5">Fulfillment Status</th>
-                                    <th class="p-3.5 pr-5 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-orders-table-body" class="divide-y divide-gray-100 font-medium">
-                                <!-- Populated dynamically by script.js -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SUB-VIEW 3: REGISTERED CUSTOMERS -->
-            <div id="admin-view-users" class="hidden space-y-4">
-                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="relative flex-1 max-w-md">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-gray-400 text-xs"></i>
-                        <input type="text" id="admin-user-search" oninput="filterAdminUsers()" placeholder="Search customers by name, email, or city..." class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:bg-white focus:border-indigo-500">
-                    </div>
-                </div>
-
-                <!-- Users Table Container -->
-                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase tracking-wider font-extrabold text-[11px]">
-                                <tr>
-                                    <th class="p-3.5 pl-5">Customer</th>
-                                    <th class="p-3.5">Email Address</th>
-                                    <th class="p-3.5">Phone</th>
-                                    <th class="p-3.5">City / Address</th>
-                                    <th class="p-3.5">Status</th>
-                                    <th class="p-3.5">Total Orders</th>
-                                    <th class="p-3.5">Registered Date</th>
-                                    <th class="p-3.5 pr-5 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-users-table-body" class="divide-y divide-gray-100 font-medium">
-                                <!-- Populated dynamically by script.js -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SUB-VIEW 4: PROMO CODES & DISCOUNT VOUCHERS MANAGER -->
-            <div id="admin-view-coupons" class="hidden space-y-6">
-                <!-- Create Promo Code Box -->
-                <div class="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-sm space-y-4">
-                    <div class="flex items-center space-x-2 text-rose-600 text-xs font-black uppercase tracking-wider">
-                        <i class="fa-solid fa-ticket"></i>
-                        <span>Create Store Voucher / Coupon Code</span>
-                    </div>
-                    <form onsubmit="handleAdminCreateCoupon(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
                         <div>
-                            <label class="block text-[11px] font-bold text-gray-600 mb-1">Coupon Code <span class="text-rose-500">*</span></label>
-                            <input type="text" id="admin-coupon-code" required placeholder="e.g. FLASH25" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-mono font-bold uppercase focus:outline-none focus:border-rose-500">
+                            <h1 id="admin-section-title">Overview</h1>
+                            <p class="text-xs text-slate-500 mt-0.5" id="admin-section-subtitle">Real-time store management and telemetry</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-white border border-slate-200 px-3.5 py-1.5 rounded-xl shadow-xs text-xs flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span class="text-slate-500">Admin User:</span>
+                            <strong id="admin-user-display" class="text-slate-800">Store Manager</strong>
+                            <span id="admin-email-display" class="text-slate-400 hidden xl:inline font-mono text-[11px]">(mikegborbitey05@gmail.com)</span>
+                        </div>
+                        <button onclick="loadAdminDashboardData()" class="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-sky-600 hover:border-sky-300 transition shadow-xs" title="Refresh Live Store Data">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
+                        <button onclick="switchTab('catalog')" class="hidden sm:inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:text-indigo-600 transition shadow-xs">
+                            <i class="fa-solid fa-store text-indigo-500"></i>
+                            <span>Store</span>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Key Metrics Stats Grid (Matches User's Layout) -->
+                <div class="stats-grid">
+                    <div class="card">
+                        <h3>Total Revenue</h3>
+                        <div class="value font-mono text-emerald-600" id="admin-stat-revenue">GH₵ 0.00</div>
+                    </div>
+                    <div class="card">
+                        <h3>Total Orders</h3>
+                        <div class="value" id="admin-stat-orders">0</div>
+                    </div>
+                    <div class="card">
+                        <h3>Active Products</h3>
+                        <div class="value" id="admin-stat-products">0</div>
+                    </div>
+                    <div class="card">
+                        <h3>Pending Delivery</h3>
+                        <div class="value text-amber-600" id="admin-stat-pending">0</div>
+                    </div>
+                </div>
+
+                <!-- Low Stock Alert Banner -->
+                <div id="admin-low-stock-banner" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold flex-shrink-0 animate-bounce">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-gray-600 mb-1">Discount Type</label>
-                            <select id="admin-coupon-type" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:border-rose-500">
-                                <option value="percent">Percentage Off (%)</option>
-                                <option value="fixed">Fixed Amount (GH₵)</option>
+                            <h4 class="font-extrabold text-amber-950 text-sm">Low Inventory Stock Warning</h4>
+                            <p id="admin-low-stock-text" class="text-amber-800 text-xs mt-0.5">Some items in your catalog are running out of stock.</p>
+                        </div>
+                    </div>
+                    <button onclick="handleAdminRestockAllLow()" class="bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs px-4 py-2 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-xs flex-shrink-0">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>⚡ Restock All Low Items (+25)</span>
+                    </button>
+                </div>
+
+                <!-- SUB-VIEW 0: DASHBOARD / OVERVIEW (The User's Exact Front View!) -->
+                <div id="admin-view-dashboard" class="space-y-6">
+                    <!-- Recent Orders Table Container (Exact user's mockup table!) -->
+                    <div class="table-container">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2>Recent Orders</h2>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="exportAdminData('orders')" class="text-xs font-semibold text-slate-600 hover:text-sky-600 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 transition inline-flex items-center space-x-1.5">
+                                    <i class="fa-solid fa-download text-slate-500"></i>
+                                    <span>Export</span>
+                                </button>
+                                <button onclick="switchAdminSubTab('orders')" class="text-xs font-bold text-sky-600 hover:text-sky-700 px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 transition inline-flex items-center space-x-1">
+                                    <span>View All Orders</span>
+                                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Item Count</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-recent-orders-table-body">
+                                    <!-- Populated dynamically by script.js -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Quick Action Shortcuts -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div onclick="openAdminProductModal()" class="card cursor-pointer hover:border-sky-300 transition group p-5">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 group-hover:bg-sky-600 group-hover:text-white transition flex items-center justify-center text-lg">
+                                    <i class="fa-solid fa-circle-plus"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-slate-800">Add New Product</h4>
+                                    <p class="text-[11px] text-slate-500 mt-0.5">Upload new shoes, bags, or boots</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div onclick="switchAdminSubTab('inventory')" class="card cursor-pointer hover:border-amber-300 transition group p-5">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition flex items-center justify-center text-lg">
+                                    <i class="fa-solid fa-boxes-packing"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-slate-800">Inventory Control</h4>
+                                    <p class="text-[11px] text-slate-500 mt-0.5">Monitor stock levels and replenish</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div onclick="switchAdminSubTab('users')" class="card cursor-pointer hover:border-indigo-300 transition group p-5">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition flex items-center justify-center text-lg">
+                                    <i class="fa-solid fa-users"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-slate-800">Customer Directory</h4>
+                                    <p class="text-[11px] text-slate-500 mt-0.5">View profiles and order records</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-VIEW 1: PRODUCTS INVENTORY MANAGEMENT -->
+                <div id="admin-view-products" class="hidden space-y-4">
+                    <div class="table-container p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex flex-wrap items-center gap-3 flex-1">
+                            <!-- Product Search Input -->
+                            <div class="relative flex-1 min-w-[200px] max-w-md">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-gray-400 text-xs"></i>
+                                <input type="text" id="admin-product-search" oninput="filterAdminProducts()" placeholder="Search bags, shoes, boots, sneakers..." class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:bg-white focus:border-sky-500">
+                            </div>
+
+                            <!-- Category Filter -->
+                            <select id="admin-product-category" onchange="filterAdminProducts()" class="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-3 py-2 focus:outline-none focus:border-sky-500">
+                                <option value="All">All Categories</option>
+                                <option value="Handbags & Totes">Handbags & Totes</option>
+                                <option value="Sneakers & Trainers">Sneakers & Trainers</option>
+                                <option value="Heels & Pumps">Heels & Pumps</option>
+                                <option value="Backpacks & Travel">Backpacks & Travel</option>
+                                <option value="Loafers & Dress Shoes">Loafers & Dress Shoes</option>
+                                <option value="Crossbody & Clutches">Crossbody & Clutches</option>
+                                <option value="Boots & Ankle Boots">Boots & Ankle Boots</option>
+                                <option value="Sandals & Slides">Sandals & Slides</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-gray-600 mb-1">Discount Value <span class="text-rose-500">*</span></label>
-                            <input type="number" step="0.5" min="1" id="admin-coupon-value" required placeholder="e.g. 20" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none focus:border-rose-500">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-gray-600 mb-1">Min Spend (GH₵)</label>
-                            <input type="number" min="0" id="admin-coupon-minspend" placeholder="0" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-rose-500">
-                        </div>
-                        <div>
-                            <button type="submit" id="admin-create-coupon-btn" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs py-2.5 rounded-xl shadow transition flex items-center justify-center space-x-1.5">
-                                <i class="fa-solid fa-plus"></i>
-                                <span>Add Voucher</span>
+
+                        <div class="flex items-center space-x-2">
+                            <button onclick="exportAdminData('products')" class="text-xs font-bold text-slate-700 hover:text-sky-600 bg-slate-100 hover:bg-slate-200 px-3.5 py-2.5 rounded-xl transition inline-flex items-center space-x-1.5 shadow-xs">
+                                <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                                <span>Export CSV</span>
+                            </button>
+                            <!-- Add New Product Button -->
+                            <button onclick="openAdminProductModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold px-4 py-2.5 rounded-xl shadow-md transition inline-flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-circle-plus"></i>
+                                <span>Add New Product</span>
                             </button>
                         </div>
-                    </form>
+                    </div>
+
+                    <!-- Products Table Container -->
+                    <div class="table-container overflow-hidden p-0">
+                        <div class="overflow-x-auto">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th class="p-3.5 pl-5">Product</th>
+                                        <th class="p-3.5">Category</th>
+                                        <th class="p-3.5">Brand</th>
+                                        <th class="p-3.5">Price (GH₵)</th>
+                                        <th class="p-3.5">Stock Status</th>
+                                        <th class="p-3.5">Rating</th>
+                                        <th class="p-3.5 pr-5 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-products-table-body" class="divide-y divide-gray-100 font-medium">
+                                    <!-- Populated dynamically by script.js -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Active Promo Codes Table -->
-                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-                    <div class="p-4 border-b border-gray-100 flex items-center justify-between">
-                        <h4 class="text-xs font-black text-gray-800 uppercase tracking-wider flex items-center space-x-2">
-                            <i class="fa-solid fa-list-check text-rose-500"></i>
-                            <span>Store Coupons & Promo Rules</span>
-                        </h4>
-                        <span class="text-[11px] text-gray-400">Validated in real-time at customer cart checkout</span>
+                <!-- SUB-VIEW 2: CUSTOMER ORDERS MANAGEMENT -->
+                <div id="admin-view-orders" class="hidden space-y-4">
+                    <div class="table-container p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex flex-wrap items-center gap-3 flex-1">
+                            <!-- Order Search Input -->
+                            <div class="relative flex-1 min-w-[200px] max-w-md">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-gray-400 text-xs"></i>
+                                <input type="text" id="admin-order-search" oninput="filterAdminOrders()" placeholder="Search by tracking #, transaction ID, or city..." class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:bg-white focus:border-sky-500">
+                            </div>
+
+                            <!-- Status Filter Buttons -->
+                            <div class="flex items-center space-x-1 overflow-x-auto scrollbar-none py-1">
+                                <button onclick="setAdminOrderStatusFilter('all')" class="admin-order-filter-btn px-3 py-1.5 rounded-lg text-xs font-extrabold bg-slate-900 text-white transition" data-status="all">All</button>
+                                <button onclick="setAdminOrderStatusFilter('pending')" class="admin-order-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-status="pending">Pending</button>
+                                <button onclick="setAdminOrderStatusFilter('processing')" class="admin-order-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-status="processing">Processing</button>
+                                <button onclick="setAdminOrderStatusFilter('shipped')" class="admin-order-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-status="shipped">Shipped</button>
+                                <button onclick="setAdminOrderStatusFilter('delivered')" class="admin-order-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-status="delivered">Delivered</button>
+                            </div>
+                        </div>
+
+                        <button onclick="exportAdminData('orders')" class="text-xs font-bold text-slate-700 hover:text-sky-600 bg-slate-100 hover:bg-slate-200 px-3.5 py-2.5 rounded-xl transition inline-flex items-center space-x-1.5 shadow-xs">
+                            <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                            <span>Export CSV</span>
+                        </button>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase tracking-wider font-extrabold text-[11px]">
-                                <tr>
-                                    <th class="p-3.5 pl-5">Coupon Code</th>
-                                    <th class="p-3.5">Type & Benefit</th>
-                                    <th class="p-3.5">Min Subtotal</th>
-                                    <th class="p-3.5">Usage Count</th>
-                                    <th class="p-3.5">Status</th>
-                                    <th class="p-3.5 pr-5 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-coupons-table-body" class="divide-y divide-gray-100 font-medium">
-                                <!-- Populated dynamically by script.js -->
-                            </tbody>
-                        </table>
+
+                    <!-- Orders Table Container -->
+                    <div class="table-container overflow-hidden p-0">
+                        <div class="overflow-x-auto">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th class="p-3.5 pl-5">Tracking #</th>
+                                        <th class="p-3.5">Date Placed</th>
+                                        <th class="p-3.5">Shipping Details</th>
+                                        <th class="p-3.5">Items Summary</th>
+                                        <th class="p-3.5">Total Amount</th>
+                                        <th class="p-3.5">Payment</th>
+                                        <th class="p-3.5">Fulfillment Status</th>
+                                        <th class="p-3.5 pr-5 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-orders-table-body" class="divide-y divide-gray-100 font-medium">
+                                    <!-- Populated dynamically by script.js -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
+
+                <!-- SUB-VIEW 3: INVENTORY HEALTH & REPLENISHMENT -->
+                <div id="admin-view-inventory" class="hidden space-y-4">
+                    <div class="table-container p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800">Inventory Stock Controller</h3>
+                            <p class="text-xs text-slate-500 mt-0.5">Track warehouse levels and rapidly restock depletion items</p>
+                        </div>
+                        <button onclick="handleAdminRestockAllLow()" class="bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition flex items-center space-x-1.5 shadow-sm">
+                            <i class="fa-solid fa-bolt"></i>
+                            <span>⚡ Replenish All Low Stock (+25)</span>
+                        </button>
+                    </div>
+
+                    <div class="table-container overflow-hidden p-0">
+                        <div class="overflow-x-auto">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th class="p-3.5 pl-5">Product Title</th>
+                                        <th class="p-3.5">Category</th>
+                                        <th class="p-3.5">Current Stock</th>
+                                        <th class="p-3.5">Health Level</th>
+                                        <th class="p-3.5 pr-5 text-right">Quick Restock</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-inventory-table-body" class="divide-y divide-gray-100 font-medium">
+                                    <!-- Populated dynamically by script.js -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-VIEW 4: REGISTERED CUSTOMERS -->
+                <div id="admin-view-users" class="hidden space-y-4">
+                    <div class="table-container p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="relative flex-1 max-w-md">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-gray-400 text-xs"></i>
+                            <input type="text" id="admin-user-search" oninput="filterAdminUsers()" placeholder="Search customers by name, email, or city..." class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:bg-white focus:border-sky-500">
+                        </div>
+                        <button onclick="exportAdminData('users')" class="text-xs font-bold text-slate-700 hover:text-sky-600 bg-slate-100 hover:bg-slate-200 px-3.5 py-2.5 rounded-xl transition inline-flex items-center space-x-1.5 shadow-xs">
+                            <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                            <span>Export CSV</span>
+                        </button>
+                    </div>
+
+                    <!-- Users Table Container -->
+                    <div class="table-container overflow-hidden p-0">
+                        <div class="overflow-x-auto">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th class="p-3.5 pl-5">Customer</th>
+                                        <th class="p-3.5">Email Address</th>
+                                        <th class="p-3.5">Phone</th>
+                                        <th class="p-3.5">City / Address</th>
+                                        <th class="p-3.5">Status</th>
+                                        <th class="p-3.5">Total Orders</th>
+                                        <th class="p-3.5">Registered Date</th>
+                                        <th class="p-3.5 pr-5 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-users-table-body" class="divide-y divide-gray-100 font-medium">
+                                    <!-- Populated dynamically by script.js -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-VIEW 5: PROMO CODES & DISCOUNT VOUCHERS MANAGER -->
+                <div id="admin-view-coupons" class="hidden space-y-6">
+                    <!-- Create Promo Code Box -->
+                    <div class="table-container space-y-4">
+                        <div class="flex items-center space-x-2 text-rose-600 text-xs font-black uppercase tracking-wider">
+                            <i class="fa-solid fa-ticket"></i>
+                            <span>Create Store Voucher / Coupon Code</span>
+                        </div>
+                        <form onsubmit="handleAdminCreateCoupon(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-600 mb-1">Coupon Code <span class="text-rose-500">*</span></label>
+                                <input type="text" id="admin-coupon-code" required placeholder="e.g. FLASH25" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-mono font-bold uppercase focus:outline-none focus:border-rose-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-600 mb-1">Discount Type</label>
+                                <select id="admin-coupon-type" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:border-rose-500">
+                                    <option value="percent">Percentage Off (%)</option>
+                                    <option value="fixed">Fixed Amount (GH₵)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-600 mb-1">Discount Value <span class="text-rose-500">*</span></label>
+                                <input type="number" step="0.5" min="1" id="admin-coupon-value" required placeholder="e.g. 20" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none focus:border-rose-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-600 mb-1">Min Spend (GH₵)</label>
+                                <input type="number" min="0" id="admin-coupon-minspend" placeholder="0" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-rose-500">
+                            </div>
+                            <div>
+                                <button type="submit" id="admin-create-coupon-btn" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs py-2.5 rounded-xl shadow transition flex items-center justify-center space-x-1.5">
+                                    <i class="fa-solid fa-plus"></i>
+                                    <span>Add Voucher</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Active Coupons Table -->
+                    <div class="table-container overflow-hidden p-0">
+                        <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+                            <h4 class="font-black text-gray-900 text-xs uppercase tracking-wider flex items-center space-x-2">
+                                <i class="fa-solid fa-tags text-rose-500"></i>
+                                <span>Active Store Discounts & Coupons</span>
+                            </h4>
+                            <span class="text-[11px] text-gray-400">Validated in real-time at customer cart checkout</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th class="p-3.5 pl-5">Coupon Code</th>
+                                        <th class="p-3.5">Type & Benefit</th>
+                                        <th class="p-3.5">Min Subtotal</th>
+                                        <th class="p-3.5">Usage Count</th>
+                                        <th class="p-3.5">Status</th>
+                                        <th class="p-3.5 pr-5 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-coupons-table-body" class="divide-y divide-gray-100 font-medium">
+                                    <!-- Populated dynamically by script.js -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-VIEW 6: STORE TELEMETRY & ANALYTICS -->
+                <div id="admin-view-analytics" class="hidden space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="card">
+                            <h3>Average Order Value</h3>
+                            <div class="value font-mono text-sky-600" id="admin-analytics-aov">GH₵ 0.00</div>
+                        </div>
+                        <div class="card">
+                            <h3>Fulfillment Rate</h3>
+                            <div class="value text-emerald-600" id="admin-analytics-rate">100%</div>
+                        </div>
+                        <div class="card">
+                            <h3>Total Items Sold</h3>
+                            <div class="value" id="admin-analytics-items">0</div>
+                        </div>
+                        <div class="card">
+                            <h3>Active Customers</h3>
+                            <div class="value text-indigo-600" id="admin-stat-users">0</div>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <h2>Order Status Distribution</h2>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
+                            <div class="p-4 rounded-xl bg-amber-50 border border-amber-100 text-center">
+                                <span class="text-xs font-bold text-amber-800 uppercase tracking-wider block">Pending</span>
+                                <span class="text-2xl font-black text-amber-900 mt-1 block" id="admin-analytics-pending">0</span>
+                            </div>
+                            <div class="p-4 rounded-xl bg-purple-50 border border-purple-100 text-center">
+                                <span class="text-xs font-bold text-purple-800 uppercase tracking-wider block">Processing</span>
+                                <span class="text-2xl font-black text-purple-900 mt-1 block" id="admin-analytics-processing">0</span>
+                            </div>
+                            <div class="p-4 rounded-xl bg-sky-50 border border-sky-100 text-center">
+                                <span class="text-xs font-bold text-sky-800 uppercase tracking-wider block">Shipped</span>
+                                <span class="text-2xl font-black text-sky-900 mt-1 block" id="admin-analytics-shipped">0</span>
+                            </div>
+                            <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-100 text-center">
+                                <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider block">Delivered</span>
+                                <span class="text-2xl font-black text-emerald-900 mt-1 block" id="admin-analytics-delivered">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
         </div>
 
     </main>
@@ -1610,7 +1953,7 @@
     </div>
 
     <!-- JUMIA-STYLE RICH E-COMMERCE FOOTER -->
-    <footer class="bg-gray-900 text-gray-300 mt-16 border-t border-gray-800 text-xs">
+    <footer id="main-store-footer" class="bg-gray-900 text-gray-300 mt-16 border-t border-gray-800 text-xs">
         <!-- Newsletter Subscription Banner -->
         <div class="bg-indigo-950/80 border-b border-indigo-900/60 py-8 px-4 sm:px-6 lg:px-8">
             <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
@@ -2038,7 +2381,7 @@
 
     <!-- Global Navigation Dock (Desktop Floating Dock + Mobile Bottom Bar) -->
     <!-- Desktop Floating Dock -->
-    <div class="hidden sm:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-white/95 backdrop-blur-xl border border-gray-200/80 shadow-2xl rounded-2xl py-2.5 px-6 items-center space-x-7 transition-all hover:shadow-indigo-500/10">
+    <div id="desktop-floating-dock" class="hidden sm:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-white/95 backdrop-blur-xl border border-gray-200/80 shadow-2xl rounded-2xl py-2.5 px-6 items-center space-x-7 transition-all hover:shadow-indigo-500/10">
         <button onclick="switchTab('catalog')" id="dock-btn-catalog" class="dock-nav-item flex items-center space-x-2 text-gray-600 hover:text-indigo-600 text-xs font-bold transition group">
             <div class="w-8 h-8 rounded-xl bg-gray-100 group-hover:bg-indigo-50 flex items-center justify-center transition text-indigo-600">
                 <i class="fa-solid fa-house"></i>
@@ -2080,7 +2423,7 @@
     </div>
 
     <!-- Mobile Bottom Sticky App Navigation Bar -->
-    <div class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-2xl py-2 px-2 flex items-center justify-around">
+    <div id="mobile-bottom-dock" class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-2xl py-2 px-2 flex items-center justify-around">
         <button onclick="switchTab('catalog')" class="flex flex-col items-center text-gray-600 hover:text-indigo-600 focus:text-indigo-600 text-[10px] font-bold space-y-0.5 transition">
             <i class="fa-solid fa-house text-base"></i>
             <span>Shop</span>

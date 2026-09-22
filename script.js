@@ -256,7 +256,11 @@ function switchTab(tabId, pushHistory = true) {
             switchTab('catalog', false);
             return;
         }
+        document.body.classList.add('admin-view-mode');
+        switchAdminSubTab('dashboard');
         loadAdminDashboardData();
+    } else {
+        document.body.classList.remove('admin-view-mode');
     }
 }
 
@@ -3346,38 +3350,276 @@ function handleAdminLogout() {
     adminUser = null;
     localStorage.removeItem('sd_admin_token');
     localStorage.removeItem('sd_admin_user');
+    document.body.classList.remove('admin-view-mode');
     
     updateAdminButtonVisibility();
     switchTab('catalog');
     showToast('Administrator logged out successfully');
 }
 
+function toggleAdminMobileSidebar() {
+    const sidebar = document.getElementById('admin-sidebar');
+    const backdrop = document.getElementById('admin-sidebar-backdrop');
+    if (sidebar) sidebar.classList.toggle('mobile-open');
+    if (backdrop) backdrop.classList.toggle('hidden');
+}
+
 let adminCouponsList = [];
 
-// --- ADMIN SUB-TAB SWITCHER ---
+// --- SHOPADMIN EXECUTIVE SUB-TAB SWITCHER ---
 function switchAdminSubTab(subTab) {
-    const tabs = ['products', 'orders', 'users', 'coupons'];
+    const tabs = ['dashboard', 'orders', 'products', 'inventory', 'users', 'coupons', 'analytics'];
+    
+    // Close mobile sidebar on selection
+    const sidebar = document.getElementById('admin-sidebar');
+    const backdrop = document.getElementById('admin-sidebar-backdrop');
+    if (sidebar) sidebar.classList.remove('mobile-open');
+    if (backdrop) backdrop.classList.add('hidden');
+
+    const titles = {
+        dashboard: { title: 'Overview', subtitle: 'Real-time store management and telemetry' },
+        orders: { title: 'Customer Orders', subtitle: 'Manage shipments, fulfillments, and printable invoices' },
+        products: { title: 'Products Catalog', subtitle: 'Manage inventory items, pricing, and categories' },
+        inventory: { title: 'Inventory Management', subtitle: 'Real-time stock tracking and replenishment alerts' },
+        users: { title: 'Registered Customers', subtitle: 'Customer directories, lifetime spend, and profile details' },
+        coupons: { title: 'Discounts & Vouchers', subtitle: 'Promo campaigns, discount vouchers, and coupon rules' },
+        analytics: { title: 'Store Analytics', subtitle: 'Business telemetry, average order value, and fulfillment velocity' }
+    };
+
+    const headerTitle = document.getElementById('admin-section-title');
+    const headerSub = document.getElementById('admin-section-subtitle');
+    if (headerTitle && titles[subTab]) headerTitle.textContent = titles[subTab].title;
+    if (headerSub && titles[subTab]) headerSub.textContent = titles[subTab].subtitle;
+
     tabs.forEach(t => {
         const btn = document.getElementById(`admin-subtab-btn-${t}`);
         const view = document.getElementById(`admin-view-${t}`);
         
         if (t === subTab) {
-            if (btn) {
-                btn.className = "admin-subtab-btn px-4 py-2 rounded-xl text-xs font-extrabold transition bg-slate-900 text-white shadow-xs flex items-center space-x-2";
-            }
+            if (btn) btn.classList.add('active');
             if (view) view.classList.remove('hidden');
         } else {
-            if (btn) {
-                btn.className = "admin-subtab-btn px-4 py-2 rounded-xl text-xs font-bold transition bg-gray-50 text-gray-700 hover:bg-gray-100 flex items-center space-x-2";
-            }
+            if (btn) btn.classList.remove('active');
             if (view) view.classList.add('hidden');
         }
     });
 
-    if (subTab === 'products') loadAdminProducts();
-    if (subTab === 'orders') loadAdminOrders();
-    if (subTab === 'users') loadAdminUsers();
-    if (subTab === 'coupons') loadAdminCoupons();
+    if (subTab === 'dashboard') {
+        renderAdminRecentOrdersTable();
+    } else if (subTab === 'products') {
+        loadAdminProducts();
+    } else if (subTab === 'orders') {
+        loadAdminOrders();
+    } else if (subTab === 'inventory') {
+        renderAdminInventoryTable();
+    } else if (subTab === 'users') {
+        loadAdminUsers();
+    } else if (subTab === 'coupons') {
+        loadAdminCoupons();
+    } else if (subTab === 'analytics') {
+        renderAdminAnalytics();
+    }
+}
+
+// --- RECENT ORDERS TABLE (EXACT USER FRONT VIEW) ---
+function renderAdminRecentOrdersTable() {
+    const tbody = document.getElementById('admin-recent-orders-table-body');
+    if (!tbody) return;
+
+    const orders = (adminOrdersList && adminOrdersList.length > 0) 
+        ? adminOrdersList.slice(0, 6) 
+        : [];
+
+    if (orders.length > 0) {
+        tbody.innerHTML = orders.map(o => {
+            const orderId = (o._id || o.id || '1000').toString();
+            const displayId = o.trackingNumber || `#ORD-${orderId.substring(orderId.length - 4)}`;
+            const customer = o.customerName || (typeof o.shippingAddress === 'object' ? o.shippingAddress.name : '') || o.userEmail || 'Customer';
+            const itemsCount = Array.isArray(o.items) 
+                ? o.items.reduce((sum, item) => sum + (Number(item.quantity || item.qty) || 1), 0) 
+                : 1;
+            const itemsLabel = `${itemsCount} item${itemsCount > 1 ? 's' : ''}`;
+            const totalStr = formatPrice(Number(o.totalAmount || 0));
+            const rawStatus = (o.status || 'pending').toLowerCase();
+            
+            let badgeClass = 'pending';
+            let badgeLabel = 'Pending';
+            if (rawStatus === 'paid' || rawStatus === 'completed') {
+                badgeClass = 'paid';
+                badgeLabel = 'Paid';
+            } else if (rawStatus === 'shipped') {
+                badgeClass = 'shipped';
+                badgeLabel = 'Shipped';
+            } else if (rawStatus === 'delivered') {
+                badgeClass = 'delivered';
+                badgeLabel = 'Delivered';
+            } else if (rawStatus === 'processing') {
+                badgeClass = 'processing';
+                badgeLabel = 'Processing';
+            } else if (rawStatus === 'cancelled') {
+                badgeClass = 'cancelled';
+                badgeLabel = 'Cancelled';
+            }
+
+            return `
+                <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="openInvoiceModalFromData(${escapeJsonForAttr(o)})">
+                    <td class="font-mono font-bold text-slate-900">${displayId}</td>
+                    <td class="font-semibold text-slate-800">${escapeHtml(customer)}</td>
+                    <td class="text-slate-500">${itemsLabel}</td>
+                    <td class="font-mono font-bold text-slate-900">${totalStr}</td>
+                    <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
+                </tr>
+            `;
+        }).join('');
+    } else {
+        // Render the exact demo preview rows provided by the user
+        tbody.innerHTML = `
+            <tr class="hover:bg-slate-50 transition">
+                <td class="font-mono font-bold text-slate-900">#ORD-1094</td>
+                <td class="font-semibold text-slate-800">Alex Rivera</td>
+                <td class="text-slate-500">2 items</td>
+                <td class="font-mono font-bold text-slate-900">GH₵ 124.00</td>
+                <td><span class="badge paid">Paid</span></td>
+            </tr>
+            <tr class="hover:bg-slate-50 transition">
+                <td class="font-mono font-bold text-slate-900">#ORD-1093</td>
+                <td class="font-semibold text-slate-800">Sarah Jenkins</td>
+                <td class="text-slate-500">1 item</td>
+                <td class="font-mono font-bold text-slate-900">GH₵ 45.50</td>
+                <td><span class="badge shipped">Shipped</span></td>
+            </tr>
+            <tr class="hover:bg-slate-50 transition">
+                <td class="font-mono font-bold text-slate-900">#ORD-1092</td>
+                <td class="font-semibold text-slate-800">Michael Chang</td>
+                <td class="text-slate-500">4 items</td>
+                <td class="font-mono font-bold text-slate-900">GH₵ 310.00</td>
+                <td><span class="badge pending">Pending</span></td>
+            </tr>
+            <tr class="hover:bg-slate-50 transition">
+                <td class="font-mono font-bold text-slate-900">#ORD-1091</td>
+                <td class="font-semibold text-slate-800">Amara Osei</td>
+                <td class="text-slate-500">1 item</td>
+                <td class="font-mono font-bold text-slate-900">GH₵ 89.99</td>
+                <td><span class="badge paid">Paid</span></td>
+            </tr>
+        `;
+    }
+}
+
+// --- INVENTORY TABLE RENDERER ---
+function renderAdminInventoryTable() {
+    const tbody = document.getElementById('admin-inventory-table-body');
+    if (!tbody) return;
+
+    const items = [...adminProductsList].sort((a, b) => {
+        const sa = Number(a.stock !== undefined ? a.stock : 50);
+        const sb = Number(b.stock !== undefined ? b.stock : 50);
+        return sa - sb;
+    });
+
+    if (items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400">No products found in catalog.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = items.map(p => {
+        const prodId = p._id || p.id;
+        const stock = Number(p.stock !== undefined ? p.stock : 50);
+        const isLow = stock <= 10;
+        const isOut = stock === 0;
+
+        let healthBadge = `<span class="badge paid">Healthy (${stock})</span>`;
+        if (isOut) {
+            healthBadge = `<span class="badge cancelled">Out of Stock</span>`;
+        } else if (isLow) {
+            healthBadge = `<span class="badge pending">Low Stock (${stock})</span>`;
+        }
+
+        return `
+            <tr class="hover:bg-slate-50 transition">
+                <td class="p-3.5 pl-5 font-bold text-slate-900">${escapeHtml(p.title || p.name)}</td>
+                <td class="p-3.5 text-slate-500">${escapeHtml(p.category || 'General')}</td>
+                <td class="p-3.5 font-mono font-black text-slate-800">${stock} units</td>
+                <td class="p-3.5">${healthBadge}</td>
+                <td class="p-3.5 pr-5 text-right">
+                    <button onclick="handleAdminQuickRestock('${prodId}', 25)" class="bg-sky-50 hover:bg-sky-600 text-sky-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">
+                        +25 Units
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function handleAdminQuickRestock(productId, amount = 25) {
+    if (!adminToken) return;
+    showLoading('Restocking Inventory', `Adding +${amount} units to product inventory...`);
+    try {
+        const response = await fetch(`${API_BASE}/admin/products/${productId}/restock`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${adminToken}`
+            },
+            body: JSON.stringify({ amount })
+        });
+        const data = await safeParseResponse(response);
+        if (!response.ok) throw new Error(data.error || 'Failed to restock');
+        showToast(`Stock replenished (+${amount} units)!`, 'success');
+        await loadAdminProducts(true);
+        renderAdminInventoryTable();
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// --- STORE ANALYTICS TELEMETRY RENDERER ---
+function renderAdminAnalytics() {
+    const orders = adminOrdersList || [];
+    const totalOrders = orders.length;
+    
+    let totalRevenue = 0;
+    let totalItems = 0;
+    let pendingCount = 0;
+    let processingCount = 0;
+    let shippedCount = 0;
+    let deliveredCount = 0;
+
+    orders.forEach(o => {
+        totalRevenue += Number(o.totalAmount || 0);
+        const status = (o.status || 'pending').toLowerCase();
+        if (status === 'pending') pendingCount++;
+        else if (status === 'processing') processingCount++;
+        else if (status === 'shipped') shippedCount++;
+        else if (status === 'delivered') deliveredCount++;
+
+        if (Array.isArray(o.items)) {
+            o.items.forEach(i => totalItems += (Number(i.quantity || i.qty) || 1));
+        } else {
+            totalItems += 1;
+        }
+    });
+
+    const aov = totalOrders > 0 ? (totalRevenue / totalOrders) : 0;
+    const fulfillmentRate = totalOrders > 0 ? Math.round(((deliveredCount + shippedCount) / totalOrders) * 100) : 100;
+
+    const aovElem = document.getElementById('admin-analytics-aov');
+    const rateElem = document.getElementById('admin-analytics-rate');
+    const itemsElem = document.getElementById('admin-analytics-items');
+    const pendElem = document.getElementById('admin-analytics-pending');
+    const procElem = document.getElementById('admin-analytics-processing');
+    const shipElem = document.getElementById('admin-analytics-shipped');
+    const delivElem = document.getElementById('admin-analytics-delivered');
+
+    if (aovElem) aovElem.textContent = formatPrice(aov);
+    if (rateElem) rateElem.textContent = `${fulfillmentRate}%`;
+    if (itemsElem) itemsElem.textContent = totalItems;
+    if (pendElem) pendElem.textContent = pendingCount;
+    if (procElem) procElem.textContent = processingCount;
+    if (shipElem) shipElem.textContent = shippedCount;
+    if (delivElem) delivElem.textContent = deliveredCount;
 }
 
 // --- LOW-STOCK ALERT ENGINE ---
@@ -3999,6 +4241,7 @@ async function loadAdminOrders() {
     }
 
     filterAdminOrders();
+    renderAdminRecentOrdersTable();
 }
 
 function setAdminOrderStatusFilter(status) {
