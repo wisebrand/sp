@@ -653,7 +653,7 @@ router.get('/users', adminAuthMiddleware, async (req, res) => {
         city: u.city || '—',
         address: u.address || '—',
         isVerified: u.isVerified !== false,
-        orderCount: orderCount || 1,
+        orderCount: typeof orderCount === 'number' ? orderCount : 0,
         createdAt: u.createdAt || new Date()
       };
     }));

@@ -108,7 +108,7 @@ router.post('/', authMiddleware, async (req, res) => {
     // Auto-dispatch official email receipt asynchronously
     (async () => {
       try {
-        let recipientEmail = (req.body.userEmail || req.userEmail || (req.user && req.user.email) || '').trim();
+        let recipientEmail = (req.body.userEmail || req.userEmail || (req.user && req.user.email) || (req.body.shippingAddress && req.body.shippingAddress.email) || '').trim();
         if (!recipientEmail && req.userId) {
           const u = await User.findById(req.userId).maxTimeMS(2000).catch(() => null);
           if (u && u.email) recipientEmail = u.email;
@@ -302,7 +302,7 @@ router.put('/:id/cancel', authMiddleware, async (req, res) => {
     // Auto-dispatch cancellation email
     (async () => {
       try {
-        let recipientEmail = (order.userEmail || (req.user && req.user.email) || '').trim();
+        let recipientEmail = (order.userEmail || (order.shippingAddress && order.shippingAddress.email) || (req.user && req.user.email) || '').trim();
         if (!recipientEmail && req.userId) {
           const u = await User.findById(req.userId).maxTimeMS(2000).catch(() => null);
           if (u && u.email) recipientEmail = u.email;

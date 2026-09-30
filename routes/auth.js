@@ -5,6 +5,7 @@ const { generateOTP, sendOTPEmail } = require('../utils/email');
 const User = require('../models/User');
 const Otp = require('../models/Otp');
 const Order = require('../models/Order');
+const bcrypt = require('bcryptjs');
 
 // Authorized Administrator Accounts
 const AUTHORIZED_ADMIN_EMAILS = [
@@ -170,6 +171,7 @@ router.post('/verify-otp', async (req, res) => {
       _id: user._id || 'user_' + Date.now(),
       name: user.name || storedOtp.name,
       email: normalizedEmail,
+      password: storedOtp.password || user.password,
       phone: user.phone || storedOtp.phone || '',
       city: user.city || storedOtp.city || '',
       address: user.address || storedOtp.address || '',
@@ -275,8 +277,8 @@ router.post('/login', async (req, res) => {
     let isValid = false;
     if (typeof user.comparePassword === 'function') {
       isValid = await user.comparePassword(password);
-    } else {
-      isValid = (user.password === password);
+    } else if (user.password) {
+      isValid = (user.password === password) || (await bcrypt.compare(password, user.password).catch(() => false));
     }
 
     if (!isValid) {

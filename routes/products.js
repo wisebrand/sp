@@ -173,6 +173,43 @@ const FALLBACK_PRODUCTS = [
     reviews: [
       { userName: 'Richmond K.', rating: 5, comment: 'Cushioning is like walking on clouds. Top tier sneakers.', createdAt: new Date(Date.now() - 86400000 * 4) }
     ]
+  },
+  {
+    _id: '9',
+    title: 'Monogram Canvas Luxury Handbag',
+    description: 'Iconic patterned top-handle satchel with detachable shoulder strap and padlock detail.',
+    price: 1850.00,
+    image: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80'
+    ],
+    category: 'Handbags & Totes',
+    brand: 'Gucci',
+    stock: 15,
+    rating: 5.0,
+    ratingCount: 16,
+    reviews: [
+      { userName: 'Jessica T.', rating: 5, comment: 'Pure luxury. The craft and stitching are perfection.', createdAt: new Date(Date.now() - 86400000 * 2) }
+    ]
+  },
+  {
+    _id: '10',
+    title: 'Comfort Leather Slide Sandals',
+    description: 'Casual slip-on slides with contoured footbed, dual buckle straps, and soft leather lining.',
+    price: 210.00,
+    image: 'https://images.unsplash.com/photo-1603808033192-082d6919d3e1?w=800&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1603808033192-082d6919d3e1?w=800&auto=format&fit=crop&q=80'
+    ],
+    category: 'Sandals & Slides',
+    brand: 'Zara',
+    stock: 60,
+    rating: 4.5,
+    ratingCount: 39,
+    reviews: [
+      { userName: 'Kwame M.', rating: 5, comment: 'Very easy to slip into, comfortable leather sole.', createdAt: new Date(Date.now() - 86400000 * 5) }
+    ]
   }
 ];
 
@@ -362,7 +399,7 @@ router.post('/:id/reviews', authMiddleware, async (req, res) => {
     customList.unshift(newReview);
     memoryReviews.set(req.params.id, customList);
 
-    const fallbackProd = DEFAULT_PRODUCTS.find(p => p._id === req.params.id);
+    const fallbackProd = FALLBACK_PRODUCTS.find(p => p._id === req.params.id);
     if (fallbackProd) {
       fallbackProd.reviews = fallbackProd.reviews || [];
       if (!fallbackProd.reviews.some(r => r.comment === newReview.comment)) {
