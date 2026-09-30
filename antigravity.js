@@ -19,7 +19,7 @@ const path = require('path');
 const { spawn, execSync } = require('child_process');
 
 const SPS_DIR = path.resolve(__dirname);
-const SP_DIR = path.resolve(__dirname, '..', '..', 'sp');
+const SP_DIR = path.resolve(__dirname, '..', 'sp');
 
 // Auto-Accept Permissions Flag: Grants full automated permission for all agent tasks
 const AUTO_ACCEPT_PERMISSIONS = true;
