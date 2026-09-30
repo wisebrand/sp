@@ -1991,7 +1991,7 @@ async function submitPayment(e) {
         const sExp = (document.getElementById('stripe-card-exp')?.value || '').trim();
         const sCvc = (document.getElementById('stripe-card-cvc')?.value || '').trim();
         if (sNum.length < 12 || !sExp || !sCvc) {
-            showToast('Please complete all Stripe card details (or tap "Fill Test Card")', 'error');
+            showToast('Please complete all card details (Card Number, Expiry, CVC)', 'error');
             return;
         }
 
@@ -3472,35 +3472,12 @@ function renderAdminRecentOrdersTable() {
             `;
         }).join('');
     } else {
-        // Render the exact demo preview rows provided by the user
         tbody.innerHTML = `
             <tr class="hover:bg-slate-50 transition">
-                <td class="font-mono font-bold text-slate-900">#ORD-1094</td>
-                <td class="font-semibold text-slate-800">Alex Rivera</td>
-                <td class="text-slate-500">2 items</td>
-                <td class="font-mono font-bold text-slate-900">GH₵ 124.00</td>
-                <td><span class="badge paid">Paid</span></td>
-            </tr>
-            <tr class="hover:bg-slate-50 transition">
-                <td class="font-mono font-bold text-slate-900">#ORD-1093</td>
-                <td class="font-semibold text-slate-800">Sarah Jenkins</td>
-                <td class="text-slate-500">1 item</td>
-                <td class="font-mono font-bold text-slate-900">GH₵ 45.50</td>
-                <td><span class="badge shipped">Shipped</span></td>
-            </tr>
-            <tr class="hover:bg-slate-50 transition">
-                <td class="font-mono font-bold text-slate-900">#ORD-1092</td>
-                <td class="font-semibold text-slate-800">Michael Chang</td>
-                <td class="text-slate-500">4 items</td>
-                <td class="font-mono font-bold text-slate-900">GH₵ 310.00</td>
-                <td><span class="badge pending">Pending</span></td>
-            </tr>
-            <tr class="hover:bg-slate-50 transition">
-                <td class="font-mono font-bold text-slate-900">#ORD-1091</td>
-                <td class="font-semibold text-slate-800">Amara Osei</td>
-                <td class="text-slate-500">1 item</td>
-                <td class="font-mono font-bold text-slate-900">GH₵ 89.99</td>
-                <td><span class="badge paid">Paid</span></td>
+                <td colspan="5" class="py-8 text-center text-slate-400 font-medium">
+                    <i class="fa-solid fa-receipt text-2xl mb-2 block text-slate-300"></i>
+                    No customer orders placed yet. Customer orders will appear here in real time.
+                </td>
             </tr>
         `;
     }

@@ -84,12 +84,9 @@ router.post('/momo-charge', optionalAuth, async (req, res) => {
 
     if (!result.ok || !result.data.status) {
       console.warn('Paystack Charge Notice:', result.data);
-      const reference = 'PAY-' + Date.now();
-      return res.json({
-        success: true,
-        reference,
-        status: 'pending',
-        displayText: result.data.message || `USSD prompt sent to ${cleanPhone}. Please check your phone to approve payment with your MoMo PIN.`
+      return res.status(400).json({
+        success: false,
+        error: result.data?.message || `Failed to trigger Mobile Money prompt for ${cleanPhone}. Please verify your phone number and network provider.`
       });
     }
 
@@ -142,7 +139,11 @@ router.get('/verify/:reference', optionalAuth, async (req, res) => {
     const result = await paystackRequest(`/transaction/verify/${reference}`, 'GET');
 
     if (!result.ok || !result.data.status) {
-      return res.json({ status: 'success', reference });
+      return res.status(400).json({
+        status: 'failed',
+        reference,
+        error: result.data?.message || 'Payment verification failed with provider'
+      });
     }
 
     const payData = result.data.data;
@@ -155,7 +156,7 @@ router.get('/verify/:reference', optionalAuth, async (req, res) => {
     });
   } catch (error) {
     console.error('Verify payment error:', error);
-    res.json({ status: 'success', reference: req.params.reference });
+    res.status(500).json({ status: 'failed', error: 'Payment verification failed', reference: req.params.reference });
   }
 });
 
@@ -261,7 +262,7 @@ router.post('/paypal/create-order', optionalAuth, async (req, res) => {
     }
 
     const paypalId = 'PAYPAL-' + Date.now() + '-' + Math.floor(1000 + Math.random() * 9000);
-    const approveUrl = `https://www.sandbox.paypal.com/checkoutnow?token=${paypalId}`;
+    const approveUrl = `https://www.paypal.com/checkoutnow?token=${paypalId}`;
 
     console.log(`\n🅿️ [PayPal Order Created]: ${paypalId} for $${amount} (${email || 'customer'})`);
 

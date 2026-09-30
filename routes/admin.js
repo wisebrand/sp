@@ -603,8 +603,8 @@ router.get('/users', adminAuthMiddleware, async (req, res) => {
           name: custName,
           email: custEmail,
           phone: (ord.shippingAddress && ord.shippingAddress.phone) || ord.phone || '—',
-          city: (ord.shippingAddress && ord.shippingAddress.city) || 'Accra',
-          address: typeof ord.shippingAddress === 'string' ? ord.shippingAddress : ((ord.shippingAddress && ord.shippingAddress.address) || '14 Independence Ave, Accra'),
+          city: (ord.shippingAddress && ord.shippingAddress.city) || '—',
+          address: typeof ord.shippingAddress === 'string' ? ord.shippingAddress : ((ord.shippingAddress && ord.shippingAddress.address) || '—'),
           isVerified: true,
           createdAt: ord.createdAt || new Date()
         });
