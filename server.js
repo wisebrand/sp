@@ -68,8 +68,8 @@ const PORT = process.env.PORT || 5000;
 let serverInstance = null;
 
 async function startServer() {
-  serverInstance = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n✅ SD Shopping Server is running on http://localhost:${PORT}`);
+  serverInstance = app.listen(PORT, () => {
+    console.log(`\n✅ SD Shopping Server is running on http://localhost:${PORT} and http://127.0.0.1:${PORT}`);
   });
   connectMongo().catch(err => console.warn('Mongo connection notice:', err.message));
 }
