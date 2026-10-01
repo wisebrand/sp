@@ -1,822 +1,587 @@
+/**
+ * =========================================================================
+ * SD SHOPPING - ULTRA-MODERN GLASSMORPHISM DESIGN SYSTEM (GLASS UI 2.0)
+ * =========================================================================
+ * Production-Grade Glass UI with High Usability, Accessibility, and Contrast.
+ * Designed for Real-World Commercial E-Commerce.
+ * =========================================================================
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    /* Glass Colors */
+    --glass-bg-primary: rgba(255, 255, 255, 0.72);
+    --glass-bg-secondary: rgba(255, 255, 255, 0.55);
+    --glass-bg-elevated: rgba(255, 255, 255, 0.85);
+    --glass-bg-hover: rgba(255, 255, 255, 0.92);
+    --glass-border-light: rgba(255, 255, 255, 0.75);
+    --glass-border-subtle: rgba(226, 232, 240, 0.65);
+    --glass-border-glow: rgba(99, 102, 241, 0.4);
+    --glass-specular: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    
+    /* Shadows */
+    --glass-shadow-sm: 0 4px 16px 0 rgba(31, 38, 135, 0.04);
+    --glass-shadow-md: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+    --glass-shadow-lg: 0 16px 48px 0 rgba(31, 38, 135, 0.12);
+    --glass-shadow-xl: 0 24px 64px -12px rgba(15, 23, 42, 0.18);
+    --glass-shadow-glow: 0 0 25px rgba(99, 102, 241, 0.25);
+
+    /* Brand Accents */
+    --accent-indigo: #4f46e5;
+    --accent-violet: #7c3aed;
+    --accent-emerald: #059669;
+    --accent-amber: #d97706;
+    --accent-rose: #e11d48;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+}
+
+/* Global Reset & Base Typography */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-:root {
-    --primary-color: #007bff;
-    --secondary-color: #6c757d;
-    --success-color: #28a745;
-    --danger-color: #dc3545;
-    --warning-color: #ffc107;
-    --dark-color: #343a40;
-    --light-color: #f8f9fa;
-    --border-color: #dee2e6;
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 html {
     scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-    background: #f8f9fa;
-    color: #333;
-}
-
-a {
-    text-decoration: none;
-    color: inherit;
-}
-
-/* Container */
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-/* Navbar */
-.navbar {
-    background: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
-
-.navbar .container {
+    background-color: #f1f5f9;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.09) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(217, 70, 239, 0.08) 0px, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(56, 189, 248, 0.06) 0px, transparent 60%),
+        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.07) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(244, 63, 94, 0.06) 0px, transparent 50%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    min-height: 100vh;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-}
-
-.nav-brand h1 {
-    font-size: 24px;
-    color: var(--primary-color);
-}
-
-.nav-links {
-    display: flex;
-    list-style: none;
-    gap: 30px;
-    flex: 1;
-    margin: 0 40px;
-}
-
-.nav-link {
-    color: #333;
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-.nav-link:hover {
-    color: var(--primary-color);
-}
-
-.nav-actions {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-}
-
-.cart-icon {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #333;
+    flex-direction: column;
+    overflow-x: hidden;
     position: relative;
-    transition: color 0.3s ease;
 }
 
-.cart-icon:hover {
-    color: var(--primary-color);
+/* Fixed Ambient Aurora Lighting Spheres */
+.ambient-aurora-canvas {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
 }
 
-.cart-count {
+.aurora-orb {
     position: absolute;
-    top: -8px;
-    right: -8px;
-    background: var(--danger-color);
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.cart-count.hidden {
-    display: none;
-}
-
-/* Buttons */
-.btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    display: inline-block;
-}
-
-.btn-primary {
-    background: var(--primary-color);
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #0056b3;
-    transform: translateY(-2px);
-}
-
-.btn-secondary {
-    background: var(--secondary-color);
-    color: white;
-}
-
-.btn-secondary:hover {
-    background: #5a6268;
-}
-
-.btn-full {
-    width: 100%;
-    margin: 10px 0;
-}
-
-.btn.hidden {
-    display: none;
-}
-
-.btn.loading {
+    border-radius: 9999px;
+    filter: blur(120px);
     opacity: 0.7;
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+.aurora-orb-1 {
+    top: -15%;
+    left: -10%;
+    width: 55vw;
+    height: 55vw;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.16) 0%, rgba(139, 92, 246, 0.08) 70%, transparent 100%);
+    animation: floatAurora1 22s ease-in-out infinite alternate;
+}
+
+.aurora-orb-2 {
+    top: 30%;
+    right: -15%;
+    width: 50vw;
+    height: 50vw;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.14) 0%, rgba(45, 212, 191, 0.08) 70%, transparent 100%);
+    animation: floatAurora2 26s ease-in-out infinite alternate;
+}
+
+.aurora-orb-3 {
+    bottom: -15%;
+    left: 20%;
+    width: 60vw;
+    height: 60vw;
+    background: radial-gradient(circle, rgba(236, 72, 153, 0.12) 0%, rgba(99, 102, 241, 0.06) 70%, transparent 100%);
+    animation: floatAurora3 28s ease-in-out infinite alternate;
+}
+
+@keyframes floatAurora1 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(60px, 40px) scale(1.08); }
+}
+
+@keyframes floatAurora2 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-50px, 60px) scale(1.05); }
+}
+
+@keyframes floatAurora3 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(40px, -40px) scale(0.96); }
+}
+
+/* =========================================================
+   CORE GLASS UTILITY CLASSES
+   ========================================================= */
+
+/* Glass Panel (Cards, containers, headers) */
+.glass-panel {
+    background: var(--glass-bg-primary) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid var(--glass-border-light) !important;
+    box-shadow: var(--glass-shadow-md), var(--glass-specular) !important;
+}
+
+.glass-panel-subtle {
+    background: var(--glass-bg-secondary) !important;
+    backdrop-filter: blur(16px) saturate(170%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(170%) !important;
+    border: 1px solid var(--glass-border-subtle) !important;
+    box-shadow: var(--glass-shadow-sm), var(--glass-specular) !important;
+}
+
+/* Glass Interactive Product / Feature Card */
+.glass-card {
+    background: var(--glass-bg-primary) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid var(--glass-border-light) !important;
+    box-shadow: var(--glass-shadow-md), var(--glass-specular) !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
     pointer-events: none;
 }
 
-/* Hero Section */
-.hero {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 80px 20px;
-    text-align: center;
+.glass-card:hover {
+    background: var(--glass-bg-hover) !important;
+    border-color: rgba(99, 102, 241, 0.45) !important;
+    transform: translateY(-5px) !important;
+    box-shadow: var(--glass-shadow-xl), 0 0 20px rgba(99, 102, 241, 0.12), var(--glass-specular) !important;
 }
 
-.hero-content {
-    margin-bottom: 60px;
+/* Glass Navigation Bar */
+.glass-navbar {
+    background: rgba(255, 255, 255, 0.82) !important;
+    backdrop-filter: blur(24px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.7) !important;
+    box-shadow: 0 4px 24px -2px rgba(15, 23, 42, 0.05), inset 0 -1px 0 rgba(226, 232, 240, 0.6) !important;
 }
 
-.hero-content h2 {
-    font-size: 48px;
-    margin-bottom: 15px;
+/* Apple visionOS-inspired Floating Dock */
+.glass-dock {
+    background: rgba(255, 255, 255, 0.82) !important;
+    backdrop-filter: blur(28px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(200%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
 }
 
-.hero-content p {
-    font-size: 20px;
-    margin-bottom: 30px;
-    opacity: 0.9;
+/* Glass Modal Shell */
+.glass-modal {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(32px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(32px) saturate(200%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 0 30px 80px -15px rgba(15, 23, 42, 0.25), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
 }
 
-.hero-stats {
+/* Glass Input Fields */
+.glass-input {
+    background: rgba(255, 255, 255, 0.68) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    border: 1.5px solid rgba(203, 213, 225, 0.7) !important;
+    color: var(--text-primary) !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.glass-input:focus {
+    background: rgba(255, 255, 255, 0.96) !important;
+    border-color: rgba(99, 102, 241, 0.85) !important;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.16), inset 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+    outline: none !important;
+}
+
+/* Glass Primary Buttons */
+.glass-btn-primary {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.95) 0%, rgba(124, 58, 237, 0.95) 100%) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    box-shadow: 0 8px 24px -4px rgba(99, 102, 241, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    font-weight: 800 !important;
+}
+
+.glass-btn-primary:hover {
+    background: linear-gradient(135deg, rgba(67, 56, 202, 1) 0%, rgba(109, 40, 217, 1) 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 14px 28px -4px rgba(99, 102, 241, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+}
+
+.glass-btn-primary:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 4px 12px -2px rgba(99, 102, 241, 0.4) !important;
+}
+
+/* Glass Secondary Buttons */
+.glass-btn-secondary {
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    color: var(--text-primary) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    font-weight: 700 !important;
+}
+
+.glass-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-color: rgba(99, 102, 241, 0.4) !important;
+    transform: translateY(-1px) !important;
+    color: var(--accent-indigo) !important;
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.12), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+}
+
+/* Frosted Pill Badges */
+.glass-pill {
+    background: rgba(255, 255, 255, 0.72) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.75) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Flash Sales Signature Neon-Glass Container */
+.glass-flash-container {
+    background: linear-gradient(135deg, rgba(225, 29, 72, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%), rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(24px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+    border: 1.5px solid rgba(251, 113, 133, 0.35) !important;
+    box-shadow: 0 16px 40px -10px rgba(225, 29, 72, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+/* =========================================================
+   DARK OBSIDIAN GLASS FOR EXECUTIVE ADMIN MODE
+   ========================================================= */
+
+body.admin-view-mode {
+    background-color: #0b0f17 !important;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 60%) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden;
+}
+
+body.admin-view-mode #main-content-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+}
+
+body.admin-view-mode #tab-admin {
+    display: flex !important;
+    min-height: 100vh;
+    width: 100%;
+    background: transparent !important;
+    color: #e2e8f0;
+}
+
+/* Obsidian Glass Sidebar */
+.glass-admin-sidebar {
+    width: 260px;
+    background: rgba(15, 23, 42, 0.82) !important;
+    backdrop-filter: blur(28px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(200%) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.35) !important;
+    color: #cbd5e1;
+    padding: 24px 16px;
     display: flex;
-    justify-content: center;
-    gap: 60px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 20px;
+    flex-shrink: 0;
+    min-height: 100vh;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 50;
 }
 
-.stat {
-    background: rgba(255, 255, 255, 0.1);
+.glass-admin-sidebar h2 {
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.admin-nav-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.admin-nav-links li a {
+    color: #94a3b8;
+    text-decoration: none;
+    padding: 10px 14px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.admin-nav-links li a.active, .admin-nav-links li a:hover {
+    background: rgba(56, 189, 248, 0.12) !important;
+    color: #38bdf8 !important;
+    border-color: rgba(56, 189, 248, 0.3) !important;
+    box-shadow: 0 4px 16px rgba(56, 189, 248, 0.15) !important;
+}
+
+.admin-nav-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    background: rgba(30, 41, 59, 0.8);
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.admin-nav-links li a.active .admin-nav-badge {
+    background: rgba(56, 189, 248, 0.25);
+    color: #e0f2fe;
+    border-color: rgba(56, 189, 248, 0.4);
+}
+
+/* Admin Main Content in Dark Glass */
+.admin-main-content {
+    flex: 1;
     padding: 30px;
-    border-radius: 10px;
-    min-width: 150px;
-}
-
-.stat-number {
-    font-size: 36px;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-.stat p {
-    font-size: 14px;
-    opacity: 0.9;
-}
-
-/* Products Section */
-.products {
-    padding: 60px 20px;
-}
-
-.products h2 {
-    text-align: center;
-    margin-bottom: 40px;
-    font-size: 36px;
-}
-
-.products-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 30px;
-}
-
-.product-card {
-    background: white;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.product-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-}
-
-.product-card img {
-    width: 100%;
-    height: 250px;
-    object-fit: cover;
-}
-
-.product-info {
-    padding: 20px;
-}
-
-.product-title {
-    font-size: 18px;
-    margin-bottom: 10px;
-    font-weight: 600;
-}
-
-.product-description {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 10px;
-    height: 40px;
-    overflow: hidden;
-}
-
-.product-price {
-    font-size: 24px;
-    font-weight: bold;
-    color: var(--primary-color);
-    margin-bottom: 15px;
-}
-
-.product-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.add-to-cart {
-    flex: 1;
-}
-
-.no-products {
-    text-align: center;
-    padding: 40px;
-    color: #999;
-    font-size: 18px;
-}
-
-/* Cart Sidebar */
-.cart-sidebar {
-    position: fixed;
-    right: -400px;
-    top: 0;
-    width: 400px;
-    height: 100vh;
-    background: white;
-    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    transition: right 0.3s ease;
-    z-index: 999;
-    overflow: hidden;
-}
-
-.cart-sidebar.open {
-    right: 0;
-}
-
-.cart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.cart-header h3 {
-    margin: 0;
-}
-
-.close-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #666;
-}
-
-.close-btn:hover {
-    color: #333;
-}
-
-.cart-items {
-    flex: 1;
     overflow-y: auto;
-    padding: 20px;
+    max-width: calc(100% - 260px);
+    min-height: 100vh;
+    background: transparent;
 }
 
-.empty-cart {
-    text-align: center;
-    padding: 40px 20px;
-    color: #999;
+@media (max-width: 1024px) {
+    .admin-main-content {
+        max-width: 100%;
+        padding: 20px 16px;
+    }
+    .glass-admin-sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        transform: translateX(-100%);
+    }
+    .glass-admin-sidebar.mobile-open {
+        transform: translateX(0);
+        box-shadow: 0 0 50px rgba(0, 0, 0, 0.8) !important;
+    }
 }
 
-.empty-cart i {
-    font-size: 48px;
-    margin-bottom: 20px;
-    display: block;
-    opacity: 0.5;
-}
-
-.cart-item {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 20px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.cart-item img {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 5px;
-}
-
-.cart-item-info {
-    flex: 1;
-}
-
-.cart-item-title {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 5px;
-}
-
-.cart-item-price {
-    font-size: 16px;
-    font-weight: bold;
-    color: var(--primary-color);
-    margin-bottom: 10px;
-}
-
-.cart-item-quantity {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    font-size: 12px;
-}
-
-.quantity-btn {
-    background: var(--light-color);
-    border: 1px solid var(--border-color);
-    width: 24px;
-    height: 24px;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 12px;
-}
-
-.quantity-btn:hover {
-    background: var(--border-color);
-}
-
-.remove-item {
-    background: none;
-    border: none;
-    color: var(--danger-color);
-    cursor: pointer;
-    font-size: 14px;
-    margin-left: auto;
-}
-
-.remove-item:hover {
-    color: #c82333;
-}
-
-.cart-footer {
-    border-top: 1px solid var(--border-color);
-    padding: 20px;
-}
-
-.cart-total-box {
+.admin-top-header {
     display: flex;
     justify-content: space-between;
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 15px;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
-/* Modal */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 2000;
-    left: 0;
-    top: 0;
+.admin-top-header h1 {
+    font-size: 1.7rem;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+}
+
+/* Admin Key Metrics Glass Cards */
+.admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.glass-admin-card {
+    background: rgba(30, 41, 59, 0.7) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-admin-card:hover {
+    background: rgba(30, 41, 59, 0.9) !important;
+    transform: translateY(-2px);
+    border-color: rgba(56, 189, 248, 0.4) !important;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3), 0 0 15px rgba(56, 189, 248, 0.15) !important;
+}
+
+.glass-admin-card h3 {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+}
+
+.glass-admin-card .value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-top: 8px;
+    color: #ffffff;
+}
+
+/* Glass Data Tables */
+.glass-table-container {
+    background: rgba(30, 41, 59, 0.65) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    overflow: hidden;
+}
+
+.glass-admin-table {
     width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    justify-content: center;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.glass-admin-table th, .glass-admin-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-admin-table th {
+    color: #94a3b8;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(15, 23, 42, 0.5);
+}
+
+.glass-admin-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* Status Badges */
+.badge {
+    display: inline-flex;
     align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+    backdrop-filter: blur(8px);
 }
 
-.modal.show {
-    display: flex;
-}
+.badge.paid, .badge.delivered { background-color: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); }
+.badge.shipped { background-color: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+.badge.pending { background-color: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+.badge.processing { background-color: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.3); }
+.badge.cancelled { background-color: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(251, 113, 133, 0.3); }
 
-.modal-content {
-    background: white;
-    padding: 40px;
-    border-radius: 10px;
-    max-width: 500px;
-    width: 90%;
-    position: relative;
-    animation: slideUp 0.3s ease;
-}
+/* =========================================================
+   SCROLLBAR & SPECIAL EFFECTS
+   ========================================================= */
 
-@keyframes slideUp {
-    from {
-        transform: translateY(50px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-.modal-close {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #666;
-}
-
-.modal-close:hover {
-    color: #333;
-}
-
-/* Auth Tabs */
-.auth-tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 30px;
-    border-bottom: 2px solid var(--border-color);
-}
-
-.auth-tab {
-    background: none;
-    border: none;
-    padding: 15px 20px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    color: #666;
-    border-bottom: 3px solid transparent;
-    margin-bottom: -2px;
-    transition: all 0.3s ease;
-}
-
-.auth-tab.active {
-    color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
-}
-
-/* Auth Panel */
-.auth-panel {
-    display: block;
-}
-
-.auth-panel.hidden {
-    display: none;
-}
-
-.auth-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-}
-
-.form-group label {
-    font-weight: 600;
-    margin-bottom: 5px;
-    color: #333;
-}
-
-.form-group input {
-    padding: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    font-size: 14px;
-    transition: border-color 0.3s ease;
-}
-
-.form-group input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-}
-
-.auth-link {
-    text-align: center;
-    font-size: 14px;
-    color: #666;
-    margin-top: 10px;
-}
-
-.auth-link a {
-    color: var(--primary-color);
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.auth-link a:hover {
-    text-decoration: underline;
-}
-
-/* OTP Section */
-.otp-section {
-    display: block;
-}
-
-.otp-section.hidden {
-    display: none;
-}
-
-.otp-message {
-    text-align: center;
-    color: #666;
-    margin-bottom: 20px;
-}
-
-/* Toast */
-.toast-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 9999;
-}
-
-.toast {
-    background: white;
-    padding: 15px 20px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    min-width: 300px;
-    animation: slideIn 0.3s ease;
-    opacity: 0;
-}
-
-.toast.show {
-    opacity: 1;
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(400px);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-.toast.success {
-    border-left: 4px solid var(--success-color);
-}
-
-.toast.success i {
-    color: var(--success-color);
-}
-
-.toast.error {
-    border-left: 4px solid var(--danger-color);
-}
-
-.toast.error i {
-    color: var(--danger-color);
-}
-
-.toast.warning {
-    border-left: 4px solid var(--warning-color);
-}
-
-.toast.warning i {
-    color: var(--warning-color);
-}
-
-.toast.info {
-    border-left: 4px solid var(--primary-color);
-}
-
-.toast.info i {
-    color: var(--primary-color);
-}
-
-/* ============================================================
-   MODERN UI/UX POLISH & ENHANCEMENTS
-   ============================================================ */
-
-/* Skeleton Loading Shimmer */
-.skeleton {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: 8px;
-}
-
-@keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-}
-
-/* Heart Icon Micro-animation */
-.heart-btn {
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.2s ease;
-}
-
-.heart-btn:hover {
-    transform: scale(1.18);
-}
-
-.heart-btn.active {
-    color: #e11d48 !important;
-    animation: heartPop 0.35s ease-out;
-}
-
-@keyframes heartPop {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.35); }
-    100% { transform: scale(1); }
-}
-
-/* Glassmorphic Modal & Floating Cards */
-.glass-panel {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-/* Custom Sleek Scrollbar */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: rgba(241, 245, 249, 0.5);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: rgba(203, 213, 225, 0.8);
     border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: rgba(148, 163, 184, 0.9);
 }
 
-/* Order Tracking Stepper Timeline */
-.timeline-track {
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Micro-interaction Shimmer Effect */
+.glass-shimmer {
     position: relative;
-    padding-left: 28px;
+    overflow: hidden;
 }
 
-.timeline-track::before {
+.glass-shimmer::after {
     content: '';
     position: absolute;
-    top: 8px;
-    bottom: 8px;
-    left: 9px;
-    width: 2px;
-    background: #e2e8f0;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        60deg,
+        transparent 20%,
+        rgba(255, 255, 255, 0.15) 35%,
+        transparent 50%
+    );
+    transform: rotate(30deg);
+    animation: glassShimmerWave 6s infinite ease-in-out;
+    pointer-events: none;
 }
 
-.timeline-step {
-    position: relative;
-    margin-bottom: 24px;
-}
-
-.timeline-step:last-child {
-    margin-bottom: 0;
-}
-
-.timeline-dot {
-    position: absolute;
-    left: -28px;
-    top: 2px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: white;
-    border: 3px solid #cbd5e1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.timeline-step.completed .timeline-dot {
-    border-color: #4f46e5;
-    background: #4f46e5;
-    color: white;
-}
-
-.timeline-step.active .timeline-dot {
-    border-color: #4f46e5;
-    background: white;
-    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
-}
-
-/* Product Card Interactive Lift */
-.product-card-modern {
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
-}
-
-.product-card-modern:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.04);
-}
-
-/* Smooth Image Fade-In */
-img.lazy-load {
-    opacity: 0;
-    transition: opacity 0.4s ease-in-out;
-}
-
-img.lazy-load.loaded {
-    opacity: 1;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .nav-links {
-        display: none;
-    }
-
-    .hero-content h2 {
-        font-size: 32px;
-    }
-
-    .hero-stats {
-        gap: 30px;
-    }
-
-    .products-grid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    }
-
-    .cart-sidebar {
-        width: 100%;
-        right: -100%;
-    }
-
-    .modal-content {
-        padding: 30px 20px;
-    }
-
-    .auth-tabs {
-        gap: 5px;
-    }
-
-    .auth-tab {
-        padding: 12px 15px;
-        font-size: 14px;
-    }
+@keyframes glassShimmerWave {
+    0% { transform: translateX(-100%) rotate(30deg); }
+    30% { transform: translateX(100%) rotate(30deg); }
+    100% { transform: translateX(100%) rotate(30deg); }
 }

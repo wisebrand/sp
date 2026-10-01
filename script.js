@@ -429,28 +429,28 @@ function renderFlashSales() {
         const progressPct = Math.min(90, Math.round((soldQty / (soldQty + leftQty)) * 100));
 
         return `
-            <div class="bg-white rounded-xl border border-gray-100 hover:border-indigo-300 hover:shadow-md transition p-3 flex flex-col justify-between group cursor-pointer" onclick="openProductModal('${pId}')">
-                <div class="relative bg-gray-50 h-32 sm:h-36 rounded-lg overflow-hidden mb-2">
+            <div class="glass-card rounded-2xl p-3 flex flex-col justify-between group cursor-pointer hover:border-rose-400/40 transition-all duration-300 relative overflow-hidden" onclick="openProductModal('${pId}')">
+                <div class="relative bg-slate-100/50 h-32 sm:h-36 rounded-xl overflow-hidden mb-2">
                     <img src="${pImg}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                    <span class="absolute top-1.5 left-1.5 bg-rose-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow-xs">
+                    <span class="absolute top-1.5 left-1.5 bg-rose-600/90 backdrop-blur-md text-white text-[9px] font-black px-1.5 py-0.5 rounded-md shadow-xs border border-rose-400/30">
                         -${discountPct}%
                     </span>
-                    <span class="absolute top-1.5 right-1.5 bg-slate-900/80 text-amber-300 text-[8px] font-extrabold px-1.5 py-0.5 rounded backdrop-blur-xs">
+                    <span class="absolute top-1.5 right-1.5 bg-slate-900/80 text-amber-300 text-[8px] font-extrabold px-1.5 py-0.5 rounded-md backdrop-blur-xs border border-amber-400/30">
                         ⚡ FLASH
                     </span>
                 </div>
                 <div>
-                    <h4 class="text-xs font-bold text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition">${pTitle}</h4>
+                    <h4 class="text-xs font-bold text-slate-800 line-clamp-1 group-hover:text-indigo-600 transition">${pTitle}</h4>
                     <div class="mt-1 flex items-baseline space-x-1.5">
-                        <span class="text-xs sm:text-sm font-black text-gray-900 font-mono">${formatPrice(salePrice)}</span>
-                        <span class="text-[10px] text-gray-400 line-through font-mono">${formatPrice(origPrice)}</span>
+                        <span class="text-xs sm:text-sm font-black text-slate-900 font-mono">${formatPrice(salePrice)}</span>
+                        <span class="text-[10px] text-slate-400 line-through font-mono">${formatPrice(origPrice)}</span>
                     </div>
                     <!-- Stock Sold Progress Bar -->
                     <div class="mt-2 space-y-0.5">
-                        <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                        <div class="w-full bg-slate-200/60 rounded-full h-1.5 overflow-hidden">
                             <div class="bg-gradient-to-r from-rose-500 to-amber-500 h-1.5 rounded-full" style="width: ${progressPct}%"></div>
                         </div>
-                        <span class="text-[9px] font-bold text-gray-500 block">${leftQty} items left</span>
+                        <span class="text-[9px] font-bold text-slate-500 block">${leftQty} items left</span>
                     </div>
                 </div>
             </div>
@@ -511,11 +511,11 @@ function renderProducts(filteredList = null) {
 
     if (listToRender.length === 0) {
         grid.innerHTML = `
-            <div class="col-span-full py-16 text-center text-gray-400 bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
-                <i class="fa-solid fa-filter-circle-xmark text-4xl text-gray-300 mb-3"></i>
-                <h3 class="text-base font-bold text-gray-700">No matching products found</h3>
-                <p class="text-xs text-gray-400 mt-1">Try adjusting your search terms, price slider, or rating filters.</p>
-                <button onclick="resetFilters()" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-5 py-2 rounded-xl transition">
+            <div class="col-span-full py-16 text-center text-slate-400 glass-card rounded-3xl p-8 shadow-sm">
+                <i class="fa-solid fa-filter-circle-xmark text-4xl text-slate-300 mb-3"></i>
+                <h3 class="text-base font-bold text-slate-700">No matching products found</h3>
+                <p class="text-xs text-slate-400 mt-1">Try adjusting your search terms, price slider, or rating filters.</p>
+                <button onclick="resetFilters()" class="mt-4 glass-btn-primary text-xs font-bold px-5 py-2 rounded-xl transition">
                     Reset All Filters
                 </button>
             </div>
@@ -535,24 +535,24 @@ function renderProducts(filteredList = null) {
         const discountTag = 15 + (idx * 5) % 25; // 15% - 35%
 
         return `
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg hover:border-indigo-300 transition-all duration-200 flex flex-col justify-between overflow-hidden group">
+            <div class="glass-card rounded-3xl overflow-hidden flex flex-col justify-between group transition-all duration-300 relative">
                 <div>
-                    <!-- Product Card Image Box with Jumia Badges -->
-                    <div class="relative bg-gray-50 h-48 sm:h-52 overflow-hidden cursor-pointer" onclick="openProductModal('${productId}')">
+                    <!-- Product Card Image Box with Frosted Badges -->
+                    <div class="relative bg-slate-100/50 h-48 sm:h-52 overflow-hidden cursor-pointer" onclick="openProductModal('${productId}')">
                         <img src="${image}" alt="${productName}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                         
                         <!-- Top Left Discount Badge -->
-                        <span class="absolute top-2.5 left-2.5 bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-sm">
+                        <span class="absolute top-2.5 left-2.5 bg-rose-600/90 backdrop-blur-md text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow-sm border border-rose-400/30">
                             -${discountTag}%
                         </span>
 
                         <!-- Top Right Wishlist Toggle -->
-                        <button onclick="event.stopPropagation(); toggleWishlist('${productId}')" class="absolute top-2.5 right-2.5 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-sm hover:bg-white transition text-gray-600">
-                            <i class="${isWishlisted ? 'fa-solid text-rose-500' : 'fa-regular text-gray-500'} fa-heart text-xs"></i>
+                        <button onclick="event.stopPropagation(); toggleWishlist('${productId}')" class="absolute top-2.5 right-2.5 bg-white/70 backdrop-blur-md p-2 rounded-full shadow-sm hover:bg-white transition text-slate-600 border border-white/80">
+                            <i class="${isWishlisted ? 'fa-solid text-rose-500' : 'fa-regular text-slate-500'} fa-heart text-xs"></i>
                         </button>
 
                         <!-- Bottom SD Express Badge -->
-                        <div class="absolute bottom-2 left-2 flex items-center space-x-1 bg-emerald-600/90 backdrop-blur-xs text-white text-[9px] font-black px-2 py-0.5 rounded shadow-xs">
+                        <div class="absolute bottom-2 left-2 flex items-center space-x-1 bg-emerald-600/80 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-xs border border-emerald-400/30">
                             <i class="fa-solid fa-truck-fast"></i>
                             <span>SD EXPRESS</span>
                         </div>
@@ -560,12 +560,12 @@ function renderProducts(filteredList = null) {
 
                     <!-- Card Body -->
                     <div class="p-4 space-y-2">
-                        <div class="flex items-center justify-between text-[11px] text-gray-400">
+                        <div class="flex items-center justify-between text-[11px] text-slate-400">
                             <span class="font-extrabold text-indigo-600 uppercase text-[9px] tracking-wider truncate max-w-[120px]">${product.category || 'General'}</span>
-                            <span class="font-semibold text-gray-500 truncate max-w-[80px]">${brand}</span>
+                            <span class="font-semibold text-slate-500 truncate max-w-[80px]">${brand}</span>
                         </div>
                         
-                        <h3 class="font-extrabold text-xs sm:text-sm text-gray-900 line-clamp-2 cursor-pointer hover:text-indigo-600 transition leading-snug" onclick="openProductModal('${productId}')">
+                        <h3 class="font-extrabold text-xs sm:text-sm text-slate-900 line-clamp-2 cursor-pointer hover:text-indigo-600 transition leading-snug" onclick="openProductModal('${productId}')">
                             ${productName}
                         </h3>
 
@@ -574,25 +574,25 @@ function renderProducts(filteredList = null) {
                             <div class="flex text-amber-400 text-[10px] space-x-0.5">
                                 ${renderStarRating(rating)}
                             </div>
-                            <span class="text-[11px] font-bold text-gray-700">${rating}</span>
-                            <span class="text-[10px] text-gray-400">(${ratingCount})</span>
+                            <span class="text-[11px] font-bold text-slate-700">${rating}</span>
+                            <span class="text-[10px] text-slate-400">(${ratingCount})</span>
                         </div>
 
                         <!-- Price Section (Current + Slashed Original) -->
                         <div class="pt-1">
-                            <div class="text-sm sm:text-base font-black text-gray-900 font-mono">
+                            <div class="text-sm sm:text-base font-black text-slate-900 font-mono">
                                 ${formatPrice(product.price)}
                             </div>
-                            <div class="text-[11px] text-gray-400 line-through font-mono">
+                            <div class="text-[11px] text-slate-400 line-through font-mono">
                                 ${formatPrice(origPrice)}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Card Footer: Jumia Action Button -->
+                <!-- Card Footer: Glass Action Button -->
                 <div class="p-4 pt-0">
-                    <button onclick="addToCart('${productId}')" class="w-full bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white py-2 rounded-xl text-xs font-black transition flex items-center justify-center space-x-1.5 shadow-2xs group-hover:bg-indigo-600 group-hover:text-white uppercase tracking-wider">
+                    <button onclick="addToCart('${productId}')" class="w-full glass-btn-primary py-2 rounded-xl text-xs font-black transition flex items-center justify-center space-x-1.5 shadow-sm uppercase tracking-wider">
                         <i class="fa-solid fa-cart-shopping text-xs"></i>
                         <span>ADD TO CART</span>
                     </button>
@@ -1517,15 +1517,15 @@ function renderWishlist() {
 
     if (wishlist.length === 0) {
         grid.innerHTML = `
-            <div class="col-span-full bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-sm space-y-4">
-                <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner">
+            <div class="col-span-full glass-card rounded-3xl p-12 text-center shadow-sm space-y-4">
+                <div class="w-16 h-16 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-inner">
                     <i class="fa-solid fa-heart"></i>
                 </div>
                 <div>
-                    <h3 class="text-lg font-extrabold text-gray-900">Your Wishlist is Empty</h3>
-                    <p class="text-xs text-gray-500 mt-1 max-w-sm mx-auto">Explore our catalog and click the heart icon on your favorite items to save them here for later.</p>
+                    <h3 class="text-lg font-extrabold text-slate-900">Your Wishlist is Empty</h3>
+                    <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Explore our catalog and click the heart icon on your favorite items to save them here for later.</p>
                 </div>
-                <button onclick="switchTab('catalog')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl shadow transition text-xs inline-flex items-center space-x-2">
+                <button onclick="switchTab('catalog')" class="glass-btn-primary font-bold px-6 py-2.5 rounded-xl shadow transition text-xs inline-flex items-center space-x-2">
                     <i class="fa-solid fa-bag-shopping"></i>
                     <span>Discover Trending Products</span>
                 </button>
@@ -1540,15 +1540,17 @@ function renderWishlist() {
         const image = product.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60';
 
         return `
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col justify-between">
+            <div class="glass-card rounded-3xl p-4 flex flex-col justify-between group transition-all duration-300">
                 <div>
-                    <img src="${image}" onclick="openProductModal('${pId}')" class="w-full h-40 object-cover rounded-xl mb-3 cursor-pointer hover:opacity-90 transition">
-                    <h4 onclick="openProductModal('${pId}')" class="font-semibold text-gray-800 line-clamp-1 cursor-pointer hover:text-indigo-600 transition">${pName}</h4>
-                    <span class="text-sm font-bold text-indigo-600 mt-1 block">${formatPrice(product.price)}</span>
+                    <div class="relative rounded-2xl overflow-hidden mb-3 bg-slate-100/50">
+                        <img src="${image}" onclick="openProductModal('${pId}')" class="w-full h-40 object-cover cursor-pointer hover:scale-105 transition duration-300">
+                    </div>
+                    <h4 onclick="openProductModal('${pId}')" class="font-bold text-slate-800 line-clamp-1 cursor-pointer hover:text-indigo-600 transition">${pName}</h4>
+                    <span class="text-sm font-black text-indigo-600 font-mono mt-1 block">${formatPrice(product.price)}</span>
                 </div>
                 <div class="mt-4 flex space-x-2">
-                    <button onclick="addToCart('${pId}')" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg text-xs font-semibold hover:bg-indigo-700 transition">Move to Cart</button>
-                    <button onclick="toggleWishlist('${pId}')" class="bg-gray-100 text-gray-600 px-3 py-2 rounded-lg text-xs hover:bg-gray-200 transition"><i class="fa-solid fa-trash"></i></button>
+                    <button onclick="addToCart('${pId}')" class="flex-1 glass-btn-primary py-2 rounded-xl text-xs font-bold transition">Move to Cart</button>
+                    <button onclick="toggleWishlist('${pId}')" class="glass-btn-secondary px-3 py-2 rounded-xl text-xs text-slate-600 hover:text-rose-600 transition"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
         `;
@@ -1640,15 +1642,15 @@ function renderCart() {
 
     if (cart.length === 0) {
         container.innerHTML = `
-            <div class="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-sm space-y-4">
-                <div class="w-20 h-20 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto text-3xl shadow-inner">
+            <div class="glass-card rounded-3xl p-12 text-center shadow-sm space-y-4">
+                <div class="w-20 h-20 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-3xl flex items-center justify-center mx-auto text-3xl shadow-inner">
                     <i class="fa-solid fa-cart-shopping"></i>
                 </div>
                 <div>
-                    <h3 class="text-xl font-extrabold text-gray-900">Your cart is empty!</h3>
-                    <p class="text-gray-500 text-xs mt-1 max-w-sm mx-auto">Explore our wide category of top products and discover unbeatable deals today.</p>
+                    <h3 class="text-xl font-extrabold text-slate-900">Your cart is empty!</h3>
+                    <p class="text-slate-500 text-xs mt-1 max-w-sm mx-auto">Explore our wide category of top products and discover unbeatable deals today.</p>
                 </div>
-                <button onclick="switchTab('catalog')" class="bg-amber-500 hover:bg-amber-600 text-white font-extrabold px-8 py-3.5 rounded-xl shadow-lg transition text-xs uppercase tracking-wider inline-flex items-center space-x-2">
+                <button onclick="switchTab('catalog')" class="glass-btn-primary font-extrabold px-8 py-3.5 rounded-xl shadow-lg transition text-xs uppercase tracking-wider inline-flex items-center space-x-2">
                     <i class="fa-solid fa-bag-shopping"></i>
                     <span>START SHOPPING</span>
                 </button>
@@ -1670,10 +1672,10 @@ function renderCart() {
         const origPrice = (item.price * 1.25).toFixed(2);
 
         return `
-            <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm space-y-4">
+            <div class="glass-card rounded-3xl p-5 shadow-sm space-y-4 border border-slate-200/80">
                 <!-- Top Status Header -->
-                <div class="flex items-center justify-between pb-3 border-b border-gray-100 text-xs">
-                    <span class="bg-amber-50 text-amber-700 font-extrabold text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center space-x-1">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-200/60 text-xs">
+                    <span class="bg-amber-500/10 border border-amber-500/20 text-amber-600 font-extrabold text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center space-x-1 backdrop-blur-md">
                         <i class="fa-solid fa-bolt text-amber-500"></i>
                         <span>SD Express</span>
                     </span>
@@ -1685,37 +1687,37 @@ function renderCart() {
 
                 <!-- Main Content Row -->
                 <div class="flex items-start space-x-4">
-                    <img src="${image}" onclick="openProductModal('${pId}')" class="w-24 h-24 object-cover rounded-xl border border-gray-100 cursor-pointer hover:opacity-90 transition flex-shrink-0">
+                    <img src="${image}" onclick="openProductModal('${pId}')" class="w-24 h-24 object-cover rounded-2xl border border-slate-200/80 cursor-pointer hover:opacity-90 transition flex-shrink-0 shadow-xs">
                     <div class="flex-1 min-w-0">
-                        <h4 onclick="openProductModal('${pId}')" class="font-bold text-gray-900 text-sm cursor-pointer hover:text-indigo-600 transition line-clamp-2 leading-snug">${pName}</h4>
-                        <span class="text-[11px] text-gray-400 block mt-0.5">Category: ${item.category || 'General'}</span>
+                        <h4 onclick="openProductModal('${pId}')" class="font-bold text-slate-900 text-sm cursor-pointer hover:text-indigo-600 transition line-clamp-2 leading-snug">${pName}</h4>
+                        <span class="text-[11px] text-slate-400 block mt-0.5">Category: ${item.category || 'General'}</span>
                         
                         <div class="flex items-center space-x-2 mt-2">
-                            <span class="text-lg font-black text-gray-900">${formatPrice(item.price)}</span>
-                            <span class="text-xs text-gray-400 line-through">${formatPrice(item.price * 1.25)}</span>
-                            <span class="bg-rose-50 text-rose-600 font-extrabold text-[10px] px-2 py-0.5 rounded-md">-20%</span>
+                            <span class="text-lg font-black text-slate-900 font-mono">${formatPrice(item.price)}</span>
+                            <span class="text-xs text-slate-400 line-through font-mono">${formatPrice(item.price * 1.25)}</span>
+                            <span class="bg-rose-500/10 text-rose-600 border border-rose-500/20 font-extrabold text-[10px] px-2 py-0.5 rounded-lg">-20%</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Jumia Bottom Action Bar -->
-                <div class="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+                <!-- Action Bar -->
+                <div class="pt-3 border-t border-slate-200/60 flex items-center justify-between gap-2">
                     <div class="flex items-center space-x-4">
                         <button onclick="removeFromCart('${pId}')" class="text-rose-600 hover:text-rose-700 text-xs font-bold flex items-center space-x-1 transition">
                             <i class="fa-solid fa-trash-can"></i>
                             <span>REMOVE</span>
                         </button>
-                        <button onclick="toggleWishlist('${pId}')" class="text-gray-500 hover:text-indigo-600 text-xs font-semibold flex items-center space-x-1 transition hidden sm:flex">
+                        <button onclick="toggleWishlist('${pId}')" class="text-slate-500 hover:text-indigo-600 text-xs font-semibold flex items-center space-x-1 transition hidden sm:flex">
                             <i class="fa-regular fa-heart"></i>
                             <span>Save for Later</span>
                         </button>
                     </div>
 
                     <!-- Quantity Control Selector -->
-                    <div class="flex items-center space-x-1 bg-gray-50 border border-gray-200 rounded-xl p-1">
-                        <button onclick="updateCartQty('${pId}', -1)" class="w-7 h-7 rounded-lg bg-white shadow-xs text-gray-700 hover:bg-gray-200 font-bold flex items-center justify-center transition text-xs">-</button>
-                        <span class="w-8 text-center text-xs font-extrabold text-gray-900">${item.qty}</span>
-                        <button onclick="updateCartQty('${pId}', 1)" class="w-7 h-7 rounded-lg bg-white shadow-xs text-gray-700 hover:bg-gray-200 font-bold flex items-center justify-center transition text-xs">+</button>
+                    <div class="flex items-center space-x-1 bg-white/60 border border-white/80 rounded-xl p-1 backdrop-blur-md">
+                        <button onclick="updateCartQty('${pId}', -1)" class="w-7 h-7 rounded-lg bg-white/90 shadow-2xs text-slate-700 hover:bg-white font-bold flex items-center justify-center transition text-xs border border-white/60">-</button>
+                        <span class="w-8 text-center text-xs font-extrabold text-slate-900">${item.qty}</span>
+                        <button onclick="updateCartQty('${pId}', 1)" class="w-7 h-7 rounded-lg bg-white/90 shadow-2xs text-slate-700 hover:bg-white font-bold flex items-center justify-center transition text-xs border border-white/60">+</button>
                     </div>
                 </div>
             </div>
@@ -2249,13 +2251,13 @@ function renderOrders() {
 
     if (orders.length === 0) {
         container.innerHTML = `
-            <div class="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-sm">
-                <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+            <div class="glass-card rounded-3xl p-12 text-center shadow-sm space-y-4">
+                <div class="w-16 h-16 bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
                     <i class="fa-solid fa-box-archive"></i>
                 </div>
-                <h3 class="text-lg font-bold text-gray-900">No Orders Found</h3>
-                <p class="text-xs text-gray-500 mt-1 max-w-sm mx-auto">You have not placed any orders yet. Explore our catalog and place your first order!</p>
-                <button onclick="switchTab('catalog')" class="mt-5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-6 py-2.5 rounded-xl shadow transition inline-flex items-center space-x-2">
+                <h3 class="text-lg font-bold text-slate-900">No Orders Found</h3>
+                <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">You have not placed any orders yet. Explore our catalog and place your first order!</p>
+                <button onclick="switchTab('catalog')" class="mt-5 glass-btn-primary text-xs font-bold px-6 py-2.5 rounded-xl shadow transition inline-flex items-center space-x-2">
                     <i class="fa-solid fa-bag-shopping"></i>
                     <span>Browse Products</span>
                 </button>
@@ -2283,24 +2285,24 @@ function renderOrders() {
         else if (status === 'shipped') { nextStatusText = 'Advance to Delivered'; nextStatusAction = 'delivered'; }
 
         return `
-            <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition">
+            <div class="glass-card rounded-3xl p-6 shadow-sm hover:shadow-md transition border border-slate-200/80">
                 <!-- Top Row: Order ID, Tracking Badge, Date & Status -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200/60 gap-3">
                     <div>
                         <div class="flex flex-wrap items-center gap-2">
-                            <span class="font-black text-gray-900 text-sm sm:text-base">${orderId}</span>
-                            <button onclick="copyToClipboard('${trackingNum}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-lg inline-flex items-center space-x-1 transition" title="Click to copy tracking code">
-                                <i class="fa-solid fa-barcode text-gray-400"></i>
+                            <span class="font-black text-slate-900 text-sm sm:text-base">${orderId}</span>
+                            <button onclick="copyToClipboard('${trackingNum}')" class="bg-white/60 hover:bg-white border border-white/80 text-slate-700 text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-lg inline-flex items-center space-x-1 transition backdrop-blur-md" title="Click to copy tracking code">
+                                <i class="fa-solid fa-barcode text-slate-400"></i>
                                 <span>${trackingNum}</span>
-                                <i class="fa-regular fa-copy text-[10px] text-gray-400"></i>
+                                <i class="fa-regular fa-copy text-[10px] text-slate-400"></i>
                             </button>
                         </div>
-                        <p class="text-xs text-gray-500 mt-1">Placed on <span class="font-medium text-gray-700">${dateStr}</span> • Shipping to: <span class="text-gray-700 font-medium">${address}</span></p>
+                        <p class="text-xs text-slate-500 mt-1">Placed on <span class="font-medium text-slate-700">${dateStr}</span> • Shipping to: <span class="text-slate-700 font-medium">${address}</span></p>
                     </div>
 
                     <div class="flex items-center space-x-3 self-start sm:self-center">
                         ${getStatusBadge(status)}
-                        <span class="font-black text-indigo-600 text-lg">${formatPrice(total)}</span>
+                        <span class="font-black text-indigo-600 text-lg font-mono">${formatPrice(total)}</span>
                     </div>
                 </div>
 
@@ -2308,35 +2310,35 @@ function renderOrders() {
                 ${renderOrderStepper(status)}
 
                 <!-- Items & Action Buttons -->
-                <div class="pt-5 mt-2 flex flex-col md:flex-row md:items-center justify-between gap-4 border-t border-gray-100/80">
+                <div class="pt-5 mt-2 flex flex-col md:flex-row md:items-center justify-between gap-4 border-t border-slate-200/60">
                     <div class="space-y-1">
-                        <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Items in Package:</span>
-                        <div class="text-xs font-semibold text-gray-800 flex flex-wrap gap-1.5">
-                            ${items.map(i => `<span class="bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-md">${i.quantity || i.qty || 1}x ${i.title || i.name}</span>`).join('')}
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Items in Package:</span>
+                        <div class="text-xs font-semibold text-slate-800 flex flex-wrap gap-1.5">
+                            ${items.map(i => `<span class="bg-white/60 border border-white/80 px-2 py-0.5 rounded-md backdrop-blur-xs">${i.quantity || i.qty || 1}x ${i.title || i.name}</span>`).join('')}
                         </div>
                     </div>
 
                     <!-- Action Controls -->
                     <div class="flex flex-wrap items-center gap-2">
-                        <button onclick="openTrackingModal('${id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm transition inline-flex items-center space-x-1.5">
+                        <button onclick="openTrackingModal('${id}')" class="glass-btn-primary text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm transition inline-flex items-center space-x-1.5">
                             <i class="fa-solid fa-location-crosshairs"></i>
                             <span>Tracking</span>
                         </button>
 
-                        <button onclick="openInvoiceModal('${id}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold px-3.5 py-2 rounded-xl transition inline-flex items-center space-x-1.5" title="View & Print Official Receipt">
+                        <button onclick="openInvoiceModal('${id}')" class="glass-btn-secondary text-slate-700 text-xs font-bold px-3.5 py-2 rounded-xl transition inline-flex items-center space-x-1.5" title="View & Print Official Receipt">
                             <i class="fa-solid fa-file-invoice text-indigo-600"></i>
                             <span>Invoice</span>
                         </button>
 
                         ${(status === 'pending' || status === 'processing') ? `
-                            <button onclick="cancelOrder('${id}')" class="bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 border border-rose-200 text-xs font-bold px-3 py-2 rounded-xl transition inline-flex items-center space-x-1.5" title="Cancel this order">
+                            <button onclick="cancelOrder('${id}')" class="bg-rose-500/10 hover:bg-rose-600 hover:text-white text-rose-600 border border-rose-500/20 text-xs font-bold px-3 py-2 rounded-xl transition inline-flex items-center space-x-1.5" title="Cancel this order">
                                 <i class="fa-solid fa-ban"></i>
                                 <span>Cancel</span>
                             </button>
                         ` : ''}
 
                         ${nextStatusAction ? `
-                            <button onclick="advanceOrderStatus('${id}', '${nextStatusAction}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl transition inline-flex items-center space-x-1" title="Simulate courier delivery step">
+                            <button onclick="advanceOrderStatus('${id}', '${nextStatusAction}')" class="glass-btn-secondary text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition inline-flex items-center space-x-1" title="Simulate courier delivery step">
                                 <i class="fa-solid fa-forward-step text-indigo-600"></i>
                                 <span>${nextStatusText}</span>
                             </button>
