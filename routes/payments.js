@@ -1,9 +1,57 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const { verifyToken } = require('../utils/jwt');
 
-const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY || 'sk_test_a5626f9c017f40a01a66cab1218e3765cec220df';
-const PAYSTACK_PUBLIC = process.env.PAYSTACK_PUBLIC_KEY || 'pk_test_fda52ee71d243f9f64f750eaebf5887fcfef737a';
+const getPaystackSecret = () => (process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SECRET || 'sk_test_a5626f9c017f40a01a66cab1218e3765cec220df').trim();
+const getPaystackPublic = () => (process.env.PAYSTACK_PUBLIC_KEY || process.env.PAYSTACK_PUBLIC || 'pk_test_fda52ee71d243f9f64f750eaebf5887fcfef737a').trim();
+
+// 0. Paystack Configuration Endpoint for Frontend
+router.get('/paystack/config', (req, res) => {
+  const pubKey = getPaystackPublic();
+  const isLive = pubKey.startsWith('pk_live_');
+  res.json({
+    publicKey: pubKey,
+    isLive,
+    currency: 'GHS',
+    mode: isLive ? 'live' : 'test'
+  });
+});
+
+// Paystack Webhook Handler with HMAC-SHA512 verification
+router.post('/paystack/webhook', async (req, res) => {
+  try {
+    const secret = getPaystackSecret();
+    const hash = crypto.createHmac('sha512', secret).update(JSON.stringify(req.body)).digest('hex');
+    if (hash !== req.headers['x-paystack-signature']) {
+      return res.status(401).send('Invalid signature');
+    }
+
+    const event = req.body;
+    console.log(`\n🔔 [Paystack Webhook]: Event: ${event.event} | Ref: ${event.data?.reference}`);
+
+    if (event.event === 'charge.success') {
+      try {
+        const Order = require('../models/Order');
+        const ref = event.data?.reference;
+        if (ref) {
+          await Order.findOneAndUpdate(
+            { $or: [{ transactionId: ref }, { trackingNumber: ref }] },
+            { paymentStatus: 'completed', status: 'processing', updatedAt: new Date() }
+          );
+          console.log(`✅ [Paystack Webhook]: Order updated to completed for ref: ${ref}`);
+        }
+      } catch (dbErr) {
+        console.warn('Webhook DB update notice:', dbErr.message);
+      }
+    }
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.error('Paystack webhook error:', err);
+    res.sendStatus(500);
+  }
+});
 
 const optionalAuth = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -25,7 +73,7 @@ async function paystackRequest(path, method = 'GET', body = null) {
   const options = {
     method,
     headers: {
-      'Authorization': `Bearer ${PAYSTACK_SECRET}`,
+      'Authorization': `Bearer ${getPaystackSecret()}`,
       'Content-Type': 'application/json'
     }
   };

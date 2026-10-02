@@ -29,12 +29,12 @@ function generateTrackingEntry(status) {
 // 1. Create New Order
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    const { items, totalAmount, shippingAddress, paymentMethod } = req.body;
+    const { items, totalAmount, shippingAddress, paymentMethod, transactionId: customTxnId } = req.body;
     if (!Array.isArray(items) || items.length === 0 || !totalAmount || !shippingAddress) {
       return res.status(400).json({ error: 'Items, total amount, and shipping address are required' });
     }
 
-    const transactionId = 'TXN-' + Math.floor(100000 + Math.random() * 900000);
+    const transactionId = customTxnId || ('TXN-' + Math.floor(100000 + Math.random() * 900000));
     const trackingNumber = 'SD-TRK-' + Math.floor(100000 + Math.random() * 900000);
     const estimatedDelivery = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
 

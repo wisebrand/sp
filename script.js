@@ -1865,7 +1865,7 @@ function updateBadges() {
 }
 
 // --- PAYMENT GATEWAY & CHECKOUT ---
-let activePaymentMethod = 'card';
+let activePaymentMethod = 'paystack';
 let pendingOrderTotal = 0;
 
 async function proceedToCheckout() {
@@ -1896,10 +1896,11 @@ async function proceedToCheckout() {
 
         document.getElementById('pay-modal-total').textContent = formatPrice(pendingOrderTotal);
         document.getElementById('cod-amount').textContent = formatPrice(pendingOrderTotal);
-        document.getElementById('pay-btn-text').textContent = `Confirm & Pay ${formatPrice(pendingOrderTotal)}`;
+        document.getElementById('pay-btn-text').textContent = `Pay with Paystack Live (${formatPrice(pendingOrderTotal)})`;
 
         const payAddressInput = document.getElementById('pay-address');
         const momoPhoneInput = document.getElementById('momo-phone');
+        const paystackEmailInput = document.getElementById('paystack-email');
 
         if (payAddressInput) {
             if (shippingAddress) {
@@ -1913,6 +1914,27 @@ async function proceedToCheckout() {
             momoPhoneInput.value = currentUser.phone;
         }
 
+        if (paystackEmailInput && currentUser && currentUser.email) {
+            paystackEmailInput.value = currentUser.email;
+        }
+
+        // Auto-fetch Paystack live/test gateway mode
+        try {
+            fetch(`${API_BASE}/payments/paystack/config`).then(r => r.json()).then(cfg => {
+                const badge = document.getElementById('paystack-mode-badge');
+                if (badge) {
+                    if (cfg.isLive) {
+                        badge.className = "text-[10px] font-bold text-emerald-700 bg-emerald-100/90 px-2.5 py-0.5 rounded-full border border-emerald-300";
+                        badge.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>Paystack Live Active';
+                    } else {
+                        badge.className = "text-[10px] font-bold text-amber-700 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300";
+                        badge.innerHTML = '<i class="fa-solid fa-flask text-amber-600 mr-1"></i>Paystack Sandbox Ready';
+                    }
+                }
+            }).catch(() => {});
+        } catch (e) {}
+
+        selectPaymentMethod('paystack');
         document.getElementById('payment-modal').classList.remove('hidden');
     } finally {
         setButtonLoading('cart-checkout-btn', false);
@@ -1938,14 +1960,14 @@ function autofillStripeTestCard() {
 
 function selectPaymentMethod(method) {
     activePaymentMethod = method;
-    const tabs = ['card', 'momo', 'stripe', 'paypal', 'cod'];
+    const tabs = ['paystack', 'card', 'momo', 'stripe', 'paypal', 'cod'];
 
     tabs.forEach(t => {
         const btn = document.getElementById(`pay-tab-${t}`);
         const form = document.getElementById(`pay-form-${t}`);
 
         if (t === method) {
-            if (btn) btn.className = "pay-method-btn border-2 border-indigo-600 bg-indigo-50/50 text-indigo-700 py-2.5 px-1.5 rounded-xl text-xs font-bold flex flex-col items-center justify-center space-y-1 transition";
+            if (btn) btn.className = "pay-method-btn border-2 border-emerald-600 bg-emerald-50/70 text-emerald-800 py-2.5 px-1.5 rounded-xl text-xs font-bold flex flex-col items-center justify-center space-y-1 transition shadow-sm";
             if (form) form.classList.remove('hidden');
         } else {
             if (btn) btn.className = "pay-method-btn border border-gray-200 bg-gray-50 text-gray-600 py-2.5 px-1.5 rounded-xl text-xs font-medium flex flex-col items-center justify-center space-y-1 hover:bg-gray-100 transition";
@@ -1955,7 +1977,9 @@ function selectPaymentMethod(method) {
 
     const submitText = document.getElementById('pay-btn-text');
     if (submitText) {
-        if (method === 'cod') {
+        if (method === 'paystack') {
+            submitText.textContent = `Pay with Paystack Live (${formatPrice(pendingOrderTotal)})`;
+        } else if (method === 'cod') {
             submitText.textContent = `Place Order (${formatPrice(pendingOrderTotal)})`;
         } else if (method === 'stripe') {
             submitText.textContent = `Pay with Stripe (${formatPrice(pendingOrderTotal)})`;
@@ -1979,7 +2003,69 @@ async function submitPayment(e) {
     let paymentMethodName = 'Credit / Debit Card';
     let momoNoticeText = '';
 
-    if (activePaymentMethod === 'card') {
+    if (activePaymentMethod === 'paystack') {
+        const pEmail = (document.getElementById('paystack-email')?.value || (currentUser ? currentUser.email : '')).trim();
+        if (!pEmail || !pEmail.includes('@')) {
+            showToast('Please enter a valid billing email address for Paystack', 'error');
+            return;
+        }
+
+        setButtonLoading('pay-submit-btn', true, 'Opening Paystack...');
+
+        try {
+            const cfgRes = await fetch(`${API_BASE}/payments/paystack/config`);
+            const cfg = await safeParseResponse(cfgRes);
+            const pubKey = (cfg.publicKey || 'pk_test_fda52ee71d243f9f64f750eaebf5887fcfef737a').trim();
+
+            if (typeof PaystackPop === 'undefined') {
+                showToast('Paystack SDK is loading, please try again in a moment', 'warning');
+                setButtonLoading('pay-submit-btn', false, `Pay with Paystack Live (${formatPrice(pendingOrderTotal)})`);
+                return;
+            }
+
+            const paymentRef = 'SD-LIVE-' + Date.now() + '-' + Math.floor(1000 + Math.random() * 9000);
+            const amountInPesewas = Math.round(pendingOrderTotal * 100);
+
+            const handler = PaystackPop.setup({
+                key: pubKey,
+                email: pEmail,
+                amount: amountInPesewas,
+                currency: 'GHS',
+                ref: paymentRef,
+                metadata: {
+                    custom_fields: [
+                        { display_name: "Customer Name", variable_name: "customer_name", value: currentUser ? currentUser.name : "Valued Customer" },
+                        { display_name: "Delivery Address", variable_name: "delivery_address", value: address }
+                    ]
+                },
+                callback: async function(paystackResponse) {
+                    showLoading('Verifying Payment', 'Connecting with Paystack to confirm transaction...');
+                    const confirmedRef = paystackResponse.reference || paymentRef;
+                    try {
+                        await fetch(`${API_BASE}/payments/verify/${confirmedRef}`, {
+                            headers: { 'Authorization': `Bearer ${authToken}` }
+                        });
+                    } catch (vErr) {
+                        console.warn('Paystack verification call notice:', vErr);
+                    }
+
+                    await placeFinalOrder(address, `Paystack Live (${confirmedRef})`, confirmedRef);
+                },
+                onClose: function() {
+                    setButtonLoading('pay-submit-btn', false, `Pay with Paystack Live (${formatPrice(pendingOrderTotal)})`);
+                    showToast('Paystack checkout window closed', 'info');
+                }
+            });
+
+            handler.openIframe();
+            return;
+        } catch (err) {
+            console.error('Paystack checkout error:', err);
+            showToast('Could not initialize Paystack checkout: ' + err.message, 'error');
+            setButtonLoading('pay-submit-btn', false, `Pay with Paystack Live (${formatPrice(pendingOrderTotal)})`);
+            return;
+        }
+    } else if (activePaymentMethod === 'card') {
         const cNum = (document.getElementById('card-number')?.value || '').trim();
         const cExp = (document.getElementById('card-expiry')?.value || '').trim();
         const cCvv = (document.getElementById('card-cvv')?.value || '').trim();
@@ -2085,11 +2171,12 @@ async function submitPayment(e) {
         paymentMethodName = 'Cash on Delivery';
     }
 
+    await placeFinalOrder(address, paymentMethodName, null, momoNoticeText ? `📲 ${momoNoticeText}. Receipt emailed to ${currentUser ? currentUser.email : 'your inbox'}!` : '');
+}
+
+async function placeFinalOrder(address, paymentMethodName, transactionRef, customNotice = '') {
     setButtonLoading('pay-submit-btn', true, 'Please wait...');
     showLoading('Please wait', 'Processing payment & placing order securely...');
-
-    // Processing delay for USSD prompt dispatch & confirmation
-    await new Promise(res => setTimeout(res, 1000));
 
     const orderPayload = {
         items: cart.map(item => ({
@@ -2102,6 +2189,7 @@ async function submitPayment(e) {
         totalAmount: pendingOrderTotal,
         shippingAddress: address,
         paymentMethod: paymentMethodName,
+        transactionId: transactionRef || undefined,
         userEmail: currentUser ? currentUser.email : ''
     };
 
@@ -2128,10 +2216,10 @@ async function submitPayment(e) {
         try { localStorage.setItem('sd_last_order_event', Date.now().toString()); } catch (e) {}
 
         const userEmail = currentUser ? currentUser.email : 'your inbox';
-        if (momoNoticeText) {
-            showToast(`📲 ${momoNoticeText}. Receipt emailed to ${userEmail}!`);
+        if (customNotice) {
+            showToast(customNotice);
         } else {
-            showToast(`🎉 Payment successful! Official receipt sent to ${userEmail}.`);
+            showToast(`🎉 Payment verified! Official receipt sent to ${userEmail}.`);
         }
         switchTab('orders');
     } catch (error) {
